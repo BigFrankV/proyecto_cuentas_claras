@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: db
--- Tiempo de generación: 24-11-2025 a las 20:43:42
+-- Tiempo de generación: 24-11-2025 a las 23:07:29
 -- Versión del servidor: 8.0.43
 -- Versión de PHP: 8.3.26
 
@@ -274,13 +274,13 @@ INSERT INTO `bitacora_auditoria` (`id`, `comunidad_id`, `tipo`, `prioridad`, `ti
 --
 DROP VIEW IF EXISTS `bitacora_conserjeria`;
 CREATE TABLE `bitacora_conserjeria` (
-`id` bigint
-,`comunidad_id` bigint
-,`fecha_hora` datetime
-,`usuario_id` bigint
-,`evento` varchar(150)
-,`detalle` varchar(1000)
+`comunidad_id` bigint
 ,`created_at` datetime
+,`detalle` varchar(1000)
+,`evento` varchar(150)
+,`fecha_hora` datetime
+,`id` bigint
+,`usuario_id` bigint
 );
 
 -- --------------------------------------------------------
@@ -291,15 +291,15 @@ CREATE TABLE `bitacora_conserjeria` (
 --
 DROP VIEW IF EXISTS `cargo_financiero_unidad`;
 CREATE TABLE `cargo_financiero_unidad` (
-`id` bigint
+`comunidad_id` bigint
+,`created_at` datetime
 ,`emision_id` bigint
-,`comunidad_id` bigint
-,`unidad_id` bigint
+,`estado` enum('pendiente','pagado','vencido','parcial')
+,`id` bigint
+,`interes_acumulado` decimal(12,2)
 ,`monto_total` decimal(12,2)
 ,`saldo` decimal(12,2)
-,`estado` enum('pendiente','pagado','vencido','parcial')
-,`interes_acumulado` decimal(12,2)
-,`created_at` datetime
+,`unidad_id` bigint
 ,`updated_at` datetime
 );
 
@@ -741,7 +741,7 @@ INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_i
 (69, 43, 3, 14, 53000.00, 53000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
 (70, 43, 3, 3, 96000.00, 96000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
 (71, 41, 1, 1, 56000.00, 56000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
-(72, 42, 2, 3, 63000.00, 63000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
+(72, 42, 2, 3, 63000.00, 0.00, 'pagado', 0.00, '2025-10-29 19:39:19', '2025-11-24 20:49:59'),
 (73, 43, 3, 4, 89000.00, 89000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
 (74, 41, 1, 2, 61000.00, 61000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
 (75, 42, 2, 13, 36000.00, 36000.00, 'pendiente', 0.00, '2025-10-29 19:39:19', '2025-11-24 18:17:58'),
@@ -789,7 +789,14 @@ INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_i
 (117, 67, 49, 97, 55000.00, 55000.00, 'pendiente', 825.00, '2025-10-29 19:54:01', '2025-11-24 18:17:58'),
 (118, 68, 40, 80, 78000.00, 78000.00, 'pendiente', 0.00, '2025-10-29 19:54:01', '2025-11-24 18:17:58'),
 (119, 69, 41, 81, 62000.00, 62000.00, 'pendiente', 0.00, '2025-10-29 19:54:01', '2025-11-24 18:17:58'),
-(120, 70, 59, 117, 88000.00, 88000.00, 'pendiente', 1320.00, '2025-10-29 19:54:01', '2025-11-24 18:17:58');
+(120, 70, 59, 117, 88000.00, 88000.00, 'pendiente', 1320.00, '2025-10-29 19:54:01', '2025-11-24 18:17:58'),
+(121, 92, 5, 6, 234783.00, 234783.00, 'pendiente', 0.00, '2025-11-24 22:31:25', '2025-11-24 22:31:25'),
+(122, 93, 5, 6, 234783.00, 234783.00, 'pendiente', 0.00, '2025-11-24 22:34:49', '2025-11-24 22:34:49'),
+(123, 94, 3, 4, 597780.00, 597780.00, 'pendiente', 0.00, '2025-11-24 22:50:59', '2025-11-24 22:50:59'),
+(124, 95, 5, 6, 605043.00, 605043.00, 'pendiente', 0.00, '2025-11-24 22:51:43', '2025-11-24 22:51:43'),
+(125, 96, 5, 6, 605043.00, 605043.00, 'pendiente', 0.00, '2025-11-24 22:51:53', '2025-11-24 22:51:53'),
+(126, 97, 5, 6, 605043.00, 605043.00, 'pendiente', 0.00, '2025-11-24 22:55:43', '2025-11-24 22:55:43'),
+(127, 97, 5, 16, 677100.00, 677100.00, 'pendiente', 0.00, '2025-11-24 22:55:44', '2025-11-24 22:55:44');
 
 -- --------------------------------------------------------
 
@@ -799,15 +806,15 @@ INSERT INTO `cuenta_cobro_unidad` (`id`, `emision_id`, `comunidad_id`, `unidad_i
 --
 DROP VIEW IF EXISTS `detalle_cargo_unidad`;
 CREATE TABLE `detalle_cargo_unidad` (
-`id` bigint
-,`cargo_unidad_id` bigint
+`cargo_unidad_id` bigint
 ,`categoria_id` bigint
+,`created_at` datetime
 ,`glosa` varchar(250)
+,`id` bigint
+,`iva_incluido` tinyint(1)
 ,`monto` decimal(12,2)
 ,`origen` enum('gasto','multa','consumo','ajuste')
 ,`origen_id` bigint
-,`iva_incluido` tinyint(1)
-,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -841,7 +848,6 @@ INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_
 (3, 3, 3, 'Cuota por Gasto Extraordinario', 88000.00, 'ajuste', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (4, 4, 4, 'Multa por Atraso', 10000.00, 'multa', NULL, 0, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (5, 4, 5, 'Consumo Agua Caliente', 41000.00, 'consumo', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
-(6, 5, 6, 'Gastos Fijos y Seguros', 73000.00, 'gasto', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (7, 6, 7, 'Cuota por Reparación Ascensores', 95000.00, 'ajuste', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (8, 7, 8, 'Recargo uso Amenidades', 55000.00, 'multa', NULL, 0, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (9, 8, 9, 'Gasto de Administración', 78000.00, 'gasto', NULL, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
@@ -851,7 +857,6 @@ INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_
 (13, 13, 3, 'Cuota Extraordinaria Mantención', 30000.00, 'ajuste', 3, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (14, 14, 4, 'Multa por Ruido', 10000.00, 'multa', 4, 0, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (15, 14, 5, 'Consumo Gas', 30000.00, 'consumo', 5, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
-(16, 15, 6, 'Gastos Administrativos', 60000.00, 'gasto', 6, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (17, 16, 7, 'Cuota Remodelación Fachada', 75000.00, 'ajuste', 7, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (18, 17, 8, 'Multa por Fumar en Común', 25000.00, 'multa', 8, 0, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
 (19, 18, 9, 'Gasto de Conserjería', 55000.00, 'gasto', 9, 1, '2025-10-10 18:10:14', '2025-10-10 18:10:14'),
@@ -861,7 +866,6 @@ INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_
 (23, 23, 13, 'Consumo Agua Común', 48000.00, 'consumo', 13, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (24, 24, 14, 'Aporte Fondo Reserva', 15000.00, 'gasto', 14, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (25, 24, 4, 'Multa Mascotas', 10000.00, 'multa', 14, 0, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(26, 25, 15, 'Multa Basura', 12000.00, 'multa', 15, 0, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (27, 26, 16, 'Remodelación Fachada', 42000.00, 'ajuste', 16, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (28, 27, 17, 'Internet Común', 78000.00, 'gasto', 17, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (29, 28, 18, 'Consumo Gas Unidad', 33000.00, 'consumo', 18, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
@@ -872,7 +876,6 @@ INSERT INTO `detalle_cuenta_unidad` (`id`, `cuenta_cobro_unidad_id`, `categoria_
 (34, 33, 3, 'Cuota Gasto Extraordinario', 90000.00, 'ajuste', 3, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (35, 34, 4, 'Multa por Atraso', 10000.00, 'multa', 4, 0, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (36, 34, 5, 'Consumo Agua Caliente', 51000.00, 'consumo', 5, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
-(37, 35, 6, 'Gastos Fijos y Seguros', 80000.00, 'gasto', 6, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (38, 36, 7, 'Cuota por Reparación Ascensores', 98000.00, 'ajuste', 7, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (39, 37, 8, 'Recargo uso Amenidades', 60000.00, 'multa', 8, 0, '2025-10-23 16:35:00', '2025-10-23 16:35:00'),
 (40, 38, 9, 'Gasto de Administración', 88000.00, 'gasto', 9, 1, '2025-10-23 16:35:00', '2025-10-23 16:35:00');
@@ -1316,8 +1319,6 @@ INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_ve
 (41, 1, '2025-11', '2025-12-05', 'emitido', 'Emisión Noviembre C1', '2025-10-29 19:39:18', '2025-10-29 19:39:18'),
 (42, 2, '2025-11', '2025-12-06', 'emitido', 'Emisión Noviembre C2', '2025-10-29 19:39:18', '2025-10-29 19:39:18'),
 (43, 3, '2025-11', '2025-12-07', 'emitido', 'Emisión Noviembre C3', '2025-10-29 19:39:18', '2025-10-29 19:39:18'),
-(44, 1, '2025-12', '2026-01-05', 'borrador', 'Emisión Diciembre C1 (Borrador)', '2025-10-29 19:39:18', '2025-10-29 19:39:18'),
-(45, 2, '2025-12', '2026-01-06', 'borrador', 'Emisión Diciembre C2 (Borrador)', '2025-10-29 19:39:18', '2025-10-29 19:39:18'),
 (46, 4, '2025-11', '2025-12-08', 'emitido', 'Emisión Noviembre C4', '2025-10-29 19:43:40', '2025-10-29 19:43:40'),
 (47, 5, '2025-11', '2025-12-09', 'emitido', 'Emisión Noviembre C5', '2025-10-29 19:43:40', '2025-10-29 19:43:40'),
 (48, 6, '2025-11', '2025-12-10', 'emitido', 'Emisión Noviembre C6', '2025-10-29 19:43:40', '2025-10-29 19:43:40'),
@@ -1351,12 +1352,15 @@ INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_ve
 (76, 41, '2025-11', '2025-12-10', 'emitido', 'Emisión Noviembre C41', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
 (77, 59, '2025-11', '2025-12-10', 'emitido', 'Emisión Noviembre C59', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
 (78, 32, '2025-11', '2025-12-10', 'emitido', 'Emisión Noviembre C32', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
-(79, 36, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C36', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
-(80, 46, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C46', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
-(81, 49, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C49', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
-(82, 40, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C40', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
-(83, 41, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C41', '2025-10-29 19:54:00', '2025-10-29 19:54:00'),
-(84, 59, '2025-12', '2026-01-10', 'borrador', 'Emisión Diciembre C59', '2025-10-29 19:54:00', '2025-10-29 19:54:00');
+(86, 5, '2026-01', '2025-12-24', 'emitido', NULL, '2025-11-24 22:09:50', '2025-11-24 22:09:50'),
+(87, 5, '2026-03', '2025-12-24', 'emitido', NULL, '2025-11-24 22:10:09', '2025-11-24 22:10:09'),
+(88, 5, '2025-07', '2025-12-24', 'emitido', NULL, '2025-11-24 22:12:52', '2025-11-24 22:12:52'),
+(92, 5, '2025-12', '2025-11-24', 'emitido', NULL, '2025-11-24 22:31:25', '2025-11-24 22:31:25'),
+(93, 5, '2026-02', '2025-11-24', 'emitido', NULL, '2025-11-24 22:34:49', '2025-11-24 22:34:49'),
+(94, 3, '2026-01', '2025-12-24', 'emitido', NULL, '2025-11-24 22:50:59', '2025-11-24 22:50:59'),
+(95, 5, '2026-04', '2025-12-24', 'emitido', NULL, '2025-11-24 22:51:43', '2025-11-24 22:51:43'),
+(96, 5, '2026-05', '2025-12-24', 'emitido', NULL, '2025-11-24 22:51:53', '2025-11-24 22:51:53'),
+(97, 5, '2026-06', '2025-12-24', 'emitido', NULL, '2025-11-24 22:55:43', '2025-11-24 22:55:43');
 
 -- --------------------------------------------------------
 
@@ -1366,13 +1370,13 @@ INSERT INTO `emision_gastos_comunes` (`id`, `comunidad_id`, `periodo`, `fecha_ve
 --
 DROP VIEW IF EXISTS `emision_gasto_comun`;
 CREATE TABLE `emision_gasto_comun` (
-`id` bigint
-,`comunidad_id` bigint
-,`periodo` char(7)
-,`fecha_vencimiento` date
-,`estado` enum('borrador','emitido','cerrado','anulado')
-,`observaciones` varchar(500)
+`comunidad_id` bigint
 ,`created_at` datetime
+,`estado` enum('borrador','emitido','cerrado','anulado')
+,`fecha_vencimiento` date
+,`id` bigint
+,`observaciones` varchar(500)
+,`periodo` char(7)
 ,`updated_at` datetime
 );
 
@@ -1384,14 +1388,14 @@ CREATE TABLE `emision_gasto_comun` (
 --
 DROP VIEW IF EXISTS `emision_gasto_detalle`;
 CREATE TABLE `emision_gasto_detalle` (
-`id` bigint
+`categoria_id` bigint
+,`created_at` datetime
 ,`emision_id` bigint
 ,`gasto_id` bigint
-,`categoria_id` bigint
+,`id` bigint
+,`metadata_json` longtext
 ,`monto` decimal(12,2)
 ,`regla_prorrateo` enum('coeficiente','partes_iguales','consumo','fijo_por_unidad')
-,`metadata_json` longtext
-,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -2244,7 +2248,9 @@ INSERT INTO `pago` (`id`, `comunidad_id`, `unidad_id`, `persona_id`, `fecha`, `m
 (159, 4, NULL, NULL, '2025-11-24', 40000.00, 'webpay', 'MULTA-4-45-1764008811883', 'aplicado', NULL, '2025-11-24 18:27:36', '2025-11-24 18:27:36'),
 (160, 3, NULL, NULL, '2025-11-24', 89000.00, 'webpay', '01abe5df78fdb0c31b680e8e700f50b04198eaa2008da82b3ad54e48673e48de', 'aplicado', NULL, '2025-11-24 18:28:51', '2025-11-24 18:28:51'),
 (161, 4, NULL, NULL, '2025-11-24', 61000.00, 'webpay', '01ab6074831d8983a31f4452db851c3ec66f463eaaf1c1ae88afde269c674959', 'aplicado', NULL, '2025-11-24 18:30:52', '2025-11-24 18:30:52'),
-(162, 4, 4, 14, '2025-11-24', 61000.00, 'webpay', 'CARGO-4-34-1764009020590', 'aplicado', '1213', '2025-11-24 18:30:52', '2025-11-24 18:30:52');
+(162, 4, 4, 14, '2025-11-24', 61000.00, 'webpay', 'CARGO-4-34-1764009020590', 'aplicado', '1213', '2025-11-24 18:30:52', '2025-11-24 18:30:52'),
+(163, 2, NULL, NULL, '2025-11-24', 63000.00, 'webpay', '01ab2143f68b68503a4a04a40b4f5fa744c92b409cbb44f9e8cf4c3b75981a65', 'aplicado', NULL, '2025-11-24 20:49:59', '2025-11-24 20:49:59'),
+(164, 2, 3, 2, '2025-11-24', 63000.00, 'webpay', 'CARGO-2-72-1764017362048', 'aplicado', '1213', '2025-11-24 20:49:59', '2025-11-24 20:49:59');
 
 -- --------------------------------------------------------
 
@@ -2408,7 +2414,8 @@ INSERT INTO `payment_transaction` (`id`, `order_id`, `comunidad_id`, `multa_id`,
 (40, 'CARGO-4-81-1764008677209', 4, NULL, 81, 51000.00, 'webpay', 'completed', '01abb63e1aced4d2146b6ff52f76aa2d21a606e13ca4883a4d115e0a4e3b3205', '1213', '{\"vci\":\"TSY\",\"amount\":51000,\"status\":\"AUTHORIZED\",\"buy_order\":\"CARGO-4-81-1764008677209\",\"session_id\":\"session-4-81-1764008677209\",\"card_detail\":{\"card_number\":\"6623\"},\"accounting_date\":\"1124\",\"transaction_date\":\"2025-11-24T18:24:39.411Z\",\"authorization_code\":\"1213\",\"payment_type_code\":\"VN\",\"response_code\":0,\"installments_number\":0}', NULL, 4, '2025-11-24 18:24:37', '2025-11-24 18:25:10'),
 (41, 'MULTA-4-45-1764008811883', 4, 45, NULL, 40000.00, 'webpay', 'completed', '01ab4bf534a00789894544bf6ebf0d4b9cd283b2ee556ada689ee0e4b9f932b1', '1213', '{\"vci\":\"TSY\",\"amount\":40000,\"status\":\"AUTHORIZED\",\"buy_order\":\"MULTA-4-45-1764008811883\",\"session_id\":\"session-undefined-45-1764008811883\",\"card_detail\":{\"card_number\":\"6623\"},\"accounting_date\":\"1124\",\"transaction_date\":\"2025-11-24T18:26:54.052Z\",\"authorization_code\":\"1213\",\"payment_type_code\":\"VN\",\"response_code\":0,\"installments_number\":0}', NULL, NULL, '2025-11-24 18:26:51', '2025-11-24 18:27:36'),
 (42, 'CARGO-3-73-1764008905099', 3, NULL, 73, 89000.00, 'webpay', 'completed', '01abe5df78fdb0c31b680e8e700f50b04198eaa2008da82b3ad54e48673e48de', '1213', '{\"vci\":\"TSY\",\"amount\":89000,\"status\":\"AUTHORIZED\",\"buy_order\":\"CARGO-3-73-1764008905099\",\"session_id\":\"session-4-73-1764008905099\",\"card_detail\":{\"card_number\":\"6623\"},\"accounting_date\":\"1124\",\"transaction_date\":\"2025-11-24T18:28:27.239Z\",\"authorization_code\":\"1213\",\"payment_type_code\":\"VN\",\"response_code\":0,\"installments_number\":0}', NULL, 4, '2025-11-24 18:28:25', '2025-11-24 18:28:51'),
-(43, 'CARGO-4-34-1764009020590', 4, NULL, 34, 61000.00, 'webpay', 'completed', '01ab6074831d8983a31f4452db851c3ec66f463eaaf1c1ae88afde269c674959', '1213', '{\"vci\":\"TSY\",\"amount\":61000,\"status\":\"AUTHORIZED\",\"buy_order\":\"CARGO-4-34-1764009020590\",\"session_id\":\"session-4-34-1764009020590\",\"card_detail\":{\"card_number\":\"6623\"},\"accounting_date\":\"1124\",\"transaction_date\":\"2025-11-24T18:30:22.803Z\",\"authorization_code\":\"1213\",\"payment_type_code\":\"VN\",\"response_code\":0,\"installments_number\":0}', 'elexfrank17@gmil.com', 4, '2025-11-24 18:30:20', '2025-11-24 18:30:52');
+(43, 'CARGO-4-34-1764009020590', 4, NULL, 34, 61000.00, 'webpay', 'completed', '01ab6074831d8983a31f4452db851c3ec66f463eaaf1c1ae88afde269c674959', '1213', '{\"vci\":\"TSY\",\"amount\":61000,\"status\":\"AUTHORIZED\",\"buy_order\":\"CARGO-4-34-1764009020590\",\"session_id\":\"session-4-34-1764009020590\",\"card_detail\":{\"card_number\":\"6623\"},\"accounting_date\":\"1124\",\"transaction_date\":\"2025-11-24T18:30:22.803Z\",\"authorization_code\":\"1213\",\"payment_type_code\":\"VN\",\"response_code\":0,\"installments_number\":0}', 'elexfrank17@gmil.com', 4, '2025-11-24 18:30:20', '2025-11-24 18:30:52'),
+(44, 'CARGO-2-72-1764017362048', 2, NULL, 72, 63000.00, 'webpay', 'completed', '01ab2143f68b68503a4a04a40b4f5fa744c92b409cbb44f9e8cf4c3b75981a65', '1213', '{\"vci\":\"TSY\",\"amount\":63000,\"status\":\"AUTHORIZED\",\"buy_order\":\"CARGO-2-72-1764017362048\",\"session_id\":\"session-3-72-1764017362048\",\"card_detail\":{\"card_number\":\"6623\"},\"accounting_date\":\"1124\",\"transaction_date\":\"2025-11-24T20:49:25.431Z\",\"authorization_code\":\"1213\",\"payment_type_code\":\"VN\",\"response_code\":0,\"installments_number\":0}', NULL, 3, '2025-11-24 20:49:22', '2025-11-24 20:49:59');
 
 -- --------------------------------------------------------
 
@@ -3044,17 +3051,17 @@ INSERT INTO `tarifa_consumo` (`id`, `comunidad_id`, `tipo`, `periodo_desde`, `pe
 --
 DROP VIEW IF EXISTS `ticket`;
 CREATE TABLE `ticket` (
-`id` bigint
-,`comunidad_id` bigint
-,`unidad_id` bigint
+`asignado_a` bigint
+,`attachments_json` longtext
 ,`categoria` varchar(120)
-,`titulo` varchar(200)
+,`comunidad_id` bigint
+,`created_at` datetime
 ,`descripcion` varchar(1000)
 ,`estado` enum('abierto','en_progreso','resuelto','cerrado')
+,`id` bigint
 ,`prioridad` enum('baja','media','alta')
-,`asignado_a` bigint
-,`attachments_json` longtext
-,`created_at` datetime
+,`titulo` varchar(200)
+,`unidad_id` bigint
 ,`updated_at` datetime
 );
 
@@ -3360,15 +3367,15 @@ INSERT INTO `titulares_unidad` (`id`, `comunidad_id`, `unidad_id`, `persona_id`,
 --
 DROP VIEW IF EXISTS `titularidad_unidad`;
 CREATE TABLE `titularidad_unidad` (
-`id` bigint
-,`comunidad_id` bigint
-,`unidad_id` bigint
-,`persona_id` bigint
-,`tipo` enum('propietario','arrendatario')
+`comunidad_id` bigint
+,`created_at` datetime
 ,`desde` date
 ,`hasta` date
+,`id` bigint
+,`persona_id` bigint
 ,`porcentaje` decimal(5,2)
-,`created_at` datetime
+,`tipo` enum('propietario','arrendatario')
+,`unidad_id` bigint
 ,`updated_at` datetime
 );
 
@@ -3851,14 +3858,14 @@ INSERT INTO `usuario` (`id`, `persona_id`, `username`, `hash_password`, `email`,
 --
 DROP VIEW IF EXISTS `usuario_miembro_comunidad`;
 CREATE TABLE `usuario_miembro_comunidad` (
-`id` bigint
+`activo` tinyint(1)
 ,`comunidad_id` bigint
-,`persona_id` bigint
-,`rol` varchar(50)
+,`created_at` datetime
 ,`desde` date
 ,`hasta` date
-,`activo` tinyint(1)
-,`created_at` datetime
+,`id` bigint
+,`persona_id` bigint
+,`rol` varchar(50)
 ,`updated_at` datetime
 );
 
@@ -4032,20 +4039,20 @@ INSERT INTO `utm_valor` (`fecha`, `valor`) VALUES
 --
 DROP VIEW IF EXISTS `vista_compras`;
 CREATE TABLE `vista_compras` (
-`id` bigint
-,`comunidad_id` bigint
+`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
+,`created_at` datetime
+,`exento` decimal(12,2)
+,`fecha_emision` date
+,`folio` varchar(50)
+,`glosa` varchar(250)
+,`id` bigint
+,`iva` decimal(12,2)
+,`neto` decimal(12,2)
 ,`proveedor_id` bigint
 ,`proveedor_nombre` varchar(200)
 ,`tipo_doc` enum('factura','boleta','nota_credito')
-,`folio` varchar(50)
-,`fecha_emision` date
-,`neto` decimal(12,2)
-,`iva` decimal(12,2)
-,`exento` decimal(12,2)
 ,`total` decimal(12,2)
-,`glosa` varchar(250)
-,`created_at` datetime
 ,`updated_at` datetime
 );
 
@@ -4057,16 +4064,16 @@ CREATE TABLE `vista_compras` (
 --
 DROP VIEW IF EXISTS `vista_consumos`;
 CREATE TABLE `vista_consumos` (
-`medidor_id` bigint
-,`medidor_codigo` varchar(50)
-,`medidor_tipo` enum('agua','gas','electricidad')
-,`comunidad_id` bigint
+`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
-,`periodo` char(7)
-,`fecha_inicio_periodo` date
-,`fecha_fin_periodo` date
 ,`consumo` decimal(13,3)
+,`fecha_fin_periodo` date
+,`fecha_inicio_periodo` date
 ,`lecturas_en_periodo` bigint
+,`medidor_codigo` varchar(50)
+,`medidor_id` bigint
+,`medidor_tipo` enum('agua','gas','electricidad')
+,`periodo` char(7)
 );
 
 -- --------------------------------------------------------
@@ -4077,27 +4084,27 @@ CREATE TABLE `vista_consumos` (
 --
 DROP VIEW IF EXISTS `vista_medidores`;
 CREATE TABLE `vista_medidores` (
-`id` bigint
+`activo` tinyint(1)
 ,`comunidad_id` bigint
 ,`comunidad_nombre` varchar(200)
+,`created_at` datetime
+,`created_by` bigint
+,`es_compartido` tinyint(1)
+,`estado` enum('activo','inactivo','mantenimiento')
+,`fecha_ultima_lectura` date
+,`id` bigint
+,`marca` varchar(100)
+,`medidor_codigo` varchar(50)
+,`modelo` varchar(100)
+,`serial_number` varchar(100)
+,`tipo` enum('agua','gas','electricidad')
+,`total_lecturas` bigint
+,`ubicacion` json
+,`ultima_lectura` decimal(12,3)
+,`unidad_codigo` varchar(50)
 ,`unidad_id` bigint
 ,`unidad_torre_id` bigint
-,`unidad_codigo` varchar(50)
-,`tipo` enum('agua','gas','electricidad')
-,`medidor_codigo` varchar(50)
-,`serial_number` varchar(100)
-,`es_compartido` tinyint(1)
-,`marca` varchar(100)
-,`modelo` varchar(100)
-,`estado` enum('activo','inactivo','mantenimiento')
-,`ubicacion` json
-,`activo` tinyint(1)
-,`created_by` bigint
-,`created_at` datetime
 ,`updated_at` datetime
-,`ultima_lectura` decimal(12,3)
-,`fecha_ultima_lectura` date
-,`total_lecturas` bigint
 );
 
 -- --------------------------------------------------------
@@ -4108,21 +4115,21 @@ CREATE TABLE `vista_medidores` (
 --
 DROP VIEW IF EXISTS `vista_timeline_general`;
 CREATE TABLE `vista_timeline_general` (
-`id` bigint
+`adjuntos` json
 ,`comunidad_id` bigint
-,`tipo` varchar(11)
-,`prioridad` varchar(8)
-,`titulo` varchar(200)
+,`created_at` datetime
 ,`descripcion` mediumtext
+,`fecha` datetime
+,`id` bigint
+,`ip` varchar(45)
+,`prioridad` varchar(8)
+,`tags` json
+,`tipo` varchar(11)
+,`titulo` varchar(200)
+,`ubicacion` varchar(255)
+,`updated_at` datetime
 ,`usuario` varchar(150)
 ,`usuario_id` bigint
-,`fecha` datetime
-,`tags` json
-,`adjuntos` json
-,`ip` varchar(45)
-,`ubicacion` varchar(255)
-,`created_at` datetime
-,`updated_at` datetime
 );
 
 -- --------------------------------------------------------
@@ -4639,10 +4646,16 @@ ALTER TABLE `configuracion_interes`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
 
 --
+-- AUTO_INCREMENT de la tabla `cuenta_cobro_unidad`
+--
+ALTER TABLE `cuenta_cobro_unidad`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=128;
+
+--
 -- AUTO_INCREMENT de la tabla `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_cuenta_unidad`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT de la tabla `detalle_emision_gastos`
@@ -4667,6 +4680,12 @@ ALTER TABLE `documento_comunidad`
 --
 ALTER TABLE `documento_multa`
   MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=41;
+
+--
+-- AUTO_INCREMENT de la tabla `emision_gastos_comunes`
+--
+ALTER TABLE `emision_gastos_comunes`
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=98;
 
 --
 -- AUTO_INCREMENT de la tabla `gasto`
@@ -4726,7 +4745,7 @@ ALTER TABLE `notificacion_usuario`
 -- AUTO_INCREMENT de la tabla `pago`
 --
 ALTER TABLE `pago`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=163;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=165;
 
 --
 -- AUTO_INCREMENT de la tabla `pago_aplicacion`
@@ -4744,7 +4763,7 @@ ALTER TABLE `parametros_cobranza`
 -- AUTO_INCREMENT de la tabla `payment_transaction`
 --
 ALTER TABLE `payment_transaction`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedor`
@@ -4985,14 +5004,14 @@ ALTER TABLE `configuracion_interes`
 --
 ALTER TABLE `cuenta_cobro_unidad`
   ADD CONSTRAINT `fk_cargo_comunidad` FOREIGN KEY (`comunidad_id`) REFERENCES `comunidad` (`id`),
-  ADD CONSTRAINT `fk_cargo_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`),
+  ADD CONSTRAINT `fk_cargo_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_cargo_unidad` FOREIGN KEY (`unidad_id`) REFERENCES `unidad` (`id`);
 
 --
 -- Filtros para la tabla `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_cuenta_unidad`
-  ADD CONSTRAINT `fk_cargodet_cargo` FOREIGN KEY (`cuenta_cobro_unidad_id`) REFERENCES `cuenta_cobro_unidad` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_cargodet_cargo` FOREIGN KEY (`cuenta_cobro_unidad_id`) REFERENCES `cuenta_cobro_unidad` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_cargodet_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`);
 
 --
@@ -5000,7 +5019,7 @@ ALTER TABLE `detalle_cuenta_unidad`
 --
 ALTER TABLE `detalle_emision_gastos`
   ADD CONSTRAINT `fk_emidet_categoria` FOREIGN KEY (`categoria_id`) REFERENCES `categoria_gasto` (`id`),
-  ADD CONSTRAINT `fk_emidet_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_emidet_emision` FOREIGN KEY (`emision_id`) REFERENCES `emision_gastos_comunes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_emidet_gasto` FOREIGN KEY (`gasto_id`) REFERENCES `gasto` (`id`);
 
 --
@@ -5123,7 +5142,6 @@ ALTER TABLE `pago`
 -- Filtros para la tabla `pago_aplicacion`
 --
 ALTER TABLE `pago_aplicacion`
-  ADD CONSTRAINT `fk_papp_cargo` FOREIGN KEY (`cuenta_cobro_unidad_id`) REFERENCES `cuenta_cobro_unidad` (`id`),
   ADD CONSTRAINT `fk_papp_pago` FOREIGN KEY (`pago_id`) REFERENCES `pago` (`id`);
 
 --
