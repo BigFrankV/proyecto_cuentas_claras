@@ -6,6 +6,75 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 
 // ============================================
+// HELPER: Calcular consumo de medidor
+// ============================================
+async function calcularConsumoMedidor(unidadId, tipoServicio, periodo) {
+  try {
+    // 1. Buscar medidor activo de la unidad por tipo de servicio
+    const [medidores] = await db.query(
+      `SELECT id FROM medidor 
+       WHERE unidad_id = ? 
+       AND tipo = ? 
+       AND activo = 1
+       LIMIT 1`,
+      [unidadId, tipoServicio]
+    );
+
+    if (!medidores || medidores.length === 0) {
+      console.log(
+        `   ⚠️ No hay medidor de ${tipoServicio} para unidad ${unidadId}`
+      );
+      return { cantidad: 0, lecturaAnterior: 0, lecturaActual: 0 };
+    }
+
+    const medidorId = medidores[0].id;
+
+    // 2. Buscar lecturas del período actual y anterior
+    const [lecturas] = await db.query(
+      `SELECT 
+        lectura as lectura_actual,
+        periodo,
+        fecha
+       FROM lectura_medidor 
+       WHERE medidor_id = ? 
+       AND periodo <= ?
+       ORDER BY periodo DESC, fecha DESC
+       LIMIT 2`,
+      [medidorId, periodo]
+    );
+
+    if (!lecturas || lecturas.length === 0) {
+      console.log(
+        `   ⚠️ No hay lecturas para medidor ${medidorId} en período ${periodo}`
+      );
+      return { cantidad: 0, lecturaAnterior: 0, lecturaActual: 0 };
+    }
+
+    // 3. Calcular consumo
+    const lecturaActual = parseFloat(lecturas[0].lectura_actual || 0);
+    const lecturaAnterior =
+      lecturas.length > 1 ? parseFloat(lecturas[1].lectura_actual || 0) : 0;
+    const consumo = Math.max(0, lecturaActual - lecturaAnterior);
+
+    console.log(
+      `   📊 Medidor ${tipoServicio} unidad ${unidadId}: ${lecturaAnterior} → ${lecturaActual} = ${consumo.toFixed(2)}`
+    );
+
+    return {
+      cantidad: consumo,
+      lecturaAnterior: lecturaAnterior.toFixed(2),
+      lecturaActual: lecturaActual.toFixed(2),
+    };
+  } catch (error) {
+    console.error(
+      `Error calculando consumo medidor unidad ${unidadId}:`,
+      error
+    );
+    return { cantidad: 0, lecturaAnterior: 0, lecturaActual: 0 };
+  }
+}
+
+// ============================================
 // HELPER: Obtener comunidades del usuario
 // ============================================
 // eslint-disable-next-line no-unused-vars
@@ -445,29 +514,306 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    authorize('admin', 'superadmin'),
-    body('periodo').notEmpty(),
-    body('fecha_vencimiento').notEmpty(),
+    authorize('admin', 'superadmin', 'admin_comunidad'), // Agregar admin_comunidad
+    body('periodo')
+      .notEmpty()
+      .withMessage('Período es requerido')
+      .matches(/^\d{4}-\d{2}$/)
+      .withMessage('Período debe tener formato YYYY-MM'),
+    body('fecha_vencimiento')
+      .notEmpty()
+      .withMessage('Fecha de vencimiento es requerida')
+      .isISO8601()
+      .withMessage('Fecha de vencimiento debe ser una fecha válida'),
+    body('monto_total')
+      .isFloat({ min: 0 })
+      .withMessage('Monto total debe ser mayor o igual a 0'),
+    body('estado')
+      .optional()
+      .isIn(['borrador', 'emitido'])
+      .withMessage('Estado debe ser borrador o emitido'),
   ],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
-    const comunidadId = req.params.comunidadId;
-    const { periodo, fecha_vencimiento, observaciones } = req.body;
+
+    const comunidadId = parseInt(req.params.comunidadId, 10);
+    const {
+      periodo,
+      fecha_vencimiento,
+      observaciones,
+      monto_total,
+      conceptos,
+      estado = 'emitido', // Por defecto 'emitido', puede ser 'borrador'
+      crear_cargos = true, // Permitir crear emisión sin cargos (solo borrador)
+    } = req.body;
+
     try {
-      const [result] = await db.query(
-        'INSERT INTO emision_gastos_comunes (comunidad_id, periodo, fecha_vencimiento, observaciones) VALUES (?,?,?,?)',
-        [comunidadId, periodo, fecha_vencimiento, observaciones || null]
+      console.log('📝 Creando emisión para comunidad:', comunidadId);
+      console.log('   Período:', periodo);
+      console.log('   Estado:', estado);
+      console.log('   Monto total:', monto_total);
+      console.log('   Crear cargos:', crear_cargos);
+
+      // 1. Verificar que no exista ya una emisión para este período
+      const [emisionesExistentes] = await db.query(
+        `SELECT id FROM emision_gastos_comunes 
+         WHERE comunidad_id = ? AND periodo = ? LIMIT 1`,
+        [comunidadId, periodo]
       );
-      const [row] = await db.query(
-        'SELECT id, periodo, estado FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
-        [result.insertId]
+
+      if (emisionesExistentes && emisionesExistentes.length > 0) {
+        return res.status(400).json({
+          error: `Ya existe una emisión para el período ${periodo} en esta comunidad`,
+        });
+      }
+
+      // 2. Crear la emisión
+      const [emisionResult] = await db.query(
+        `INSERT INTO emision_gastos_comunes 
+         (comunidad_id, periodo, fecha_vencimiento, observaciones, estado, created_at) 
+         VALUES (?, ?, ?, ?, ?, NOW())`,
+        [comunidadId, periodo, fecha_vencimiento, observaciones || null, estado]
       );
-      res.status(201).json(row[0]);
+
+      const emisionId = emisionResult.insertId;
+      console.log('✅ Emisión creada con ID:', emisionId);
+
+      // 3. Si no se deben crear cargos o está en borrador, retornar solo la emisión
+      if (!crear_cargos || estado === 'borrador') {
+        const [emision] = await db.query(
+          `SELECT * FROM emision_gastos_comunes WHERE id = ?`,
+          [emisionId]
+        );
+        return res.status(201).json({
+          success: true,
+          emision: emision[0],
+          message:
+            estado === 'borrador'
+              ? 'Emisión creada en borrador. Use el endpoint de emitir para generar los cargos.'
+              : 'Emisión creada sin cargos',
+        });
+      }
+
+      // 4. Obtener todas las unidades activas de la comunidad con sus alícuotas
+      const [unidades] = await db.query(
+        `SELECT id, codigo, alicuota 
+         FROM unidad 
+         WHERE comunidad_id = ? AND activa = 1
+         ORDER BY codigo`,
+        [comunidadId]
+      );
+
+      if (!unidades || unidades.length === 0) {
+        return res.status(400).json({
+          error: 'No hay unidades activas en esta comunidad',
+        });
+      }
+
+      console.log(`📊 Se encontraron ${unidades.length} unidades activas`);
+
+      // 5. Calcular la suma total de alícuotas
+      const totalAlicuota = unidades.reduce(
+        (sum, u) => sum + parseFloat(u.alicuota || 0),
+        0
+      );
+
+      if (totalAlicuota === 0) {
+        return res.status(400).json({
+          error:
+            'La suma de alícuotas es 0. Verifica las configuraciones de las unidades.',
+        });
+      }
+
+      console.log('   Total alícuotas:', totalAlicuota);
+
+      // Obtener servicios medidos y tarifas del request
+      const { servicios_medidos = [], tarifas = {} } = req.body;
+      console.log('   Servicios medidos:', servicios_medidos);
+      console.log('   Tarifas:', tarifas);
+
+      // 6. Crear cargos para cada unidad
+      const cargosCreados = [];
+
+      for (const unidad of unidades) {
+        // Calcular monto prorrateado según alícuota
+        const alicuota = parseFloat(unidad.alicuota || 0);
+        const montoGastosComunes = Math.round(
+          (monto_total * alicuota) / totalAlicuota
+        );
+
+        // Calcular consumos individuales por medidor
+        let consumoAgua = 0;
+        let consumoLuz = 0;
+        let consumoGas = 0;
+        const detallesConsumo = [];
+
+        // Agua
+        if (servicios_medidos.includes('agua') && tarifas.agua) {
+          const consumo = await calcularConsumoMedidor(
+            unidad.id,
+            'agua',
+            periodo
+          );
+          if (consumo.cantidad > 0) {
+            consumoAgua = Math.round(consumo.cantidad * tarifas.agua);
+            detallesConsumo.push({
+              tipo: 'agua',
+              cantidad: consumo.cantidad,
+              tarifa: tarifas.agua,
+              monto: consumoAgua,
+              lecturaAnterior: consumo.lecturaAnterior,
+              lecturaActual: consumo.lecturaActual,
+            });
+          }
+        }
+
+        // Luz
+        if (
+          servicios_medidos.includes('electricidad') &&
+          tarifas.electricidad
+        ) {
+          const consumo = await calcularConsumoMedidor(
+            unidad.id,
+            'electricidad',
+            periodo
+          );
+          if (consumo.cantidad > 0) {
+            consumoLuz = Math.round(consumo.cantidad * tarifas.electricidad);
+            detallesConsumo.push({
+              tipo: 'electricidad',
+              cantidad: consumo.cantidad,
+              tarifa: tarifas.electricidad,
+              monto: consumoLuz,
+              lecturaAnterior: consumo.lecturaAnterior,
+              lecturaActual: consumo.lecturaActual,
+            });
+          }
+        }
+
+        // Gas
+        if (servicios_medidos.includes('gas') && tarifas.gas) {
+          const consumo = await calcularConsumoMedidor(
+            unidad.id,
+            'gas',
+            periodo
+          );
+          if (consumo.cantidad > 0) {
+            consumoGas = Math.round(consumo.cantidad * tarifas.gas);
+            detallesConsumo.push({
+              tipo: 'gas',
+              cantidad: consumo.cantidad,
+              tarifa: tarifas.gas,
+              monto: consumoGas,
+              lecturaAnterior: consumo.lecturaAnterior,
+              lecturaActual: consumo.lecturaActual,
+            });
+          }
+        }
+
+        // Monto total del cargo = gastos comunes + consumos
+        const montoTotal =
+          montoGastosComunes + consumoAgua + consumoLuz + consumoGas;
+
+        // Crear el cargo
+        const [cargoResult] = await db.query(
+          `INSERT INTO cuenta_cobro_unidad 
+           (emision_id, comunidad_id, unidad_id, monto_total, saldo, estado, interes_acumulado, created_at)
+           VALUES (?, ?, ?, ?, ?, 'pendiente', 0, NOW())`,
+          [emisionId, comunidadId, unidad.id, montoTotal, montoTotal]
+        );
+
+        const cargoId = cargoResult.insertId;
+
+        // Crear detalles de gastos comunes prorrateados
+        if (conceptos && Array.isArray(conceptos) && conceptos.length > 0) {
+          for (const concepto of conceptos) {
+            const montoConcepto = Math.round(
+              (concepto.monto * alicuota) / totalAlicuota
+            );
+            await db.query(
+              `INSERT INTO detalle_cuenta_unidad 
+               (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, iva_incluido)
+               VALUES (?, ?, ?, ?, 'gasto', 1)`,
+              [
+                cargoId,
+                concepto.categoria_id || 1,
+                concepto.glosa || concepto.nombre,
+                montoConcepto,
+              ]
+            );
+          }
+        } else if (montoGastosComunes > 0) {
+          // Si no hay conceptos, crear un detalle genérico de gastos comunes
+          await db.query(
+            `INSERT INTO detalle_cuenta_unidad 
+             (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, iva_incluido)
+             VALUES (?, 1, ?, ?, 'gasto', 1)`,
+            [cargoId, `${periodo} - Gastos Comunes`, montoGastosComunes]
+          );
+        }
+
+        // Crear detalles de consumos individuales
+        for (const detalle of detallesConsumo) {
+          const glosa = `${detalle.tipo.toUpperCase()} - ${detalle.cantidad.toFixed(2)} ${detalle.tipo === 'electricidad' ? 'kWh' : 'm³'} × $${detalle.tarifa} (${detalle.lecturaAnterior} → ${detalle.lecturaActual})`;
+
+          await db.query(
+            `INSERT INTO detalle_cuenta_unidad 
+             (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, iva_incluido)
+             VALUES (?, 1, ?, ?, 'consumo', 1)`,
+            [cargoId, glosa, detalle.monto]
+          );
+        }
+
+        cargosCreados.push({
+          cargoId,
+          unidadCodigo: unidad.codigo,
+          monto: montoTotal,
+          alicuota,
+          gastosComunes: montoGastosComunes,
+          consumos: {
+            agua: consumoAgua,
+            electricidad: consumoLuz,
+            gas: consumoGas,
+          },
+        });
+      }
+
+      console.log(`✅ Se crearon ${cargosCreados.length} cargos`);
+
+      // 7. Obtener la emisión completa con totales
+      const [emisionCompleta] = await db.query(
+        `SELECT 
+          e.id, 
+          e.periodo, 
+          e.estado, 
+          e.fecha_vencimiento,
+          e.created_at,
+          e.observaciones,
+          COUNT(ccu.id) AS total_unidades,
+          COALESCE(SUM(ccu.monto_total), 0) AS monto_total_calculado,
+          COALESCE(SUM(ccu.saldo), 0) AS saldo_total
+        FROM emision_gastos_comunes e
+        LEFT JOIN cuenta_cobro_unidad ccu ON e.id = ccu.emision_id
+        WHERE e.id = ?
+        GROUP BY e.id`,
+        [emisionId]
+      );
+
+      res.status(201).json({
+        success: true,
+        emision: emisionCompleta[0],
+        cargosCreados: cargosCreados.length,
+        detalles: cargosCreados,
+      });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'server error' });
+      console.error('❌ Error creando emisión:', err);
+      res.status(500).json({
+        error: 'Error al crear la emisión',
+        details:
+          process.env.NODE_ENV === 'development' ? err.message : undefined,
+      });
     }
   }
 );
