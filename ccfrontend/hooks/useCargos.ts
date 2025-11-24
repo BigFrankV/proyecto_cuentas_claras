@@ -5,6 +5,8 @@ import {
   getCargo,
   getCargosByUnidad,
   getCargosByComunidad,
+  getTodosCargosResumen,
+  getCargosResumenByComunidad,
   createCargo,
   updateCargo,
   deleteCargo,
@@ -45,22 +47,31 @@ export const useCargos = () => {
   };
 
   /**
-   * Listar todos los cargos (por comunidad del usuario si disponible)
+   * Listar todos los cargos usando el endpoint /resumen
+   * - Superadmin: ve todos los cargos de todas las comunidades
+   * - Admin: ve todos los cargos de su comunidad
+   * - Usuarios: ven solo los cargos de sus unidades
    */
   const listarCargos = useCallback(
     async (filters?: any): Promise<Cargo[]> => {
       setLoading(true);
       setError(null);
       try {
+        // Si es superadmin, obtener TODOS los cargos
+        if (user?.is_superadmin) {
+          const result = await getTodosCargosResumen();
+          return result;
+        }
+
         const comunidadId = getComunidadId();
         
-        // Si hay comunidad, usar el endpoint específico de comunidad
+        // Si hay comunidad, usar el endpoint de resumen por comunidad
         if (comunidadId) {
-          const result = await getCargosByComunidad(comunidadId, filters);
+          const result = await getCargosResumenByComunidad(comunidadId);
           return result;
         }
         
-        // Si no hay comunidad, listar todos
+        // Fallback: listar usando el servicio básico
         const data = await listCargosService(filters);
         return data;
       } catch (err: any) {

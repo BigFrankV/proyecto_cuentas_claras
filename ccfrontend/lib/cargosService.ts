@@ -202,6 +202,37 @@ export async function getCargosByComunidad(
 }
 
 /**
+ * Obtener resumen de TODOS los cargos (solo superadmin)
+ */
+export async function getTodosCargosResumen(): Promise<Cargo[]> {
+  try {
+    const response = await apiClient.get('/cargos/todas/resumen');
+    const data = Array.isArray(response.data) ? response.data : [];
+    return data.map(mapCargoFromAPI);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Obtener resumen de cargos de una comunidad
+ * - Superadmin: ve todos los cargos de la comunidad
+ * - Admin/Tesorero/Presidente: ve todos los cargos de su comunidad
+ * - Propietario/Inquilino/Residente: ve solo los cargos de sus unidades
+ */
+export async function getCargosResumenByComunidad(
+  comunidadId: number,
+): Promise<Cargo[]> {
+  try {
+    const response = await apiClient.get(`/cargos/comunidad/${comunidadId}/resumen`);
+    const data = Array.isArray(response.data) ? response.data : [];
+    return data.map(mapCargoFromAPI);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Obtener detalle de gastos que componen un cargo
  */
 export async function getCargoDetalle(cargoId: number): Promise<any[]> {

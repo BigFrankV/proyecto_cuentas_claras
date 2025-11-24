@@ -103,16 +103,16 @@ router.get('/mis-unidades', authenticate, async (req, res) => {
     const usuarioId = req.user.sub;
 
     // Buscar persona_id asociada al usuario
-    const [personaRows] = await db.query(
-      'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+    const [usuarioRows] = await db.query(
+      'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
       [usuarioId]
     );
 
-    if (!personaRows || !personaRows.length) {
+    if (!usuarioRows || !usuarioRows.length) {
       return res.json([]);
     }
 
-    const personaId = personaRows[0].id;
+    const personaId = usuarioRows[0].persona_id;
 
     // Buscar unidades donde esta persona es titular activo
     const [unidades] = await db.query(
@@ -138,6 +138,226 @@ router.get('/mis-unidades', authenticate, async (req, res) => {
     res.status(500).json({ error: 'server error' });
   }
 });
+
+/**
+ * @swagger
+ * /cargos/todas/resumen:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener resumen de TODOS los cargos (solo superadmin)
+ *     description: |
+ *       Retorna un resumen de todas las cuentas de cobro de todas las comunidades.
+ *       Solo accesible para superadmin.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Resumen de todos los cargos
+ *       403:
+ *         description: No tiene permisos de superadmin
+ */
+router.get('/todas/resumen', authenticate, async (req, res) => {
+  try {
+    // eslint-disable-next-line no-unused-vars
+    const usuarioId = req.user.sub;
+    const isSuper = Boolean(req.user.is_superadmin === true);
+
+    // Solo superadmin puede ver todos los cargos
+    if (!isSuper) {
+      return res.status(403).json({ error: 'forbidden - superadmin only' });
+    }
+
+    const [rows] = await db.query(
+      `
+      SELECT
+        ccu.id,
+        CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+        CASE
+          WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
+          WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
+          WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+          ELSE 'Administración'
+        END as tipo,
+        ccu.monto_total as monto,
+        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
+        CASE
+          WHEN ccu.estado = 'pendiente' THEN 'pendiente'
+          WHEN ccu.estado = 'pagado' THEN 'pagado'
+          WHEN ccu.estado = 'vencido' THEN 'vencido'
+          WHEN ccu.estado = 'parcial' THEN 'parcial'
+          ELSE 'pendiente'
+        END as estado,
+        u.codigo as unidad,
+        c.razon_social as nombre_comunidad,
+        egc.periodo as periodo,
+        MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
+        ccu.saldo as saldo,
+        ccu.interes_acumulado as interes_acumulado,
+        DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+        ccu.updated_at
+      FROM cuenta_cobro_unidad ccu
+      JOIN comunidad c ON ccu.comunidad_id = c.id
+      JOIN unidad u ON ccu.unidad_id = u.id
+      LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+      LEFT JOIN (
+          SELECT tu1.*
+          FROM titulares_unidad tu1
+          WHERE tu1.tipo = 'propietario'
+            AND tu1.hasta IS NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM titulares_unidad tu2
+                WHERE tu2.unidad_id = tu1.unidad_id
+                  AND tu2.tipo = 'propietario'
+                  AND tu2.hasta IS NULL
+                  AND tu2.created_at > tu1.created_at
+            )
+      ) tu ON u.id = tu.unidad_id
+      LEFT JOIN persona p ON tu.persona_id = p.id
+      GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, ccu.updated_at, u.codigo, c.razon_social, egc.periodo, egc.fecha_vencimiento
+      ORDER BY ccu.created_at DESC
+    `
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error('Error en /cargos/todas/resumen:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
+ * /cargos/comunidad/{comunidadId}/resumen:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener resumen de cargos de una comunidad
+ *     description: |
+ *       Retorna un resumen de las cuentas de cobro de una comunidad específica.
+ *       - Superadmin: ve todos los cargos de la comunidad
+ *       - Admin/Tesorero/Presidente: ve todos los cargos de su comunidad
+ *       - Propietario/Inquilino/Residente: ve solo los cargos de sus unidades
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: comunidadId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Resumen de cargos de la comunidad
+ *       403:
+ *         description: No tiene acceso a esta comunidad
+ */
+router.get(
+  '/comunidad/:comunidadId/resumen',
+  authenticate,
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const usuarioId = req.user.sub;
+      const isSuper = Boolean(req.user.is_superadmin === true);
+
+      // Verificar si es admin de la comunidad
+      let isAdmin = false;
+      if (!isSuper && usuarioId) {
+        const [adminCheck] = await db.query(
+          `SELECT 1 FROM usuario_rol_comunidad urc
+           JOIN rol_sistema rs ON urc.rol_id = rs.id
+           WHERE urc.usuario_id = ?
+             AND urc.comunidad_id = ?
+             AND urc.activo = 1
+             AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+           LIMIT 1`,
+          [usuarioId, comunidadId]
+        );
+        isAdmin = adminCheck && adminCheck.length > 0;
+      }
+
+      const conditions = ['ccu.comunidad_id = ?'];
+      const params = [comunidadId];
+
+      // Si NO es superadmin NI admin, filtrar por sus unidades
+      if (!isSuper && !isAdmin && usuarioId) {
+        // Buscar persona_id del usuario
+        const [usuarioRows] = await db.query(
+          'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (usuarioRows && usuarioRows.length > 0) {
+          const personaId = usuarioRows[0].persona_id;
+          // Agregar condición para filtrar solo sus unidades
+          conditions.push(`u.id IN (
+            SELECT unidad_id FROM titulares_unidad
+            WHERE persona_id = ? AND hasta IS NULL
+          )`);
+          params.push(personaId);
+        } else {
+          // Si no tiene persona asociada, no puede ver nada
+          return res.json([]);
+        }
+      }
+
+      const sql = `
+      SELECT
+        ccu.id,
+        CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
+        CASE
+          WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
+          WHEN egc.periodo LIKE '%Multa%' THEN 'multa'
+          WHEN egc.periodo LIKE '%Interes%' THEN 'interes'
+          ELSE 'Administración'
+        END as tipo,
+        ccu.monto_total as monto,
+        DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
+        CASE
+          WHEN ccu.estado = 'pendiente' THEN 'pendiente'
+          WHEN ccu.estado = 'pagado' THEN 'pagado'
+          WHEN ccu.estado = 'vencido' THEN 'vencido'
+          WHEN ccu.estado = 'parcial' THEN 'parcial'
+          ELSE 'pendiente'
+        END as estado,
+        u.codigo as unidad,
+        c.razon_social as nombre_comunidad,
+        egc.periodo as periodo,
+        MAX(CONCAT(p.nombres, ' ', p.apellidos)) as propietario,
+        ccu.saldo as saldo,
+        ccu.interes_acumulado as interes_acumulado,
+        DATE_FORMAT(ccu.created_at, '%Y-%m-%d') as fecha_creacion,
+        ccu.updated_at
+      FROM cuenta_cobro_unidad ccu
+      JOIN comunidad c ON ccu.comunidad_id = c.id
+      JOIN unidad u ON ccu.unidad_id = u.id
+      LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+      LEFT JOIN (
+          SELECT tu1.*
+          FROM titulares_unidad tu1
+          WHERE tu1.tipo = 'propietario'
+            AND tu1.hasta IS NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM titulares_unidad tu2
+                WHERE tu2.unidad_id = tu1.unidad_id
+                  AND tu2.tipo = 'propietario'
+                  AND tu2.hasta IS NULL
+                  AND tu2.created_at > tu1.created_at
+            )
+      ) tu ON u.id = tu.unidad_id
+      LEFT JOIN persona p ON tu.persona_id = p.id
+      WHERE ${conditions.join(' AND ')}
+      GROUP BY ccu.id, ccu.monto_total, ccu.saldo, ccu.interes_acumulado, ccu.estado, ccu.created_at, ccu.updated_at, u.codigo, c.razon_social, egc.periodo, egc.fecha_vencimiento
+      ORDER BY ccu.created_at DESC
+    `;
+
+      const [rows] = await db.query(sql, params);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error en /cargos/comunidad/resumen:', err);
+      res.status(500).json({ error: 'server error' });
+    }
+  }
+);
 
 /**
  * @swagger
@@ -277,13 +497,13 @@ router.get(
       // Si NO es superadmin NI admin, filtrar por sus unidades
       if (!isSuper && !isAdmin && usuarioId) {
         // Buscar persona_id del usuario
-        const [personaRows] = await db.query(
-          'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+        const [usuarioRows] = await db.query(
+          'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
           [usuarioId]
         );
 
-        if (personaRows && personaRows.length > 0) {
-          const personaId = personaRows[0].id;
+        if (usuarioRows && usuarioRows.length > 0) {
+          const personaId = usuarioRows[0].persona_id;
           // Agregar condición para filtrar solo sus unidades
           conditions.push(`u.id IN (
             SELECT unidad_id FROM titulares_unidad
@@ -580,16 +800,16 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
     // Si NO es superadmin, verificar que la unidad pertenezca al usuario
     if (!isSuper && usuarioId) {
       // Buscar persona_id del usuario
-      const [personaRows] = await db.query(
-        'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+      const [usuarioRows] = await db.query(
+        'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
         [usuarioId]
       );
 
-      if (!personaRows || !personaRows.length) {
+      if (!usuarioRows || !usuarioRows.length) {
         return res.status(403).json({ error: 'forbidden' });
       }
 
-      const personaId = personaRows[0].id;
+      const personaId = usuarioRows[0].persona_id;
 
       // Verificar si es admin de la comunidad de esta unidad
       const [unidadInfo] = await db.query(

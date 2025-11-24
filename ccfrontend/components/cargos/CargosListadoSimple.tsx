@@ -15,15 +15,23 @@ const CargosListadoSimple: React.FC = () => {
 
   const { listarCargos, loading, error } = useCargos();
 
+  // Determinar si el usuario es admin
+  const isAdmin = useMemo(() => {
+    if (user?.is_superadmin) return true;
+    return hasPermission(Permission.VIEW_ALL_CARGOS);
+  }, [user, hasPermission]);
+
   // Cargar cargos al montar el componente
   useEffect(() => {
     cargarCargos();
-  }, []);
+  }, [user]);
 
   // Cargar cargos con filtro de estado
   useEffect(() => {
-    cargarCargos();
-  }, [selectedStatus]);
+    if (user) {
+      cargarCargos();
+    }
+  }, [selectedStatus, user]);
 
   const cargarCargos = async () => {
     try {
@@ -340,7 +348,26 @@ const CargosListadoSimple: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Mensaje informativo según el rol */}
+      {!isAdmin && cargos.length > 0 && (
+        <div className='alert alert-info d-flex align-items-center' role='alert'>
+          <i className='material-icons me-2'>info</i>
+          <div>
+            Estás viendo únicamente los cargos de las unidades donde estás registrado como propietario, inquilino o residente.
+          </div>
+        </div>
+      )}
+
+      {user?.is_superadmin && (
+        <div className='alert alert-primary d-flex align-items-center' role='alert'>
+          <i className='material-icons me-2'>admin_panel_settings</i>
+          <div>
+            <strong>Modo Superadmin:</strong> Estás viendo todos los cargos de todas las comunidades ({cargos.length} registros).
+          </div>
+        </div>
+      )}
+
+      {/* Filters and Search */}
       <div className='card mb-4'>
         <div className='card-body'>
           <div className='row g-3'>
