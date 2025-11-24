@@ -19,6 +19,86 @@ const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @swagger
+ * /cargos/mis-unidades:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener unidades del usuario actual
+ *     description: |
+ *       Retorna las unidades asociadas al usuario actual a través de la tabla titulares_unidad.
+ *       Útil para saber qué unidades puede ver el usuario (propietario, inquilino, residente).
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de unidades del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   unidad_id:
+ *                     type: integer
+ *                   codigo:
+ *                     type: string
+ *                   comunidad_id:
+ *                     type: integer
+ *                   nombre_comunidad:
+ *                     type: string
+ *                   tipo:
+ *                     type: string
+ *                     enum: [propietario, inquilino, residente]
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
+router.get('/mis-unidades', authenticate, async (req, res) => {
+  try {
+    if (!req.user || !req.user.sub) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
+
+    const usuarioId = req.user.sub;
+
+    // Buscar persona_id asociada al usuario
+    const [personaRows] = await db.query(
+      'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+      [usuarioId]
+    );
+
+    if (!personaRows || !personaRows.length) {
+      return res.json([]);
+    }
+
+    const personaId = personaRows[0].id;
+
+    // Buscar unidades donde esta persona es titular activo
+    const [unidades] = await db.query(
+      `SELECT DISTINCT
+        tu.unidad_id,
+        u.codigo,
+        u.comunidad_id,
+        c.razon_social as nombre_comunidad,
+        tu.tipo
+      FROM titulares_unidad tu
+      JOIN unidad u ON tu.unidad_id = u.id
+      JOIN comunidad c ON u.comunidad_id = c.id
+      WHERE tu.persona_id = ?
+        AND tu.hasta IS NULL
+        AND u.activa = 1
+      ORDER BY c.razon_social, u.codigo`,
+      [personaId]
+    );
+
+    res.json(unidades);
+  } catch (err) {
+    console.error('Error en /mis-unidades:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
  * /cargos/comunidad/{comunidadId}:
  *   get:
  *     tags: [Cargos]
@@ -125,23 +205,72 @@ router.get(
   authenticate,
   requireCommunity('comunidadId'),
   async (req, res) => {
-    const comunidadId = Number(req.params.comunidadId);
-    const { estado, unidad, periodo, page = 1, limit = 100 } = req.query;
-    const offset = (page - 1) * limit;
-    const conditions = ['ccu.comunidad_id = ?'];
-    const params = [comunidadId];
-    if (estado) {
-      conditions.push('ccu.estado = ?');
-      params.push(estado);
-    }
-    if (unidad) {
-      conditions.push('u.id = ?');
-      params.push(unidad);
-    }
-    if (periodo) {
-      conditions.push('egc.periodo = ?');
-      params.push(periodo);
-    }
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const { estado, unidad, periodo, page = 1, limit = 100 } = req.query;
+      const offset = (page - 1) * limit;
+      const conditions = ['ccu.comunidad_id = ?'];
+      const params = [comunidadId];
+
+      // Verificar si es superadmin o admin
+      const usuarioId = req.user.sub;
+      const tokenRoles = (req.user.roles || []).map((r) => String(r).toLowerCase());
+      let isSuper = Boolean(
+        req.user.is_superadmin === true ||
+        req.user.isSuper === true ||
+        tokenRoles.includes('superadmin')
+      );
+
+      // Verificar si es admin de la comunidad
+      let isAdmin = false;
+      if (!isSuper && usuarioId) {
+        const [adminCheck] = await db.query(
+          `SELECT 1 FROM usuario_rol_comunidad urc
+           JOIN rol_sistema rs ON urc.rol_id = rs.id
+           WHERE urc.usuario_id = ?
+             AND urc.comunidad_id = ?
+             AND urc.activo = 1
+             AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+           LIMIT 1`,
+          [usuarioId, comunidadId]
+        );
+        isAdmin = adminCheck && adminCheck.length > 0;
+      }
+
+      // Si NO es superadmin NI admin, filtrar por sus unidades
+      if (!isSuper && !isAdmin && usuarioId) {
+        // Buscar persona_id del usuario
+        const [personaRows] = await db.query(
+          'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (personaRows && personaRows.length > 0) {
+          const personaId = personaRows[0].id;
+          // Agregar condición para filtrar solo sus unidades
+          conditions.push(`u.id IN (
+            SELECT unidad_id FROM titulares_unidad
+            WHERE persona_id = ? AND hasta IS NULL
+          )`);
+          params.push(personaId);
+        } else {
+          // Si no tiene persona asociada, no puede ver nada
+          return res.json([]);
+        }
+      }
+
+      if (estado) {
+        conditions.push('ccu.estado = ?');
+        params.push(estado);
+      }
+      if (unidad) {
+        conditions.push('u.id = ?');
+        params.push(unidad);
+      }
+      if (periodo) {
+        conditions.push('egc.periodo = ?');
+        params.push(periodo);
+      }
 
     const sql = `
     SELECT
@@ -193,9 +322,13 @@ router.get(
     ORDER BY ccu.created_at DESC
     LIMIT ? OFFSET ?
   `;
-    params.push(Number(limit), Number(offset));
-    const [rows] = await db.query(sql, params);
-    res.json(rows);
+      params.push(Number(limit), Number(offset));
+      const [rows] = await db.query(sql, params);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error en /cargos/comunidad:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
 );
 
@@ -400,8 +533,73 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 
 router.get('/unidad/:id', authenticate, async (req, res) => {
-  const unidadId = req.params.id;
-  const sql = `
+  try {
+    const unidadId = req.params.id;
+    const usuarioId = req.user.sub;
+
+    // Verificar si es superadmin
+    const tokenRoles = (req.user.roles || []).map((r) => String(r).toLowerCase());
+    let isSuper = Boolean(
+      req.user.is_superadmin === true ||
+      req.user.isSuper === true ||
+      tokenRoles.includes('superadmin')
+    );
+
+    // Si NO es superadmin, verificar que la unidad pertenezca al usuario
+    if (!isSuper && usuarioId) {
+      // Buscar persona_id del usuario
+      const [personaRows] = await db.query(
+        'SELECT id FROM persona WHERE usuario_id = ? LIMIT 1',
+        [usuarioId]
+      );
+
+      if (!personaRows || !personaRows.length) {
+        return res.status(403).json({ error: 'forbidden' });
+      }
+
+      const personaId = personaRows[0].id;
+
+      // Verificar si es admin de la comunidad de esta unidad
+      const [unidadInfo] = await db.query(
+        'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+        [unidadId]
+      );
+
+      if (!unidadInfo || !unidadInfo.length) {
+        return res.status(404).json({ error: 'unidad not found' });
+      }
+
+      const comunidadId = unidadInfo[0].comunidad_id;
+
+      const [adminCheck] = await db.query(
+        `SELECT 1 FROM usuario_rol_comunidad urc
+         JOIN rol_sistema rs ON urc.rol_id = rs.id
+         WHERE urc.usuario_id = ?
+           AND urc.comunidad_id = ?
+           AND urc.activo = 1
+           AND rs.codigo IN ('admin_comunidad', 'tesorero', 'presidente_comite')
+         LIMIT 1`,
+        [usuarioId, comunidadId]
+      );
+
+      const isAdmin = adminCheck && adminCheck.length > 0;
+
+      // Si NO es admin, verificar que sea titular de la unidad
+      if (!isAdmin) {
+        const [titularCheck] = await db.query(
+          `SELECT 1 FROM titulares_unidad
+           WHERE unidad_id = ? AND persona_id = ? AND hasta IS NULL
+           LIMIT 1`,
+          [unidadId, personaId]
+        );
+
+        if (!titularCheck || !titularCheck.length) {
+          return res.status(403).json({ error: 'forbidden - no access to this unit' });
+        }
+      }
+    }
+
+    const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -434,8 +632,12 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
     WHERE ccu.unidad_id = ?
     ORDER BY ccu.created_at DESC
   `;
-  const [rows] = await db.query(sql, [unidadId]);
-  res.json(rows);
+    const [rows] = await db.query(sql, [unidadId]);
+    res.json(rows);
+  } catch (err) {
+    console.error('Error en /cargos/unidad:', err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 /**

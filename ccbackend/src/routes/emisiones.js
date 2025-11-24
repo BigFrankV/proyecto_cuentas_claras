@@ -21,6 +21,138 @@ const { authorize } = require('../middleware/authorize');
 
 /**
  * @swagger
+ * /emisiones:
+ *   get:
+ *     tags: [Emisiones]
+ *     summary: Listar TODAS las emisiones (Solo Superadmin)
+ *     description: |
+ *       Obtiene todas las emisiones de todas las comunidades.
+ *       **SOLO SUPERADMIN** puede acceder a este endpoint.
+ *       Útil para tener una vista global del sistema.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Número de página
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Registros por página
+ *       - in: query
+ *         name: estado
+ *         schema:
+ *           type: string
+ *           enum: [borrador, emitido, cerrado, anulado]
+ *         description: Filtrar por estado
+ *     responses:
+ *       200:
+ *         description: Lista global de emisiones
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   comunidad_id:
+ *                     type: integer
+ *                   nombre_comunidad:
+ *                     type: string
+ *                   periodo:
+ *                     type: string
+ *                   estado:
+ *                     type: string
+ *                   fecha_vencimiento:
+ *                     type: string
+ *                   total_unidades:
+ *                     type: integer
+ *                   monto_total:
+ *                     type: number
+ *                   monto_pagado:
+ *                     type: number
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: Solo superadmin puede acceder
+ */
+router.get('/', authenticate, async (req, res) => {
+  try {
+    // Verificar que sea superadmin
+    const tokenRoles = (req.user.roles || []).map((r) => String(r).toLowerCase());
+    const isSuper = Boolean(
+      req.user.is_superadmin === true ||
+      req.user.isSuper === true ||
+      tokenRoles.includes('superadmin')
+    );
+
+    if (!isSuper) {
+      // Verificar en DB si es necesario
+      const usuarioId = req.user.sub;
+      if (usuarioId) {
+        const [urows] = await db.query(
+          'SELECT is_superadmin FROM usuario WHERE id = ? LIMIT 1',
+          [usuarioId]
+        );
+        if (!urows || !urows.length || Number(urows[0].is_superadmin) !== 1) {
+          return res.status(403).json({ error: 'forbidden - superadmin only' });
+        }
+      } else {
+        return res.status(403).json({ error: 'forbidden - superadmin only' });
+      }
+    }
+
+    const { page = 1, limit = 50, estado } = req.query;
+    const offset = (page - 1) * limit;
+    const conditions = [];
+    const params = [];
+
+    if (estado) {
+      conditions.push('e.estado = ?');
+      params.push(estado);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const [rows] = await db.query(
+      `SELECT 
+        e.id, 
+        e.comunidad_id,
+        e.periodo, 
+        e.estado, 
+        e.fecha_vencimiento,
+        e.created_at,
+        e.observaciones,
+        c.razon_social AS nombre_comunidad,
+        COUNT(DISTINCT ccu.unidad_id) AS total_unidades,
+        COALESCE(SUM(ccu.monto_total), 0) AS monto_total,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) AS monto_pagado
+      FROM emision_gastos_comunes e
+      INNER JOIN comunidad c ON e.comunidad_id = c.id
+      LEFT JOIN cuenta_cobro_unidad ccu ON e.id = ccu.emision_id
+      ${whereClause}
+      GROUP BY e.id, e.comunidad_id, e.periodo, e.estado, e.fecha_vencimiento, e.created_at, e.observaciones, c.razon_social
+      ORDER BY e.created_at DESC, e.comunidad_id ASC
+      LIMIT ? OFFSET ?`,
+      [...params, Number(limit), Number(offset)]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error('Error en GET /emisiones:', err);
+    res.status(500).json({ error: 'server error' });
+  }
+});
+
+/**
+ * @swagger
  * /emisiones/comunidad/{comunidadId}:
  *   get:
  *     tags: [Emisiones]
