@@ -17,8 +17,10 @@ const CargosListadoSimple: React.FC = () => {
 
   // Determinar si el usuario es admin
   const isAdmin = useMemo(() => {
-    if (user?.is_superadmin) return true;
-    return hasPermission(Permission.VIEW_ALL_CARGOS);
+    if (user?.is_superadmin) {
+      return true;
+    }
+    return hasPermission(Permission.VIEW_CARGO);
   }, [user, hasPermission]);
 
   // Cargar cargos al montar el componente

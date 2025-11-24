@@ -63,6 +63,7 @@ export default function CargoDetallePage() {
                   : 'other',
           estado: estadoMapping[cargoData.estado] || 'pending',
           monto: cargoData.monto,
+          saldo: cargoData.saldo, // Agregar campo saldo
           montoAplicado: cargoData.monto - cargoData.saldo, // Calcular monto aplicado
           unidad: cargoData.unidad,
           periodo: cargoData.periodo || '',
@@ -179,7 +180,7 @@ export default function CargoDetallePage() {
             </ol>
           </nav>
 
-          <CargoDetalle cargo={cargo} />
+          <CargoDetalle cargo={cargo} pagos={[]} documentos={[]} historial={[]} />
         </div>
       </Layout>
     </ProtectedRoute>

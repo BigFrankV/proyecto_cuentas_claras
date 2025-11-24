@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 
 import { Permission, usePermissions } from '@/lib/usePermissions';
@@ -121,8 +122,17 @@ export default function CargoDetalle({
 }: CargoDetalleProps) {
   const [activeTab, setActiveTab] = useState('detalles');
   const { hasPermission } = usePermissions();
+  const router = useRouter();
 
   const formatDate = (date: Date): string => {
+    return new Intl.DateTimeFormat('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  };
+
+  const formatDateShort = (date: Date): string => {
     return new Intl.DateTimeFormat('es-CO', {
       year: 'numeric',
       month: 'long',
@@ -161,12 +171,6 @@ export default function CargoDetalle({
 
   const isOverdue = (): boolean => {
     return new Date() > cargo.fechaVencimiento && cargo.estado !== 'paid';
-  };
-
-  const handleRegisterPayment = () => {
-    // eslint-disable-next-line no-console
-    console.log('Register payment for cargo:', cargo.id);
-    // TODO: Implement payment registration
   };
 
   const handleSendReminder = () => {
@@ -263,13 +267,13 @@ export default function CargoDetalle({
           </div>
           <div className='stat-item'>
             <div className='stat-number'>
-              <AmountCell amount={getTotalPaid()} />
+              <AmountCell amount={cargo.saldo !== undefined ? cargo.monto - cargo.saldo : getTotalPaid()} />
             </div>
             <div className='stat-label'>Pagado</div>
           </div>
           <div className='stat-item'>
             <div className='stat-number'>
-              <AmountCell amount={cargo.monto - getTotalPaid()} />
+              <AmountCell amount={cargo.saldo !== undefined ? cargo.saldo : cargo.monto - getTotalPaid()} />
             </div>
             <div className='stat-label'>Pendiente</div>
           </div>
@@ -280,13 +284,16 @@ export default function CargoDetalle({
       <div className='row mb-4'>
         <div className='col-12'>
           <div className='d-flex flex-wrap gap-2'>
-            <button
-              className='action-btn primary'
-              onClick={handleRegisterPayment}
-            >
-              <i className='material-icons me-2'>payment</i>
-              Registrar Pago
-            </button>
+            {(cargo.estado === 'pending' || cargo.estado === 'pendiente' || cargo.estado === 'vencido' || cargo.estado === 'partial' || cargo.estado === 'parcial') && 
+             (cargo.saldo !== undefined ? cargo.saldo > 0 : cargo.monto - getTotalPaid() > 0) && (
+              <button
+                className='action-btn primary'
+                onClick={() => router.push(`/cargos/${cargo.id}/pagar`)}
+              >
+                <i className='material-icons me-2'>credit_card</i>
+                Pagar Online
+              </button>
+            )}
             <button className='action-btn outline' onClick={handleSendReminder}>
               <i className='material-icons me-2'>notifications</i>
               Enviar Recordatorio
@@ -480,23 +487,23 @@ export default function CargoDetalle({
                 <div className='info-row'>
                   <span className='info-label'>Total Pagado:</span>
                   <span className='info-value money positive'>
-                    <AmountCell amount={getTotalPaid()} />
+                    <AmountCell amount={cargo.saldo !== undefined ? cargo.monto - cargo.saldo : getTotalPaid()} />
                   </span>
                 </div>
 
                 <div className='info-row'>
                   <span className='info-label'>Saldo Pendiente:</span>
                   <span
-                    className={`info-value money ${cargo.monto - getTotalPaid() > 0 ? 'negative' : 'positive'}`}
+                    className={`info-value money ${(cargo.saldo !== undefined ? cargo.saldo : cargo.monto - getTotalPaid()) > 0 ? 'negative' : 'positive'}`}
                   >
-                    <AmountCell amount={cargo.monto - getTotalPaid()} />
+                    <AmountCell amount={cargo.saldo !== undefined ? cargo.saldo : cargo.monto - getTotalPaid()} />
                   </span>
                 </div>
 
                 <div className='mt-4'>
                   <PaymentProgress
                     totalAmount={cargo.monto}
-                    paidAmount={getTotalPaid()}
+                    paidAmount={cargo.saldo !== undefined ? cargo.monto - cargo.saldo : getTotalPaid()}
                   />
                 </div>
               </div>
@@ -512,13 +519,6 @@ export default function CargoDetalle({
                 <i className='material-icons'>payment</i>
                 Historial de Pagos
               </h5>
-              <button
-                className='btn btn-primary btn-sm'
-                onClick={handleRegisterPayment}
-              >
-                <i className='material-icons me-1'>add</i>
-                Nuevo Pago
-              </button>
             </div>
 
             {pagos.length === 0 ? (

@@ -1,11 +1,11 @@
 import React from 'react';
 
 export interface TypeBadgeProps {
-  type: 'administration' | 'maintenance' | 'service' | 'insurance' | 'other';
+  type: string;
   className?: string;
 }
 
-const typeConfig = {
+const typeConfig: Record<string, { label: string; className: string }> = {
   administration: {
     label: 'Administración',
     className: 'charge-type administration',
@@ -22,6 +22,18 @@ const typeConfig = {
     label: 'Seguros',
     className: 'charge-type insurance',
   },
+  gastos_comunes: {
+    label: 'Gastos Comunes',
+    className: 'charge-type administration',
+  },
+  fondo_reserva: {
+    label: 'Fondo de Reserva',
+    className: 'charge-type insurance',
+  },
+  cuota_extraordinaria: {
+    label: 'Cuota Extraordinaria',
+    className: 'charge-type maintenance',
+  },
   other: {
     label: 'Otros',
     className: 'charge-type other',
@@ -29,7 +41,7 @@ const typeConfig = {
 };
 
 export default function TypeBadge({ type, className = '' }: TypeBadgeProps) {
-  const config = typeConfig[type];
+  const config = typeConfig[type] || typeConfig.other;
 
   return (
     <span className={`${config.className} ${className}`}>{config.label}</span>

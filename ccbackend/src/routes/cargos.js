@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const { body, validationResult } = require('express-validator');
+const { body, param, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
@@ -2468,6 +2468,407 @@ router.delete(
     } catch (err) {
       console.error('Error al eliminar cargo:', err);
       res.status(500).json({ error: 'Error al eliminar cargo' });
+    }
+  }
+);
+
+// ============================================
+// ENDPOINT: Iniciar pago de cargo con Webpay
+// ============================================
+/**
+ * @swagger
+ * /cargos/{id}/iniciar-pago:
+ *   post:
+ *     summary: Iniciar pago de un cargo con Webpay
+ *     tags: [Cargos]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del cargo (cuenta_cobro_unidad)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - gateway
+ *             properties:
+ *               gateway:
+ *                 type: string
+ *                 enum: [webpay]
+ *                 description: Pasarela de pago (solo webpay por ahora)
+ *               payerEmail:
+ *                 type: string
+ *                 format: email
+ *                 description: Email del pagador
+ *     responses:
+ *       200:
+ *         description: Transacción iniciada exitosamente
+ *       400:
+ *         description: Error de validación
+ *       403:
+ *         description: No tiene permisos
+ *       404:
+ *         description: Cargo no encontrado
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/:id/iniciar-pago',
+  authenticate,
+  [
+    param('id').isInt({ min: 1 }).withMessage('ID de cargo inválido'),
+    body('gateway').isIn(['webpay']).withMessage('Gateway debe ser webpay'),
+    body('payerEmail').optional().isEmail().withMessage('Email inválido'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const cargoId = parseInt(req.params.id, 10);
+    const { gateway, payerEmail } = req.body;
+    const usuarioId = req.user.sub;
+    const isSuper = Boolean(req.user.is_superadmin === true);
+
+    try {
+      // 1. Obtener el cargo
+      const [cargos] = await db.query(
+        `SELECT ccu.*, c.razon_social as comunidad_nombre, u.codigo as unidad_codigo,
+                egc.periodo
+         FROM cuenta_cobro_unidad ccu
+         INNER JOIN comunidad c ON ccu.comunidad_id = c.id
+         INNER JOIN unidad u ON ccu.unidad_id = u.id
+         LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+         WHERE ccu.id = ?`,
+        [cargoId]
+      );
+
+      if (!cargos || cargos.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Cargo no encontrado',
+        });
+      }
+
+      const cargo = cargos[0];
+
+      // 2. Validar que el cargo no esté pagado
+      if (cargo.estado === 'pagado') {
+        return res.status(400).json({
+          success: false,
+          error: 'Este cargo ya está pagado',
+        });
+      }
+
+      // 3. Validar permisos del usuario
+      if (!isSuper) {
+        // Buscar persona_id del usuario
+        const [usuarioRows] = await db.query(
+          'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+          [usuarioId]
+        );
+
+        if (!usuarioRows || usuarioRows.length === 0) {
+          return res.status(403).json({
+            success: false,
+            error: 'Usuario no encontrado',
+          });
+        }
+
+        const personaId = usuarioRows[0].persona_id;
+
+        // Verificar si el usuario es titular de la unidad
+        const [titularCheck] = await db.query(
+          `SELECT 1 FROM titulares_unidad
+           WHERE unidad_id = ? AND persona_id = ? AND hasta IS NULL
+           LIMIT 1`,
+          [cargo.unidad_id, personaId]
+        );
+
+        if (!titularCheck || titularCheck.length === 0) {
+          return res.status(403).json({
+            success: false,
+            error: 'No tiene permisos para pagar este cargo',
+          });
+        }
+      }
+
+      // 4. Generar order_id único
+      const timestamp = Date.now();
+      const orderId = `CARGO-${cargo.comunidad_id}-${cargoId}-${timestamp}`;
+
+      // 5. Calcular monto a pagar (usar saldo pendiente)
+      const montoPagar = parseFloat(cargo.saldo);
+
+      if (montoPagar <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'No hay saldo pendiente para este cargo',
+        });
+      }
+
+      // 6. Crear transacción en payment_transaction
+      const [result] = await db.query(
+        `INSERT INTO payment_transaction 
+         (order_id, comunidad_id, cargo_id, amount, gateway, status, payer_email, usuario_id)
+         VALUES (?, ?, ?, ?, ?, 'pending', ?, ?)`,
+        [
+          orderId,
+          cargo.comunidad_id,
+          cargoId,
+          montoPagar,
+          gateway,
+          payerEmail || null,
+          usuarioId,
+        ]
+      );
+
+      const transactionId = result.insertId;
+
+      // 7. Iniciar transacción con Webpay
+      const paymentGatewayService = require('../services/paymentGatewayService');
+
+      const descripcion = `Pago cargo #${cargoId} - ${cargo.unidad_codigo} - ${cargo.periodo || 'Periodo'}`;
+
+      const paymentData = {
+        orderId,
+        sessionId: `session-${usuarioId}-${cargoId}-${timestamp}`,
+        communityId: cargo.comunidad_id,
+        unitId: cargo.unidad_id,
+        cargoId: cargoId,
+        amount: montoPagar,
+        description: descripcion,
+      };
+
+      const webpayResult =
+        await paymentGatewayService.createWebpayTransaction(paymentData);
+
+      // 8. Actualizar transaction_token en la BD
+      await db.query(
+        `UPDATE payment_transaction 
+         SET transaction_token = ?, gateway_transaction_id = ?, gateway_response = ?
+         WHERE id = ?`,
+        [
+          webpayResult.transactionId,
+          webpayResult.transactionId,
+          JSON.stringify(webpayResult.gatewayResponse),
+          transactionId,
+        ]
+      );
+
+      // 9. Responder con URL de pago
+      res.json({
+        success: true,
+        data: {
+          orderId,
+          transactionId,
+          paymentUrl: webpayResult.paymentUrl,
+          token: webpayResult.transactionId,
+          gateway: 'webpay',
+          amount: montoPagar,
+          description: descripcion,
+        },
+      });
+    } catch (err) {
+      console.error('Error al iniciar pago de cargo:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error al iniciar pago',
+        details:
+          process.env.NODE_ENV === 'development' ? err.message : undefined,
+      });
+    }
+  }
+);
+
+// ============================================
+// ENDPOINT: Confirmar pago de cargo con Webpay
+// ============================================
+/**
+ * @swagger
+ * /cargos/pago/confirmar:
+ *   post:
+ *     summary: Confirmar pago de cargo después de Webpay
+ *     tags: [Cargos]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token_ws
+ *             properties:
+ *               token_ws:
+ *                 type: string
+ *                 description: Token de respuesta de Webpay
+ *     responses:
+ *       200:
+ *         description: Pago confirmado exitosamente
+ *       400:
+ *         description: Error en la confirmación
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/pago/confirmar',
+  [body('token_ws').notEmpty().withMessage('Token de Webpay requerido')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { token_ws } = req.body;
+
+    try {
+      const paymentGatewayService = require('../services/paymentGatewayService');
+
+      // 1. Confirmar transacción con Webpay
+      const webpayResponse =
+        await paymentGatewayService.confirmWebpayTransaction(token_ws);
+
+      // DEBUG: Ver respuesta de Webpay
+      console.log(
+        '🔍 Webpay Response (Cargo):',
+        JSON.stringify(webpayResponse, null, 2)
+      );
+
+      // 2. Buscar la transacción en payment_transaction
+      const [transactions] = await db.query(
+        `SELECT * FROM payment_transaction WHERE transaction_token = ?`,
+        [token_ws]
+      );
+
+      if (!transactions || transactions.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Transacción no encontrada',
+        });
+      }
+
+      const transaction = transactions[0];
+
+      // 3. Actualizar estado de la transacción
+      const transactionStatus =
+        webpayResponse.success && webpayResponse.response.response_code === 0
+          ? 'completed'
+          : 'failed';
+
+      await db.query(
+        `UPDATE payment_transaction 
+         SET status = ?, gateway_response = ?, gateway_transaction_id = ?, updated_at = NOW()
+         WHERE id = ?`,
+        [
+          transactionStatus,
+          JSON.stringify(webpayResponse.response),
+          webpayResponse.response.authorization_code,
+          transaction.id,
+        ]
+      );
+
+      // 4. Si el pago fue exitoso y hay cargo_id, actualizar el cargo
+      if (transactionStatus === 'completed' && transaction.cargo_id) {
+        const cargoId = transaction.cargo_id;
+        const montoPagado = parseFloat(transaction.amount);
+
+        // Obtener cargo actual
+        const [cargos] = await db.query(
+          'SELECT * FROM cuenta_cobro_unidad WHERE id = ?',
+          [cargoId]
+        );
+
+        if (cargos && cargos.length > 0) {
+          const cargo = cargos[0];
+          const nuevoSaldo = parseFloat(cargo.saldo) - montoPagado;
+
+          // Determinar nuevo estado
+          let nuevoEstado = 'pendiente';
+          if (nuevoSaldo <= 0) {
+            nuevoEstado = 'pagado';
+          } else if (nuevoSaldo < parseFloat(cargo.monto_total)) {
+            nuevoEstado = 'parcial';
+          }
+
+          // Actualizar cargo
+          await db.query(
+            `UPDATE cuenta_cobro_unidad 
+             SET saldo = ?, estado = ?, updated_at = NOW()
+             WHERE id = ?`,
+            [Math.max(0, nuevoSaldo), nuevoEstado, cargoId]
+          );
+
+          // Crear registro en la tabla pago
+          await db.query(
+            `INSERT INTO pago 
+             (comunidad_id, unidad_id, fecha, monto, medio, referencia, estado, comprobante_num)
+             VALUES (?, ?, CURDATE(), ?, 'webpay', ?, 'aplicado', ?)`,
+            [
+              transaction.comunidad_id,
+              cargo.unidad_id,
+              montoPagado,
+              transaction.order_id,
+              webpayResponse.response.authorization_code,
+            ]
+          );
+
+          res.json({
+            success: true,
+            message: 'Pago confirmado exitosamente',
+            data: {
+              transactionId: transaction.id,
+              orderId: transaction.order_id,
+              cargoId,
+              amount: montoPagado,
+              nuevoSaldo: Math.max(0, nuevoSaldo),
+              authorizationCode: webpayResponse.response.authorization_code,
+              status: 'completed',
+              estadoCargo: nuevoEstado,
+            },
+          });
+        } else {
+          res.status(404).json({
+            success: false,
+            error: 'Cargo no encontrado',
+          });
+        }
+      } else if (transactionStatus === 'failed') {
+        res.status(400).json({
+          success: false,
+          error: 'El pago fue rechazado',
+          data: {
+            transactionId: transaction.id,
+            orderId: transaction.order_id,
+            responseCode: webpayResponse.response.response_code,
+            status: 'failed',
+          },
+        });
+      } else {
+        res.json({
+          success: true,
+          message: 'Transacción confirmada',
+          data: {
+            transactionId: transaction.id,
+            status: transactionStatus,
+          },
+        });
+      }
+    } catch (err) {
+      console.error('Error al confirmar pago de cargo:', err);
+      res.status(500).json({
+        success: false,
+        error: 'Error al confirmar el pago',
+        details:
+          process.env.NODE_ENV === 'development' ? err.message : undefined,
+      });
     }
   }
 );

@@ -510,6 +510,66 @@ export async function getCargoStats(): Promise<CargoStats> {
 }
 
 /**
+ * Iniciar pago de un cargo con Webpay
+ */
+export async function iniciarPagoCargo(
+  cargoId: number,
+  payload: {
+    gateway: string;
+    payerEmail?: string;
+  },
+): Promise<{
+  orderId: string;
+  transactionId: number;
+  paymentUrl: string;
+  token: string;
+  gateway: string;
+}> {
+  const response = await apiClient.post(`/cargos/${cargoId}/iniciar-pago`, payload);
+  return response.data.data;
+}
+
+/**
+ * Confirmar pago de cargo después de redirección de Webpay
+ */
+export async function confirmarPagoCargo(token_ws: string): Promise<{
+  success: boolean;
+  message?: string;
+  error?: string;
+  data?: any;
+}> {
+  const response = await apiClient.post('/cargos/pago/confirmar', { token_ws });
+  return response.data;
+}
+
+/**
+ * Obtener estado de pago de un cargo
+ */
+export async function getPagoStatusCargo(cargoId: number): Promise<{
+  success: boolean;
+  data?: {
+    estado: string;
+    fecha_pago: string | null;
+    pagado_por: number | null;
+    updated_at: string;
+  };
+  error?: string;
+}> {
+  const response = await apiClient.get(`/cargos/${cargoId}/pago/status`);
+  return response.data;
+}
+
+// Exportación por defecto para compatibilidad
+const cargosService = {
+  iniciarPagoCargo,
+  confirmarPagoCargo,
+  getPagoStatusCargo,
+  getCargoById: getCargo,
+};
+
+export default cargosService;
+
+/**
  * Obtener cargos vencidos
  */
 export async function getCargosVencidos(): Promise<Cargo[]> {
