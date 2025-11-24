@@ -275,10 +275,16 @@ router.get(
         isAdmin = adminCheck && adminCheck.length > 0;
       }
 
-      const conditions = ['ccu.comunidad_id = ?'];
-      const params = [comunidadId];
+      let conditions = [];
+      let params = [];
 
-      // Si NO es superadmin NI admin, filtrar por sus unidades
+      // Si es superadmin o admin, filtrar por comunidad
+      if (isSuper || isAdmin) {
+        conditions.push('ccu.comunidad_id = ?');
+        params.push(comunidadId);
+      }
+
+      // Si NO es superadmin NI admin, filtrar SOLO por sus unidades (sin importar la comunidad)
       if (!isSuper && !isAdmin && usuarioId) {
         // Buscar persona_id del usuario
         const [usuarioRows] = await db.query(
@@ -288,7 +294,7 @@ router.get(
 
         if (usuarioRows && usuarioRows.length > 0) {
           const personaId = usuarioRows[0].persona_id;
-          // Agregar condición para filtrar solo sus unidades
+          // Filtrar solo sus unidades (de todas las comunidades)
           conditions.push(`u.id IN (
             SELECT unidad_id FROM titulares_unidad
             WHERE persona_id = ? AND hasta IS NULL
@@ -298,6 +304,11 @@ router.get(
           // Si no tiene persona asociada, no puede ver nada
           return res.json([]);
         }
+      }
+
+      // Si no hay condiciones, algo salió mal
+      if (conditions.length === 0) {
+        return res.json([]);
       }
 
       const sql = `
