@@ -307,9 +307,18 @@ class EmisionesService {
     data: {
       periodo: string;
       fecha_vencimiento: string;
+      monto_total: number;
       observaciones?: string;
+      conceptos?: Array<{
+        nombre: string;
+        glosa?: string;
+        monto: number;
+        categoria_id?: number;
+      }>;
+      estado?: 'borrador' | 'emitido';
+      crear_cargos?: boolean;
     },
-  ): Promise<Emision> {
+  ): Promise<any> {
     try {
       const response = await apiClient.post(
         `/emisiones/comunidad/${comunidadId}`,

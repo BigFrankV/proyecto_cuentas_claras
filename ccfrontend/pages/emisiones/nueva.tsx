@@ -15,7 +15,7 @@ interface Concept {
   distributionType: 'proportional' | 'equal' | 'custom';
   category: string;
 }
-
+ 
 interface ExpenseItem {
   id: string;
   description: string;
@@ -40,6 +40,19 @@ export default function EmisionNueva() {
     hasInterest: false,
     interestRate: 2.0,
     gracePeriod: 5,
+  });
+
+  // Servicios medidos state
+  const [serviciosMedidos, setServiciosMedidos] = useState({
+    agua: false,
+    electricidad: false,
+    gas: false,
+  });
+
+  const [tarifas, setTarifas] = useState({
+    agua: 800,
+    electricidad: 120,
+    gas: 450,
   });
 
   const [concepts, setConcepts] = useState<Concept[]>([]);
@@ -115,6 +128,16 @@ export default function EmisionNueva() {
         setLoadingComunidades(true);
         const comunidadesData = await comunidadesService.getComunidades();
         setComunidades(comunidadesData);
+        
+        // Si solo hay una comunidad, seleccionarla automáticamente
+        if (comunidadesData && comunidadesData.length === 1) {
+          setFormData(prev => ({
+            ...prev,
+            community: comunidadesData[0].id.toString(),
+          }));
+          // eslint-disable-next-line no-console
+          console.log('✅ Auto-seleccionada comunidad:', comunidadesData[0].nombre);
+        }
       } catch (error) {
         // eslint-disable-next-line no-console
         console.error('Error loading comunidades:', error);
@@ -219,39 +242,102 @@ export default function EmisionNueva() {
       return;
     }
 
+    // Validar que haya al menos un concepto o gasto seleccionado
+    const totalEmission = getTotalEmission();
+    if (totalEmission === 0) {
+      alert('Debes agregar al menos un concepto o seleccionar gastos');
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Convert community string to number
       const comunidadId = parseInt(formData.community);
 
-      // Prepare data for API
-      const emisionData: {
-        periodo: string;
-        fecha_vencimiento: string;
-        observaciones?: string;
-      } = {
-        periodo: formData.period,
-        fecha_vencimiento: formData.dueDate,
-      };
+      // Prepare conceptos array
+      const conceptosData = concepts.map(concept => ({
+        nombre: concept.name,
+        glosa: concept.description || concept.name,
+        monto: concept.amount,
+        categoria_id: 1, // Default category, you can add category selection later
+      }));
 
-      // Add observations only if provided
-      if (formData.description.trim()) {
-        emisionData.observaciones = formData.description;
+      // Add selected expenses as concepts
+      const gastosSeleccionados = expenses
+        .filter(expense => expense.selected)
+        .map(expense => ({
+          nombre: expense.description,
+          glosa: `${expense.description} - ${expense.supplier}`,
+          monto: expense.amount,
+          categoria_id: 1,
+        }));
+
+      // Combine all concepts
+      const allConceptos = [...conceptosData, ...gastosSeleccionados];
+
+      // Preparar servicios medidos activos
+      const serviciosActivos: string[] = [];
+      if (serviciosMedidos.agua) {
+        serviciosActivos.push('agua');
+      }
+      if (serviciosMedidos.electricidad) {
+        serviciosActivos.push('electricidad');
+      }
+      if (serviciosMedidos.gas) {
+        serviciosActivos.push('gas');
       }
 
+      // Preparar tarifas solo para servicios activos
+      const tarifasActivas: any = {};
+      if (serviciosMedidos.agua) {
+        tarifasActivas.agua = tarifas.agua;
+      }
+      if (serviciosMedidos.electricidad) {
+        tarifasActivas.electricidad = tarifas.electricidad;
+      }
+      if (serviciosMedidos.gas) {
+        tarifasActivas.gas = tarifas.gas;
+      }
+
+      // Prepare data for API
+      const emisionData = {
+        periodo: formData.period,
+        fecha_vencimiento: formData.dueDate,
+        monto_total: totalEmission,
+        observaciones: formData.description.trim() || undefined,
+        conceptos: allConceptos.length > 0 ? allConceptos : undefined,
+        estado: 'emitido' as const,
+        crear_cargos: true,
+        servicios_medidos: serviciosActivos,
+        tarifas: tarifasActivas,
+      };
+
+      // eslint-disable-next-line no-console
+      console.log('📝 Creando emisión con datos:', emisionData);
+
       // Call API to create emission
-      const nuevaEmision = await emisionesService.createEmision(
+      const response = await emisionesService.createEmision(
         comunidadId,
         emisionData,
       );
 
-      alert('Emisión creada exitosamente');
-      router.push('/emisiones');
+      // eslint-disable-next-line no-console
+      console.log('✅ Emisión creada:', response);
+
+      alert(
+        'Emisión creada exitosamente!\n\n' +
+          `- Emisión ID: ${response.emision?.id}\n` +
+          `- Cargos creados: ${response.cargosCreados || 0}\n` +
+          `- Monto total: $${totalEmission.toLocaleString('es-CL')}`,
+      );
+      
+      router.push(`/emisiones/${response.emision?.id || ''}`);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error creating emision:', error);
-      alert('Error al crear la emisión. Por favor intenta nuevamente.');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      alert(`Error al crear la emisión: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -306,16 +392,17 @@ export default function EmisionNueva() {
                           Período *
                         </label>
                         <input
-                          type='text'
+                          type='month'
                           className='form-control'
                           id='period'
                           value={formData.period}
                           onChange={e =>
                             handleInputChange('period', e.target.value)
                           }
-                          placeholder='Ej: Septiembre 2025'
+                          placeholder='YYYY-MM'
                           required
                         />
+                        <small className='text-muted'>Formato: YYYY-MM (ej: 2025-12)</small>
                       </div>
                       <div className='col-md-6'>
                         <label htmlFor='type' className='form-label'>
@@ -642,6 +729,175 @@ export default function EmisionNueva() {
                           ))}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Servicios Medidos */}
+                <div className='form-section mb-4'>
+                  <div className='section-header'>
+                    <h4 className='section-title'>
+                      <i className='material-icons me-2'>water_drop</i>
+                      Servicios Medidos (Consumo Individual)
+                    </h4>
+                  </div>
+                  <div className='section-content'>
+                    <p className='text-muted mb-3'>
+                      <i className='material-icons me-1' style={{ fontSize: '16px' }}>info</i>
+                      Se calculará automáticamente desde las lecturas de
+                      medidores del período
+                    </p>
+
+                    <div className='row g-3'>
+                      {/* Agua */}
+                      <div className='col-md-4'>
+                        <div className='card h-100'>
+                          <div className='card-body'>
+                            <div className='form-check mb-2'>
+                              <input
+                                className='form-check-input'
+                                type='checkbox'
+                                id='servicioAgua'
+                                checked={serviciosMedidos.agua}
+                                onChange={e =>
+                                  setServiciosMedidos({
+                                    ...serviciosMedidos,
+                                    agua: e.target.checked,
+                                  })
+                                }
+                              />
+                              <label
+                                className='form-check-label fw-bold'
+                                htmlFor='servicioAgua'
+                              >
+                                <i className='material-icons me-1' style={{ fontSize: '18px', verticalAlign: 'middle' }}>
+                                  water_drop
+                                </i>
+                                Agua
+                              </label>
+                            </div>
+                            {serviciosMedidos.agua && (
+                              <div className='mt-2'>
+                                <label className='form-label small'>
+                                  Tarifa ($/m³)
+                                </label>
+                                <input
+                                  type='number'
+                                  className='form-control form-control-sm'
+                                  value={tarifas.agua}
+                                  onChange={e =>
+                                    setTarifas({
+                                      ...tarifas,
+                                      agua: parseFloat(e.target.value),
+                                    })
+                                  }
+                                  min='0'
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Electricidad */}
+                      <div className='col-md-4'>
+                        <div className='card h-100'>
+                          <div className='card-body'>
+                            <div className='form-check mb-2'>
+                              <input
+                                className='form-check-input'
+                                type='checkbox'
+                                id='servicioElectricidad'
+                                checked={serviciosMedidos.electricidad}
+                                onChange={e =>
+                                  setServiciosMedidos({
+                                    ...serviciosMedidos,
+                                    electricidad: e.target.checked,
+                                  })
+                                }
+                              />
+                              <label
+                                className='form-check-label fw-bold'
+                                htmlFor='servicioElectricidad'
+                              >
+                                <i className='material-icons me-1' style={{ fontSize: '18px', verticalAlign: 'middle' }}>
+                                  bolt
+                                </i>
+                                Electricidad
+                              </label>
+                            </div>
+                            {serviciosMedidos.electricidad && (
+                              <div className='mt-2'>
+                                <label className='form-label small'>
+                                  Tarifa ($/kWh)
+                                </label>
+                                <input
+                                  type='number'
+                                  className='form-control form-control-sm'
+                                  value={tarifas.electricidad}
+                                  onChange={e =>
+                                    setTarifas({
+                                      ...tarifas,
+                                      electricidad: parseFloat(e.target.value),
+                                    })
+                                  }
+                                  min='0'
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Gas */}
+                      <div className='col-md-4'>
+                        <div className='card h-100'>
+                          <div className='card-body'>
+                            <div className='form-check mb-2'>
+                              <input
+                                className='form-check-input'
+                                type='checkbox'
+                                id='servicioGas'
+                                checked={serviciosMedidos.gas}
+                                onChange={e =>
+                                  setServiciosMedidos({
+                                    ...serviciosMedidos,
+                                    gas: e.target.checked,
+                                  })
+                                }
+                              />
+                              <label
+                                className='form-check-label fw-bold'
+                                htmlFor='servicioGas'
+                              >
+                                <i className='material-icons me-1' style={{ fontSize: '18px', verticalAlign: 'middle' }}>
+                                  local_fire_department
+                                </i>
+                                Gas
+                              </label>
+                            </div>
+                            {serviciosMedidos.gas && (
+                              <div className='mt-2'>
+                                <label className='form-label small'>
+                                  Tarifa ($/m³)
+                                </label>
+                                <input
+                                  type='number'
+                                  className='form-control form-control-sm'
+                                  value={tarifas.gas}
+                                  onChange={e =>
+                                    setTarifas({
+                                      ...tarifas,
+                                      gas: parseFloat(e.target.value),
+                                    })
+                                  }
+                                  min='0'
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
