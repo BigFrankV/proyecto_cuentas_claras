@@ -6,6 +6,48 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
+// ============================================
+// HELPER: Obtener comunidades del usuario
+// ============================================
+// eslint-disable-next-line no-unused-vars
+async function obtenerComunidadesUsuario(
+  usuarioId,
+  personaId,
+  isSuperAdmin = false
+) {
+  if (isSuperAdmin) {
+    const [all] = await db.query(`SELECT id FROM comunidad`);
+    return Array.isArray(all) ? all.map((r) => Number(r.id)) : [];
+  }
+
+  // por rol en usuario_rol_comunidad
+  const [porRol] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_rol_comunidad
+     WHERE usuario_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [usuarioId]
+  );
+
+  // por pertenencia como miembro
+  const [porMiembro] = await db.query(
+    `SELECT DISTINCT comunidad_id
+     FROM usuario_miembro_comunidad
+     WHERE persona_id = ?
+       AND activo = 1
+       AND (desde <= CURDATE())
+       AND (hasta IS NULL OR hasta >= CURDATE())`,
+    [personaId]
+  );
+
+  const ids = new Set();
+  porRol.forEach((r) => ids.add(Number(r.comunidad_id)));
+  porMiembro.forEach((r) => ids.add(Number(r.comunidad_id)));
+  return Array.from(ids);
+}
+
 /**
  * @swagger
  * tags:
@@ -212,14 +254,9 @@ router.get(
       const conditions = ['ccu.comunidad_id = ?'];
       const params = [comunidadId];
 
-      // Verificar si es superadmin o admin
+      // Verificar si es superadmin (de tabla usuario)
       const usuarioId = req.user.sub;
-      const tokenRoles = (req.user.roles || []).map((r) => String(r).toLowerCase());
-      let isSuper = Boolean(
-        req.user.is_superadmin === true ||
-        req.user.isSuper === true ||
-        tokenRoles.includes('superadmin')
-      );
+      const isSuper = Boolean(req.user.is_superadmin === true);
 
       // Verificar si es admin de la comunidad
       let isAdmin = false;
@@ -272,7 +309,7 @@ router.get(
         params.push(periodo);
       }
 
-    const sql = `
+      const sql = `
     SELECT
       ccu.id,
       CONCAT('CHG-', YEAR(ccu.created_at), '-', LPAD(ccu.id, 4, '0')) as concepto,
@@ -537,13 +574,8 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
     const unidadId = req.params.id;
     const usuarioId = req.user.sub;
 
-    // Verificar si es superadmin
-    const tokenRoles = (req.user.roles || []).map((r) => String(r).toLowerCase());
-    let isSuper = Boolean(
-      req.user.is_superadmin === true ||
-      req.user.isSuper === true ||
-      tokenRoles.includes('superadmin')
-    );
+    // Verificar si es superadmin (de tabla usuario)
+    const isSuper = Boolean(req.user.is_superadmin === true);
 
     // Si NO es superadmin, verificar que la unidad pertenezca al usuario
     if (!isSuper && usuarioId) {
@@ -594,7 +626,9 @@ router.get('/unidad/:id', authenticate, async (req, res) => {
         );
 
         if (!titularCheck || !titularCheck.length) {
-          return res.status(403).json({ error: 'forbidden - no access to this unit' });
+          return res
+            .status(403)
+            .json({ error: 'forbidden - no access to this unit' });
         }
       }
     }

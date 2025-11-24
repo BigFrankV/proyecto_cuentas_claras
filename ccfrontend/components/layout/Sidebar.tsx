@@ -39,7 +39,7 @@ const menuSections = [
   {
     title: 'Finanzas',
     items: [
-      { href: '/emisiones', label: 'Emisiones', icon: 'receipt_long', permission: Permission.VIEW_FINANCES },
+      { href: '/emisiones', label: 'Emisiones', icon: 'receipt_long', permission: Permission.VIEW_EMISION },
       { href: '/cargos', label: 'Cargos', icon: 'assignment', permission: Permission.VIEW_FINANCES },
       { href: '/pagos', label: 'Pagos', icon: 'payments', permission: Permission.VIEW_FINANCES },
       { href: '/conciliaciones', label: 'Conciliaciones', icon: 'account_balance', permission: Permission.APPROVE_PAYMENTS },

@@ -2,10 +2,12 @@ import Link from 'next/link';
 import React, { useState, useEffect, useMemo } from 'react';
 
 import { useCargos } from '@/hooks/useCargos';
+import { useAuth } from '@/lib/useAuth';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Cargo } from '@/types/cargos';
 
 const CargosListadoSimple: React.FC = () => {
+  const { user } = useAuth();
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('todos');
@@ -196,9 +198,13 @@ const CargosListadoSimple: React.FC = () => {
                 </i>
               </div>
               <div>
-                <h1 className='h2 mb-1 text-white'>Cargos</h1>
+                <h1 className='h2 mb-1 text-white'>
+                  Cargos
+                </h1>
                 <p className='mb-0 opacity-75'>
-                  Gestión y seguimiento de cargos
+                  {hasPermission(Permission.CREATE_CARGO) 
+                    ? 'Gestión y seguimiento de cargos de la comunidad'
+                    : 'Consulta tus cargos pendientes y pagados'}
                 </p>
               </div>
             </div>

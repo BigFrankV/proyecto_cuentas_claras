@@ -240,6 +240,20 @@ class EmisionesService {
   }
 
   /**
+   * Obtener resumen de TODAS las emisiones de TODAS las comunidades (solo superadmin)
+   */
+  async getTodasEmisionesResumen(): Promise<EmisionResumen[]> {
+    try {
+      const response = await apiClient.get('/emisiones/todas/resumen');
+      return response.data.emisiones || response.data;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching todas emisiones resumen:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Obtener resumen de emisiones con métricas consolidadas
    */
   async getEmisionesComunidadResumen(
