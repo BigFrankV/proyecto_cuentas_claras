@@ -749,8 +749,15 @@ router.post(
           await db.query(
             `INSERT INTO detalle_cuenta_unidad 
              (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, iva_incluido)
-             VALUES (?, 1, ?, ?, 'gasto', 1)`,
-            [cargoId, `${periodo} - Gastos Comunes`, montoGastosComunes]
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+              cargoId,
+              1,
+              `${periodo} - Gastos Comunes`,
+              montoGastosComunes,
+              'gasto',
+              1,
+            ]
           );
         }
 
@@ -761,8 +768,8 @@ router.post(
           await db.query(
             `INSERT INTO detalle_cuenta_unidad 
              (cuenta_cobro_unidad_id, categoria_id, glosa, monto, origen, iva_incluido)
-             VALUES (?, 1, ?, ?, 'consumo', 1)`,
-            [cargoId, glosa, detalle.monto]
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [cargoId, 1, glosa, detalle.monto, 'consumo', 1]
           );
         }
 
