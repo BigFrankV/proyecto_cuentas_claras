@@ -2780,6 +2780,12 @@ router.post(
         const cargoId = transaction.cargo_id;
         const montoPagado = parseFloat(transaction.amount);
 
+        console.log('💰 Procesando pago de cargo:', {
+          cargoId,
+          montoPagado,
+          transactionId: transaction.id
+        });
+
         // Obtener cargo actual
         const [cargos] = await db.query(
           'SELECT * FROM cuenta_cobro_unidad WHERE id = ?',
@@ -2790,6 +2796,12 @@ router.post(
           const cargo = cargos[0];
           const nuevoSaldo = parseFloat(cargo.saldo) - montoPagado;
 
+          console.log('📊 Estado actual del cargo:', {
+            saldoAntes: cargo.saldo,
+            estadoAntes: cargo.estado,
+            nuevoSaldo: Math.max(0, nuevoSaldo)
+          });
+
           // Determinar nuevo estado
           let nuevoEstado = 'pendiente';
           if (nuevoSaldo <= 0) {
@@ -2798,27 +2810,49 @@ router.post(
             nuevoEstado = 'parcial';
           }
 
+          console.log('🔄 Actualizando cargo a:', {
+            nuevoSaldo: Math.max(0, nuevoSaldo),
+            nuevoEstado
+          });
+
           // Actualizar cargo
-          await db.query(
+          const [updateResult] = await db.query(
             `UPDATE cuenta_cobro_unidad 
              SET saldo = ?, estado = ?, updated_at = NOW()
              WHERE id = ?`,
             [Math.max(0, nuevoSaldo), nuevoEstado, cargoId]
           );
 
+          console.log('✅ Cargo actualizado, filas afectadas:', updateResult.affectedRows);
+
+          // Obtener persona_id del titular de la unidad
+          const [titulares] = await db.query(
+            `SELECT persona_id FROM titulares_unidad 
+             WHERE unidad_id = ? AND tipo = 'propietario' AND hasta IS NULL
+             ORDER BY created_at DESC LIMIT 1`,
+            [cargo.unidad_id]
+          );
+
+          const personaId = titulares && titulares.length > 0 ? titulares[0].persona_id : null;
+
+          console.log('👤 Persona ID del titular:', personaId);
+
           // Crear registro en la tabla pago
-          await db.query(
+          const [pagoResult] = await db.query(
             `INSERT INTO pago 
-             (comunidad_id, unidad_id, fecha, monto, medio, referencia, estado, comprobante_num)
-             VALUES (?, ?, CURDATE(), ?, 'webpay', ?, 'aplicado', ?)`,
+             (comunidad_id, unidad_id, persona_id, fecha, monto, medio, referencia, estado, comprobante_num)
+             VALUES (?, ?, ?, CURDATE(), ?, 'webpay', ?, 'aplicado', ?)`,
             [
               transaction.comunidad_id,
               cargo.unidad_id,
+              personaId,
               montoPagado,
               transaction.order_id,
               webpayResponse.response.authorization_code,
             ]
           );
+
+          console.log('✅ Registro de pago creado, ID:', pagoResult.insertId);
 
           res.json({
             success: true,
