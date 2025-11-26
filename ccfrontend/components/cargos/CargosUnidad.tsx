@@ -173,7 +173,7 @@ export default function CargosUnidad({
         cargo =>
           cargo.concepto.toLowerCase().includes(searchLower) ||
           cargo.descripcion?.toLowerCase().includes(searchLower) ||
-          cargo.id.toLowerCase().includes(searchLower),
+          cargo.id.toString().toLowerCase().includes(searchLower),
       );
     }
 
@@ -243,7 +243,7 @@ export default function CargosUnidad({
     if (selectedCargos.size === filteredCargos.length) {
       setSelectedCargos(new Set());
     } else {
-      setSelectedCargos(new Set(filteredCargos.map(cargo => cargo.id)));
+      setSelectedCargos(new Set(filteredCargos.map(cargo => cargo.id.toString())));
     }
   };
 
@@ -560,8 +560,8 @@ export default function CargosUnidad({
                           <input
                             type='checkbox'
                             className='form-check-input'
-                            checked={selectedCargos.has(cargo.id)}
-                            onChange={() => toggleCargoSelection(cargo.id)}
+                            checked={selectedCargos.has(cargo.id.toString())}
+                            onChange={() => toggleCargoSelection(cargo.id.toString())}
                           />
                         </td>
                         <td>
@@ -596,14 +596,14 @@ export default function CargosUnidad({
                           <div className='btn-group' role='group'>
                             <button
                               className='action-btn primary small'
-                              onClick={() => handleViewCargo(cargo.id)}
+                              onClick={() => handleViewCargo(cargo.id.toString())}
                               title='Ver detalle'
                             >
                               <i className='material-icons'>visibility</i>
                             </button>
                             <button
                               className='action-btn success small'
-                              onClick={() => handleRegisterPayment(cargo.id)}
+                              onClick={() => handleRegisterPayment(cargo.id.toString())}
                               title='Registrar pago'
                             >
                               <i className='material-icons'>payment</i>

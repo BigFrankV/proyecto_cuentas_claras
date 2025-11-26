@@ -55,6 +55,7 @@ export default function CargosUnidadPage() {
                   : 'pending',
           monto: cargo.monto,
           montoAplicado: cargo.monto - cargo.saldo,
+          saldo: cargo.saldo,
           unidad: cargo.unidad,
           periodo: cargo.periodo || '',
           fechaVencimiento: cargo.fechaVencimiento,

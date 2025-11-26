@@ -110,7 +110,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
           cargo.concepto.toLowerCase().includes(searchLower) ||
           cargo.descripcion?.toLowerCase().includes(searchLower) ||
           cargo.unidad.toLowerCase().includes(searchLower) ||
-          cargo.id.toLowerCase().includes(searchLower),
+          cargo.id.toString().toLowerCase().includes(searchLower),
       );
     }
 
@@ -187,7 +187,7 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
     if (selectedCargos.size === filteredCargos.length) {
       setSelectedCargos(new Set());
     } else {
-      setSelectedCargos(new Set(filteredCargos.map(cargo => cargo.id)));
+      setSelectedCargos(new Set(filteredCargos.map(cargo => cargo.id.toString())));
     }
   };
 
@@ -417,8 +417,8 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
                       <input
                         type='checkbox'
                         className='form-check-input'
-                        checked={selectedCargos.has(cargo.id)}
-                        onChange={() => toggleCargoSelection(cargo.id)}
+                        checked={selectedCargos.has(cargo.id.toString())}
+                        onChange={() => toggleCargoSelection(cargo.id.toString())}
                       />
                     </td>
                     <td>
@@ -463,21 +463,21 @@ export default function CargosListado({ className = '' }: CargosListadoProps) {
                       <div className='btn-group' role='group'>
                         <button
                           className='action-btn primary small'
-                          onClick={() => handleViewCargo(cargo.id)}
+                          onClick={() => handleViewCargo(cargo.id.toString())}
                           title='Ver detalle'
                         >
                           <i className='material-icons'>visibility</i>
                         </button>
                         <button
                           className='action-btn outline small'
-                          onClick={() => handleEditCargo(cargo.id)}
+                          onClick={() => handleEditCargo(cargo.id.toString())}
                           title='Editar'
                         >
                           <i className='material-icons'>edit</i>
                         </button>
                         <button
                           className='action-btn danger small'
-                          onClick={() => handleDeleteCargo(cargo.id)}
+                          onClick={() => handleDeleteCargo(cargo.id.toString())}
                           title='Eliminar'
                         >
                           <i className='material-icons'>delete</i>
