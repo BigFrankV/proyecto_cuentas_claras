@@ -2783,7 +2783,7 @@ router.post(
         console.log('💰 Procesando pago de cargo:', {
           cargoId,
           montoPagado,
-          transactionId: transaction.id
+          transactionId: transaction.id,
         });
 
         // Obtener cargo actual
@@ -2799,7 +2799,7 @@ router.post(
           console.log('📊 Estado actual del cargo:', {
             saldoAntes: cargo.saldo,
             estadoAntes: cargo.estado,
-            nuevoSaldo: Math.max(0, nuevoSaldo)
+            nuevoSaldo: Math.max(0, nuevoSaldo),
           });
 
           // Determinar nuevo estado
@@ -2812,7 +2812,7 @@ router.post(
 
           console.log('🔄 Actualizando cargo a:', {
             nuevoSaldo: Math.max(0, nuevoSaldo),
-            nuevoEstado
+            nuevoEstado,
           });
 
           // Actualizar cargo
@@ -2823,7 +2823,10 @@ router.post(
             [Math.max(0, nuevoSaldo), nuevoEstado, cargoId]
           );
 
-          console.log('✅ Cargo actualizado, filas afectadas:', updateResult.affectedRows);
+          console.log(
+            '✅ Cargo actualizado, filas afectadas:',
+            updateResult.affectedRows
+          );
 
           // Obtener persona_id del titular de la unidad
           const [titulares] = await db.query(
@@ -2833,7 +2836,8 @@ router.post(
             [cargo.unidad_id]
           );
 
-          const personaId = titulares && titulares.length > 0 ? titulares[0].persona_id : null;
+          const personaId =
+            titulares && titulares.length > 0 ? titulares[0].persona_id : null;
 
           console.log('👤 Persona ID del titular:', personaId);
 

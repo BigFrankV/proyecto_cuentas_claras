@@ -1054,146 +1054,139 @@
 
 
 <div class="slide">
-      <h2>DIAGRAMA PRINCIPAL</h2>
-      
-      <div class="insight-box">
-        <span class="insight-icon">🔑</span>
-        <strong>Estructura Completa:</strong> Vista global de todas las entidades y relaciones del sistema (Modelo ER).
-      </div>
-
-      <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe;">
-        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-        <div class="mermaid">
-          erDiagram
-          %% Entidades Principales (Izquierda)
-          comunidad { int id string razon_social string email_contacto }
-          persona { int id string rut string nombres string apellidos }
-          
-          %% Entidades Estructurales (Centro-Izq)
-          edificio { int id int comunidad_id string nombre }
-          unidad { int id int edificio_id string codigo }
-          medidor { int id int unidad_id string tipo }
-          amenidad { int id int comunidad_id string nombre }
-          
-          %% Entidades de Acceso (Centro)
-          usuario { int id int persona_id string username boolean activo }
-          rol { int id string codigo string nombre }
-          usuario_comunidad_rol { int id int usuario_id int comunidad_id }
-          
-          %% Entidades Financieras (Centro-Der)
-          emision { int id int comunidad_id string periodo }
-          gasto { int id int comunidad_id number monto }
-          detalle_emision { int id int emision_id int gasto_id }
-          cuenta_cobro_unidad { int id int emision_id int unidad_id number total }
-          
-          %% Entidades Finales (Derecha)
-          pago { int id int cuenta_cobro_unidad_id number monto }
-          multa { int id int unidad_id int persona_id number monto }
-          reserva { int id int amenidad_id int unidad_id }
-          lectura_medidor { int id int medidor_id string fecha number lectura }
-
-          %% RELACIONES (Ordenadas de Padre a Hijo para forzar flujo visual Izq->Der)
-          
-          %% Rama Estructural
-          comunidad ||--o{ edificio : "contiene"
-          comunidad ||--o{ amenidad : "tiene"
-          comunidad ||--o{ emision : "genera"
-          comunidad ||--o{ gasto : "registra"
-          
-          edificio ||--o{ unidad : "alberga"
-          unidad ||--o{ medidor : "tiene"
-          medidor ||--o{ lectura_medidor : "registra"
-          
-          %% Rama Personas
-          persona ||--o{ usuario : "tiene"
-          persona ||--o{ multa : "recibe"
-          persona ||--o{ titulares_unidad : "es_titular"
-          
-          usuario ||--o{ usuario_comunidad_rol : "tiene_permisos"
-          rol ||--o{ usuario_comunidad_rol : "define"
-          comunidad ||--o{ usuario_comunidad_rol : "en_contexto"
-          
-          %% Rama Operativa
-          unidad ||--o{ titulares_unidad : "habitada_por"
-          unidad ||--o{ cuenta_cobro_unidad : "debe"
-          unidad ||--o{ reserva : "solicita"
-          unidad ||--o{ multa : "asociada_a"
-          amenidad ||--o{ reserva : "agendada_en"
-          
-          %% Rama Financiera
-          gasto ||--o{ detalle_emision : "se_prorratea"
-          emision ||--o{ detalle_emision : "detalla"
-          emision ||--o{ cuenta_cobro_unidad : "calcula"
-          cuenta_cobro_unidad ||--o{ detalle_cuenta_cobro : "items"
-          cuenta_cobro_unidad ||--o{ pago : "saldada_con"
-          documento_compra ||--o{ gasto : "respalda"
-        </div>
-      </div>
-    </div>
-    
-   <div class="slide">
-  <h2>Módulo 01 · Comunidades</h2>
+  <h2>DIAGRAMA MAESTRO HORIZONTAL (ERD Completo)</h2>
   
   <div class="insight-box">
-    <span class="insight-icon">⚙️</span>
-    <strong>Configuración:</strong> Definición de parámetros globales, centros de costo y categorías.
+    <span class="insight-icon">➡️</span>
+    <strong>Flujo Horizontal:</strong> Organización lineal desde la definición de la comunidad (izquierda) hasta la conciliación bancaria (derecha).
   </div>
-  
+
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
     <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
     
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+    <div class="mermaid" style="display: flex; justify-content: flex-start; min-width: 1800px;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 30,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. ENTIDAD PRINCIPAL (IZQUIERDA) ---
-          comunidad {
-            int id
-            string razon_social
-            string rut
-          }
+          %% ==========================================
+          %% ZONA 1: CONFIGURACIÓN Y ESTRUCTURA (IZQUIERDA)
+          %% ==========================================
+          comunidad { bigint id PK string razon_social }
+          edificio { bigint id PK string nombre }
+          torre { bigint id PK string nombre }
           
-          %% --- 2. ENTIDADES HIJAS (CENTRO / DERECHA) ---
-          parametros_cobranza {
-            int id
-            int dias_gracia
-            decimal interes_mora
-          }
-          centro_costo {
-            int id
-            string codigo
-            string nombre
-          }
-          categoria_gasto {
-            int id
-            string nombre
-            string tipo
-          }
+          rol_sistema { int id PK string codigo }
+          usuario { bigint id PK string username }
+          usuario_rol_comunidad { bigint id PK date desde }
           
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
-          comunidad ||--|| parametros_cobranza : configura
-          comunidad ||--o{ centro_costo : contiene
-          comunidad ||--o{ categoria_gasto : cataloga
+          proveedor { bigint id PK string rut }
+          categoria_gasto { bigint id PK string nombre }
+          centro_costo { bigint id PK string nombre }
+
+          %% ==========================================
+          %% ZONA 2: OPERACIÓN Y ACTIVOS (CENTRO-IZQ)
+          %% ==========================================
+          unidad { bigint id PK string codigo decimal alicuota }
+          persona { bigint id PK string nombre_completo }
+          titulares_unidad { bigint id PK enum tipo }
           
-          %% Relación entre hijos
-          centro_costo }|--o{ categoria_gasto : usa
+          medidor { bigint id PK enum tipo }
+          amenidad { bigint id PK string nombre }
+          tipo_infraccion { bigint id PK string nombre }
+
+          %% ==========================================
+          %% ZONA 3: TRANSACCIONES (CENTRO-DER)
+          %% ==========================================
+          documento_compra { bigint id PK decimal total }
+          gasto { bigint id PK decimal monto enum estado }
+          
+          lectura_medidor { bigint id PK decimal lectura }
+          reserva_amenidad { bigint id PK enum estado }
+          multa { bigint id PK decimal monto }
+          ticket_soporte { bigint id PK enum prioridad }
+
+          %% ==========================================
+          %% ZONA 4: FINANZAS (DERECHA)
+          %% ==========================================
+          emision_gastos_comunes { bigint id PK string periodo }
+          detalle_emision_gastos { bigint id PK decimal monto }
+          
+          cuenta_cobro_unidad { bigint id PK decimal saldo }
+          detalle_cuenta_unidad { bigint id PK decimal monto }
+
+          %% ==========================================
+          %% ZONA 5: RECAUDACIÓN (EXTREMA DERECHA)
+          %% ==========================================
+          pago { bigint id PK decimal monto }
+          pago_aplicacion { bigint id PK decimal monto_aplicado }
+          conciliacion_bancaria { bigint id PK enum estado }
+
+          %% ==========================================
+          %% RELACIONES (Flujo forzado de Izq a Der)
+          %% ==========================================
+
+          %% 1. Definición Jerárquica
+          comunidad ||--o{ edificio : contiene
+          edificio ||--o{ torre : divide_en
+          torre ||--o{ unidad : agrupa
+          
+          %% 2. Definición de Acceso
+          comunidad ||--o{ usuario_rol_comunidad : gestiona
+          usuario ||--o{ usuario_rol_comunidad : tiene
+          rol_sistema ||--o{ usuario_rol_comunidad : define
+          usuario ||--o{ persona : es
+
+          %% 3. Relación con la Unidad (El nexo)
+          unidad ||--o{ titulares_unidad : propiedad
+          titulares_unidad }o--|| persona : titular
+          unidad ||--o{ medidor : servicio
+          
+          %% 4. Flujo de Gastos (Egresos)
+          proveedor ||--o{ documento_compra : factura
+          comunidad ||--o{ categoria_gasto : configura
+          documento_compra ||--o{ gasto : genera
+          gasto }o--|| categoria_gasto : clasifica
+          gasto }o--|| centro_costo : imputa
+
+          %% 5. Flujo Operativo (Generan cargos)
+          medidor ||--o{ lectura_medidor : registra
+          unidad ||--o{ reserva_amenidad : solicita
+          amenidad ||--o{ reserva_amenidad : usa
+          unidad ||--o{ multa : recibe
+          tipo_infraccion ||--o{ multa : tipifica
+          unidad ||--o{ ticket_soporte : reporta
+
+          %% 6. Flujo de Cobro (La Emisión)
+          comunidad ||--o{ emision_gastos_comunes : emite_mes
+          emision_gastos_comunes ||--o{ detalle_emision_gastos : consolida
+          gasto ||--o{ detalle_emision_gastos : incluido_en
+          
+          emision_gastos_comunes ||--o{ cuenta_cobro_unidad : boleta
+          cuenta_cobro_unidad }o--|| unidad : cobrada_a
+          cuenta_cobro_unidad ||--o{ detalle_cuenta_unidad : items
+          
+          %% 7. Flujo de Ingreso (El cierre)
+          unidad ||--o{ pago : realiza
+          pago ||--o{ pago_aplicacion : distribuye
+          pago_aplicacion }o--|| cuenta_cobro_unidad : rebaja
+          pago |o--|| conciliacion_bancaria : valida
     </div>
   </div>
 </div>
-
-    <div class="slide">
-  <h2>Módulo 02 · Usuarios y Seguridad</h2>
+    
+<div class="slide">
+  <h2>Módulo 01 · Configuración de Comunidad</h2>
   
   <div class="insight-box">
-    <i class="material-icons insight-icon">security</i>
-    <strong>Seguridad RBAC:</strong> La tabla intermedia permite que un mismo usuario tenga distintos roles según la comunidad.
+    <span class="insight-icon">⚙️</span>
+    <strong>Alcance:</strong> Visualización de todos los parámetros globales, financieros y operativos que definen a la comunidad.
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1202,71 +1195,100 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. IDENTIDAD (IZQUIERDA) ---
-          persona {
-            bigint id
-            string rut
-            string nombres
-          }
-          usuario {
-            string username
-            boolean totp_enabled
-          }
-          
-          %% --- 2. INTERMEDIA Y LOGS (CENTRO) ---
-          usuario_comunidad_rol {
-            bigint id
-            boolean activo
-          }
-          sesion_usuario {
-            string token
-            string ip
-          }
-          auditoria {
-            string accion
-            text detalle
-          }
-          
-          %% --- 3. DEFINICIONES (DERECHA) ---
-          rol {
-            string codigo
-            string nombre
-          }
+          %% --- ENTIDAD CENTRAL ---
           comunidad {
-            string nombre
+            bigint id PK
+            string razon_social
+            string rut
+            json politica_mora
+            string moneda "CLP/USD"
+          }
+          
+          %% --- CONFIGURACIÓN FINANCIERA ---
+          parametros_cobranza {
+            bigint id
+            int dias_gracia
+            decimal interes_max
+            enum mora_calculo "diaria/mensual"
+          }
+          
+          configuracion_interes {
+            bigint id
+            date aplica_desde
+            decimal tasa_mensual
+            enum metodo "simple/compuesto"
           }
 
-          %% --- RELACIONES (Flujo Izq -> Der) ---
+          %% --- CLASIFICACIÓN DE GASTOS ---
+          centro_costo {
+            bigint id
+            string codigo "Ej: CC01"
+            string nombre "Ej: Administración"
+          }
           
-          %% Flujo Principal de Seguridad
-          persona ||--o{ usuario : credenciales
-          usuario ||--o{ usuario_comunidad_rol : permisos
+          categoria_gasto {
+            bigint id
+            string nombre "Ej: Aseo"
+            enum tipo "operacional/fondo"
+            string cta_contable
+          }
+
+          %% --- ACTIVOS Y NORMATIVA ---
+          amenidad {
+            bigint id
+            string nombre "Ej: Quincho"
+            int capacidad
+            decimal tarifa
+            bool requiere_aprobacion
+          }
+
+          tipo_infraccion {
+            bigint id
+            string clave "Ej: ruido"
+            decimal monto_default
+            enum prioridad "baja/alta"
+          }
+
+          proveedor {
+            bigint id
+            string razon_social
+            string rut
+            string giro
+          }
           
-          %% Desglose de la relación muchos-a-muchos (El corazón del RBAC)
-          usuario_comunidad_rol }o--|| rol : asignado
-          usuario_comunidad_rol }o--|| comunidad : contexto
+          %% --- RELACIONES ---
+          %% La comunidad define sus reglas financieras
+          comunidad ||--|| parametros_cobranza : "define reglas"
+          comunidad ||--o{ configuracion_interes : "historial tasas"
+
+          %% La comunidad define su estructura de costos
+          comunidad ||--o{ centro_costo : "tiene"
+          comunidad ||--o{ categoria_gasto : "cataloga"
+
+          %% La comunidad gestiona sus activos y normas
+          comunidad ||--o{ amenidad : "administra"
+          comunidad ||--o{ tipo_infraccion : "regula"
           
-          %% Auditoría y Logs (Ramas secundarias)
-          usuario ||--o{ sesion_usuario : inicia
-          usuario ||--o{ auditoria : actividad
+          %% Relación externa
+          comunidad ||--o{ proveedor : "contrata"
     </div>
   </div>
 </div>
 
 <div class="slide">
-  <h2>Módulo 03 · Estructura</h2>
+  <h2>Módulo 02 · Usuarios y Seguridad (RBAC)</h2>
   
   <div class="insight-box">
-    <span class="insight-icon">🏢</span>
-    <strong>Jerarquía:</strong> La relación Edificio -> Torre -> Unidad permite la correcta asignación de gastos y prorrateo.
+    <span class="insight-icon">🛡️</span>
+    <strong>Seguridad Jerárquica:</strong> Gestión de identidades, roles temporales por comunidad y doble capa de auditoría (Técnica y de Negocio).
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1275,70 +1297,193 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. NIVEL SUPERIOR (IZQUIERDA) ---
-          comunidad {
-            int id
-            string nombre
+          %% --- 1. IDENTIDAD Y ACCESO (IZQUIERDA) ---
+          persona {
+            bigint id PK
+            string rut
+            string email_contacto
+            string telefono
           }
           
-          %% --- 2. MACRO ESTRUCTURA (CENTRO-IZQ) ---
-          edificio {
+          usuario {
+            bigint id PK
+            string username
+            string hash_password
+            boolean is_superadmin
+            boolean totp_enabled
+          }
+
+          user_preferences {
             int id
+            json preferences "Tema, Idioma"
+          }
+          
+          %% --- 2. CONTROL DE ACCESO RBAC (CENTRO) ---
+          usuario_rol_comunidad {
+            bigint id PK
+            date desde
+            date hasta "Vigencia del rol"
+            boolean activo
+          }
+          
+          rol_sistema {
+            int id
+            string codigo "admin, conserje"
+            int nivel_acceso "0-100"
+            bool es_rol_sistema
+          }
+
+          comunidad {
+            bigint id PK
+            string razon_social
+          }
+
+          %% --- 3. TRAZABILIDAD Y LOGS (DERECHA/ABAJO) ---
+          sesion_usuario {
+            string id "Token"
+            timestamp last_activity
+            string ip_address
+          }
+
+          auditoria {
+            bigint id
+            string accion "INSERT/UPDATE"
+            string tabla
+            json valores_nuevos
+          }
+
+          bitacora_auditoria {
+            bigint id
+            enum tipo "security, system"
+            enum prioridad "critical, high"
+            string descripcion
+          }
+          
+          %% --- RELACIONES ---
+          %% Identidad
+          persona ||--o{ usuario : "tiene credenciales"
+          usuario ||--|| user_preferences : "configura"
+          
+          %% RBAC (El corazón del sistema)
+          usuario ||--o{ usuario_rol_comunidad : "ejerce"
+          usuario_rol_comunidad }o--|| rol_sistema : "con perfil"
+          usuario_rol_comunidad }o--|| comunidad : "en contexto"
+          
+          %% Auditoría y Sesión
+          usuario ||--o{ sesion_usuario : "inicia"
+          usuario ||--o{ auditoria : "genera traza datos"
+          usuario ||--o{ bitacora_auditoria : "genera evento seg."
+    </div>
+  </div>
+</div>
+
+<div class="slide">
+  <h2>Módulo 03 · Infraestructura y Propiedad</h2>
+  
+  <div class="insight-box">
+    <span class="insight-icon">🏢</span>
+    <strong>Jerarquía Física:</strong> Estructura piramidal para el prorrateo de gastos, asignación de medidores y gestión de la propiedad.
+  </div>
+  
+  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+    
+    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+      %%{init: {
+        'theme': 'base', 
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
+        'er': {
+            'layoutDirection': 'LR',
+            'entityPadding': 15,
+            'strokeWidth': 2
+        }
+      }}%%
+      erDiagram
+          %% --- 1. NIVEL MACRO (IZQUIERDA) ---
+          comunidad {
+            bigint id PK
+            string razon_social
+          }
+          
+          edificio {
+            bigint id PK
             string nombre
             string direccion
           }
           
-          %% --- 3. SUB ESTRUCTURA (CENTRO) ---
           torre {
-            int id
+            bigint id PK
             string nombre
-          }
-          
-          %% --- 4. NIVEL UNIDAD (DERECHA) ---
-          unidad {
             string codigo
-            decimal alicuota
           }
           
-          %% --- 5. NIVEL PROPIETARIO (EXTREMA DERECHA) ---
+          %% --- 2. NIVEL MICRO (CENTRO) ---
+          unidad {
+            bigint id PK
+            string codigo "Dpto 101"
+            decimal alicuota "% Gasto Común"
+            decimal m2_utiles
+            boolean activa
+          }
+          
+          %% --- 3. ACTIVOS VINCULADOS (ABAJO) ---
+          medidor {
+            bigint id PK
+            string codigo
+            enum tipo "agua/luz/gas"
+            boolean es_compartido
+          }
+          
+          %% --- 4. PROPIEDAD Y HABITABILIDAD (DERECHA) ---
           titulares_unidad {
-            string tipo
+            bigint id PK
+            enum tipo "propietario/arrendatario"
+            date desde
+            date hasta
+            decimal porcentaje
           }
 
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
+          persona {
+            bigint id PK
+            string nombre_completo
+            string email
+          }
+
+          %% --- RELACIONES ---
+          %% Jerarquía Física
+          comunidad ||--o{ edificio : "compuesta por"
+          edificio ||--o{ torre : "se divide en"
           
-          %% Comunidad contiene edificios (y a veces unidades directas)
-          comunidad ||--o{ edificio : contiene
-          comunidad ||--o{ unidad : admin_directa
+          %% Ubicación de la Unidad (Flexible: Puede estar en Torre, Edificio o directo en Comunidad)
+          torre ||--o{ unidad : "contiene"
+          edificio ||--o{ unidad : "alberga"
+          comunidad ||--o{ unidad : "administra directo"
+
+          %% Servicios
+          unidad ||--o{ medidor : "tiene asignado"
           
-          %% Jerarquía del Edificio
-          edificio ||--o{ torre : sectores
-          edificio ||--o{ unidad : alberga
-          
-          %% Jerarquía de Torre a Unidad
-          torre ||--o{ unidad : agrupa
-          
-          %% Relación final con personas
-          unidad ||--o{ titulares_unidad : habitada_por
+          %% Propiedad (Relación N:M resuelta)
+          unidad ||--o{ titulares_unidad : "poseída/habitada"
+          titulares_unidad }o--|| persona : "es"
     </div>
   </div>
 </div>
 
     <!-- MÓDULO 04 -->
-   <div class="slide">
-  <h2>Módulo 04 · Gestión Financiera</h2>
+<div class="slide">
+  <h2>Módulo 04 · Gestión Financiera y Auditoría</h2>
   
   <div class="insight-box">
     <span class="insight-icon">💰</span>
-    <strong>Auditoría:</strong> Flujo desde el proveedor externo hasta la imputación interna del costo.
+    <strong>Trazabilidad Total:</strong> Desde la factura del proveedor, pasando por el flujo de aprobación, hasta la emisión del cobro a la comunidad.
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1347,70 +1492,89 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. ENTIDADES DE ORIGEN (IZQUIERDA) ---
+          %% --- 1. ORIGEN (IZQUIERDA) ---
           proveedor {
             bigint id PK
-            string rut UK
-            string nombre
+            string razon_social
+            string rut
           }
-          categoria_gasto {
-            int id PK
-            string nombre
-          }
-
-          %% --- 2. SOPORTE DOCUMENTAL (CENTRO) ---
+          
           documento_compra {
             bigint id PK
-            string numero
-            decimal total
+            string folio
+            enum tipo "factura/boleta"
+            decimal monto_total
             date fecha
           }
 
-          %% --- 3. REGISTRO CONTABLE (CENTRO-DERECHA) ---
+          %% --- 2. GESTIÓN DEL GASTO (CENTRO) ---
           gasto {
             bigint id PK
+            string numero "G-2025-001"
             decimal monto
+            enum estado "pendiente/aprobado"
+            boolean extraordinario
           }
-
-          %% --- 4. IMPUTACIÓN (DERECHA FINAL) ---
-          centro_costo {
+          
+          gasto_aprobacion {
             bigint id PK
-            string nombre
-            text detalle
+            enum accion "aprobar/rechazar"
+            datetime fecha
+            string observaciones
           }
 
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
+          %% --- 3. CLASIFICACIÓN (ARRIBA/ABAJO) ---
+          centro_costo {
+            bigint id
+            string nombre
+          }
+          categoria_gasto {
+            bigint id
+            string nombre
+            string cta_contable
+          }
+
+          %% --- 4. COBRO A LA COMUNIDAD (DERECHA) ---
+          emision_gastos_comunes {
+            bigint id PK
+            string periodo "2025-11"
+            date vencimiento
+            enum estado "borrador/emitido"
+          }
+
+          %% --- RELACIONES ---
+          %% Flujo de Entrada
+          proveedor ||--o{ documento_compra : "emite"
+          documento_compra ||--o{ gasto : "respalda"
           
-          %% El proveedor emite el documento
-          proveedor ||--o{ documento_compra : emite
+          %% Clasificación
+          gasto }o--|| centro_costo : "imputado a"
+          gasto }o--|| categoria_gasto : "clasificado en"
+
+          %% Flujo de Control (Auditoría)
+          gasto ||--o{ gasto_aprobacion : "requiere"
           
-          %% El documento respalda el gasto
-          documento_compra ||--o{ gasto : respalda
-          
-          %% La categoría clasifica el gasto (Conexión vertical visualmente)
-          categoria_gasto ||--o{ gasto : clasifica
-          
-          %% El gasto se distribuye en centros de costo
-          gasto ||--o{ centro_costo : distribuye_en
+          %% Flujo de Salida (Cobro)
+          emision_gastos_comunes ||--o{ gasto : "agrupa (aprobados)"
     </div>
   </div>
 </div>
 
     <!-- MÓDULO 05 -->
-    <div class="slide">
-  <h2>Módulo 05 · Cobros y Pagos</h2>
+<div class="slide">
+  <h2>Módulo 05 · Ciclo de Ingresos y Recaudación</h2>
   
   <div class="insight-box">
-    <span class="insight-icon">⚠️</span>
-    <strong>Core del Negocio:</strong> Ciclo de Emisión (generación de deuda) y Conciliación (confirmación de ingresos).
+    <span class="insight-icon">💸</span>
+    <strong>Flujo de Caja:</strong> Desde la generación masiva de deuda, pasando por la pasarela de pago, hasta la conciliación bancaria final.
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1419,73 +1583,88 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. ORIGEN DE LA DEUDA (IZQUIERDA) ---
-          emision {
+          %% --- 1. GENERACIÓN DE COBRO (IZQUIERDA) ---
+          emision_gastos_comunes {
             bigint id PK
-            varchar periodo
-            date fecha_venc
+            string periodo
+            enum estado "borrador/emitido"
           }
-          detalle_emision {
+          
+          detalle_emision_gastos {
+            bigint id PK
             decimal monto
-            int categoria_id
+            enum regla "prorrateo/fijo"
           }
 
-          %% --- 2. DEUDA INDIVIDUAL (CENTRO-IZQ) ---
           cuenta_cobro_unidad {
             bigint id PK
-            varchar estado
-            decimal total
-          }
-          detalle_cuenta_cobro {
-            decimal monto
-            int categoria_id
+            decimal monto_total
+            decimal saldo_pendiente
+            enum estado "pendiente/pagado/vencido"
           }
 
-          %% --- 3. RECAUDACIÓN (CENTRO-DER) ---
+          %% --- 2. PASARELA Y PAGOS (CENTRO) ---
+          webhook_pago {
+            bigint id PK
+            enum proveedor "webpay/khipu"
+            json payload
+            boolean procesado
+          }
+
           pago {
             bigint id PK
             decimal monto
-            varchar medio
-            date fecha
+            enum medio "transferencia/webpay"
+            enum estado "pendiente/aplicado"
           }
 
-          %% --- 4. VALIDACIÓN (DERECHA FINAL) ---
+          %% --- 3. IMPUTACIÓN (EL CEREBRO DEL COBRO) ---
+          pago_aplicacion {
+            bigint id PK
+            decimal monto_aplicado
+            int prioridad
+          }
+
+          %% --- 4. CONTROL BANCARIO (DERECHA) ---
           conciliacion_bancaria {
             bigint id PK
-            varchar banco
-            varchar estado
+            date fecha_banco
+            decimal monto_real
+            enum estado "conciliado/pendiente"
           }
 
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
+          %% --- RELACIONES ---
+          %% Nivel 1: Emisión Masiva
+          emision_gastos_comunes ||--o{ detalle_emision_gastos : "contiene items"
+          emision_gastos_comunes ||--o{ cuenta_cobro_unidad : "genera boletas"
           
-          %% El proceso nace con la Emisión
-          emision ||--o{ detalle_emision : desglose_global
-          emision ||--o{ cuenta_cobro_unidad : genera_deuda
+          %% Nivel 2: Entrada de Dinero (Manual o Automática)
+          webhook_pago ||--|| pago : "crea automáticamente"
           
-          %% La cuenta de cobro tiene detalle y recibe pagos
-          cuenta_cobro_unidad ||--o{ detalle_cuenta_cobro : items
-          cuenta_cobro_unidad ||--o{ pago : saldada_con
-          
-          %% El pago debe ser validado contra el banco
-          pago ||--|| conciliacion_bancaria : validado_en
+          %% Nivel 3: Distribución del Dinero (Clave del Negocio)
+          pago ||--o{ pago_aplicacion : "se distribuye en"
+          pago_aplicacion }o--|| cuenta_cobro_unidad : "rebaja deuda de"
+
+          %% Nivel 4: Validación Externa
+          pago |o--|| conciliacion_bancaria : "se valida contra"
     </div>
   </div>
 </div>
     <!-- MÓDULO 05.1 -->
-    <div class="slide">
-  <h2>Módulo 05.1 · Multas e Infracciones</h2>
+<div class="slide">
+  <h2>Módulo 05.1 · Ciclo Legal de Infracciones</h2>
   
   <div class="insight-box">
     <span class="insight-icon">⚖️</span>
-    <strong>Ciclo de Infracción:</strong> Desde la identificación del responsable hasta el cobro efectivo en la boleta.
+    <strong>Gestión Punitiva:</strong> Desde la normativa base, pasando por la evidencia y apelación, hasta el impacto financiero final.
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1494,86 +1673,97 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. ORIGEN / RESPONSABLES (IZQUIERDA) ---
+          %% --- 1. CONFIGURACIÓN Y ORIGEN (IZQUIERDA) ---
+          tipo_infraccion {
+            bigint id
+            string nombre "Ej: Ruido"
+            decimal monto_default
+          }
+          
           unidad {
+            bigint id
             string codigo
-            decimal alicuota
           }
           persona {
-            string rut
+            bigint id
             string nombre
           }
 
-          %% --- 2. EL INCIDENTE (CENTRO-IZQ) ---
+          %% --- 2. EL INCIDENTE (CENTRO) ---
           multa {
             bigint id PK
-            varchar motivo
+            enum estado "pendiente/apelada/pagada/anulada"
             decimal monto
-            enum estado
-            date fecha
+            enum prioridad
+            date fecha_vencimiento
           }
 
-          %% --- 3. GESTIÓN Y EVIDENCIA (CENTRO) ---
           documento_multa {
-            string tipo
-            string ruta
+            bigint id
+            string tipo "evidencia/foto"
+            string url
           }
+
+          %% --- 3. PROCESO LEGAL (ABAJO) ---
           multa_apelacion {
-            varchar estado
-            text detalle
+            bigint id
+            text motivo_apelacion
+            enum estado "pendiente/aceptada/rechazada"
+            text resolucion
+          }
+          
+          multa_historial {
+            bigint id
+            string accion "cambio_estado"
+            string estado_anterior
+            string estado_nuevo
+            datetime fecha
           }
 
-          %% --- 4. IMPACTO FINANCIERO (DERECHA) ---
-          detalle_cuenta_cobro {
+          %% --- 4. COBRO (DERECHA) ---
+          detalle_cuenta_unidad {
+            bigint id
             decimal monto
-            enum origen
-            bigint origen_id
-          }
-          cuenta_cobro_unidad {
-            bigint id PK
-            varchar estado
-            decimal total
-          }
-          pago {
-            decimal monto
-            date fecha
+            enum origen "multa"
+            bigint origen_id "FK a multa.id"
           }
 
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
+          %% --- RELACIONES ---
+          %% Definición
+          tipo_infraccion ||--o{ multa : "tipifica"
           
-          %% Los responsables generan la multa
-          unidad ||--o{ multa : genera
-          persona ||--o{ multa : responsable
+          %% Responsabilidad
+          unidad ||--o{ multa : "se cursa a"
+          persona ||--o{ multa : "responsable"
           
-          %% La multa tiene soportes
-          multa ||--o{ documento_multa : evidencia
-          multa ||--o{ multa_apelacion : tiene_proceso
+          %% Evidencia y Trazabilidad
+          multa ||--o{ documento_multa : "sustentada por"
+          multa ||--o{ multa_historial : "tiene bitácora"
           
-          %% CONEXIÓN CRÍTICA: De Operación a Finanzas
-          multa ||--|| detalle_cuenta_cobro : se_convierte_en
+          %% Gestión de Conflicto
+          multa ||--o{ multa_apelacion : "puede tener"
           
-          %% El detalle pertenece a una cuenta y se paga
-          cuenta_cobro_unidad ||--o{ detalle_cuenta_cobro : incluye_item
-          cuenta_cobro_unidad ||--o{ pago : recaudacion
+          %% Impacto Financiero
+          multa ||--|| detalle_cuenta_unidad : "se cobra como"
     </div>
   </div>
 </div>
 
     <!-- MÓDULO 06 -->
-  <div class="slide">
-  <h2>Módulo 06 · Amenidades y Reservas</h2>
+<div class="slide">
+  <h2>Módulo 06 · Gestión de Espacios Comunes (Amenidades)</h2>
   
   <div class="insight-box">
     <span class="insight-icon">📅</span>
-    <strong>Logística:</strong> El sistema cruza la disponibilidad del recurso con la solicitud de la unidad.
+    <strong>Ciclo de Reserva:</strong> Validación de disponibilidad, asignación de responsable y control de estados según reglas del recinto.
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1582,64 +1772,64 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. LOS RECURSOS (IZQUIERDA ARRIBA) ---
+          %% --- 1. CONFIGURACIÓN DEL RECURSO (IZQUIERDA) ---
           amenidad {
             bigint id PK
             string nombre
-            text descripcion
+            int capacidad
+            decimal tarifa
+            boolean requiere_aprobacion
+            text reglas
           }
 
-          %% --- 2. EL SOLICITANTE (IZQUIERDA ABAJO) ---
+          %% --- 2. LOS SOLICITANTES (CENTRO-ABAJO) ---
           unidad {
+            bigint id
             string codigo
           }
-
-          %% --- 3. REGLAS DE NEGOCIO (CENTRO) ---
-          tarifa_amenidad {
-            decimal precio
-            varchar periodo
-          }
-          bloqueo_amenidad {
-            date desde
-            date hasta
-            varchar motivo
+          persona {
+            bigint id
+            string nombre
           }
 
-          %% --- 4. LA TRANSACCIÓN (DERECHA) ---
-          reserva {
+          %% --- 3. LA TRANSACCIÓN CENTRAL (DERECHA) ---
+          reserva_amenidad {
             bigint id PK
-            date fecha_inicio
-            date fecha_fin
-            varchar estado
+            datetime inicio
+            datetime fin
+            enum estado "solicitada/aprobada/rechazada/cancelada/cumplida"
           }
 
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
+          %% --- RELACIONES ---
           
-          %% Configuración de la Amenidad (Ramas)
-          amenidad ||--o{ tarifa_amenidad : tiene_costos
-          amenidad ||--o{ bloqueo_amenidad : tiene_bloqueos
+          %% El recurso define las reglas
+          amenidad ||--o{ reserva_amenidad : "es reservada"
           
-          %% El flujo principal de reserva (Convergencia)
-          amenidad ||--o{ reserva : recibe_reserva
-          unidad ||--o{ reserva : solicita_reserva
+          %% La solicitud vincula unidad y persona responsable
+          unidad ||--o{ reserva_amenidad : "origen solicitud"
+          persona ||--o{ reserva_amenidad : "responsable"
+          
+          %% NOTA TÉCNICA:
+          %% Si la tarifa > 0, esto eventualmente generará un
+          %% cargo en 'detalle_cuenta_unidad', conectando con Finanzas.
     </div>
   </div>
 </div>
     <!-- MÓDULO 07 -->
-   <div class="slide">
-  <h2>Módulo 07 · Soporte y Mantención</h2>
+<div class="slide">
+  <h2>Módulo 07 · Gestión de Soporte y Mantención</h2>
   
   <div class="insight-box">
     <span class="insight-icon">🔧</span>
-    <strong>SLA:</strong> Los tickets se clasifican por categoría para medir automáticamente los tiempos de respuesta.
+    <strong>Ciclo de Resolución:</strong> Flujo simplificado desde el reporte del problema hasta su cierre, con asignación directa de responsables.
   </div>
   
   <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
@@ -1648,54 +1838,54 @@
     <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
       %%{init: {
         'theme': 'base', 
-        'themeVariables': { 'fontSize': '16px', 'fontFamily': 'Arial' },
+        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
         'er': {
             'layoutDirection': 'LR',
-            'entityPadding': 20,
+            'entityPadding': 15,
             'strokeWidth': 2
         }
       }}%%
       erDiagram
-          %% --- 1. ENTRADAS (IZQUIERDA) ---
+          %% --- 1. QUIÉN REPORTA (IZQUIERDA) ---
           unidad {
-            string codigo
-          }
-          categoria_ticket {
-            int id PK
-            string nombre
-            int horas_sla
-          }
-
-          %% --- 2. EL PROBLEMA (CENTRO) ---
-          ticket {
             bigint id PK
-            string asunto
-            string estado
-            datetime creado_en
+            string codigo "Dpto 101"
+          }
+          comunidad {
+            bigint id PK
+            string razon_social
           }
 
-          %% --- 3. LA RESOLUCIÓN (DERECHA) ---
-          comentario_ticket {
-            text comentario
-            datetime fecha
-          }
-          mantencion_programada {
-            date fecha_prog
-            varchar responsable
-            varchar estado
+          %% --- 2. EL TICKET (CENTRO - NÚCLEO) ---
+          ticket_soporte {
+            bigint id PK
+            string titulo
+            string descripcion
+            string categoria "Gasfitería, Electricidad..."
+            enum prioridad "baja/media/alta"
+            enum estado "abierto/en_progreso/resuelto/cerrado"
+            json attachments_json "Fotos/Evidencia"
+            datetime created_at
           }
 
-          %% --- RELACIONES (Flujo Izquierda -> Derecha) ---
+          %% --- 3. QUIÉN RESUELVE (DERECHA) ---
+          usuario {
+            bigint id PK
+            string username "Conserje/Admin"
+          }
+
+          %% --- RELACIONES ---
           
-          %% Origen del ticket
-          unidad ||--o{ ticket : reporta_problema
+          %% El contexto del problema
+          comunidad ||--o{ ticket_soporte : "ámbito global"
+          unidad |o--o{ ticket_soporte : "reporta problema"
           
-          %% Reglas del ticket (SLA)
-          categoria_ticket ||--o{ ticket : define_sla
+          %% La gestión del problema (Asignación)
+          usuario ||--o{ ticket_soporte : "es asignado a"
           
-          %% Gestión del ticket (Derivaciones)
-          ticket ||--o{ comentario_ticket : historial_chat
-          ticket ||--o{ mantencion_programada : requiere_tecnico
+          %% NOTA TÉCNICA:
+          %% La evidencia (fotos antes/después) se almacena
+          %% directamente en el campo JSON del ticket.
     </div>
   </div>
 </div>

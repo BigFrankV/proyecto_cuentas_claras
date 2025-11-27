@@ -51,7 +51,7 @@ class PaymentGatewayService {
    */
   async createWebpayTransaction(orderData) {
     try {
-      const { amount, orderId, sessionId, cargoId, multaId } = orderData;
+      const { amount, orderId, sessionId, cargoId } = orderData;
 
       // Determinar URL de retorno según el tipo de pago
       let returnUrl = `${this.baseUrl}/multas/pago/resultado`;
@@ -69,12 +69,7 @@ class PaymentGatewayService {
       );
 
       // Crear transacción
-      const response = await tx.create(
-        orderId,
-        sessionId,
-        amount,
-        returnUrl
-      );
+      const response = await tx.create(orderId, sessionId, amount, returnUrl);
 
       // Para Webpay, la transacción ya está guardada en multas.js, solo devolver respuesta
       return {
