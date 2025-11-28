@@ -790,7 +790,7 @@ router.post(
   '/',
   [
     authenticate,
-    authorize('admin', 'superadmin'),
+    authorize('superadmin'),
     body('razon_social').notEmpty().withMessage('Raz�n social es requerida'),
     body('rut').notEmpty().withMessage('RUT es requerido'),
     body('dv').notEmpty().withMessage('D�gito verificador es requerido'),
@@ -904,6 +904,19 @@ router.patch(
     try {
       const id = req.params.id;
       const userId = req.user.id;
+      const isSuperadmin = req.user.is_superadmin;
+
+      // ALTO: Admin solo puede editar SU comunidad
+      if (!isSuperadmin) {
+        const [membership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin", "admin_comunidad")',
+          [req.user.persona_id, id]
+        );
+
+        if (!membership.length) {
+          return res.status(403).json({ error: 'No tienes permisos para editar esta comunidad' });
+        }
+      }
 
       const allowedFields = [
         'razon_social',

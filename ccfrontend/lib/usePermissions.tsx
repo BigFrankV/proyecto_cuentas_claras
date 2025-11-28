@@ -183,10 +183,6 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_REPORTS,
     Permission.EXPORT_REPORTS,
     Permission.SYSTEM_CONFIG,
-    
-    // ✅ AGREGAR permisos granulares
-    Permission.EDIT_COMUNIDAD,
-    Permission.VIEW_COMUNIDAD,
     Permission.CREATE_EDIFICIO,
     Permission.EDIT_EDIFICIO,
     Permission.DELETE_EDIFICIO,

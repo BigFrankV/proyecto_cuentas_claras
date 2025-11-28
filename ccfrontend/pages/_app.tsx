@@ -17,6 +17,7 @@ import { useEffect } from 'react';
 
 import { setAxiosAuthToken } from '@/lib/multasService';
 import { AuthProvider } from '@/lib/useAuth';
+import { ComunidadProvider } from '@/lib/useComunidad';
 
 export default function App({ Component, pageProps }: AppProps) {
   useEffect(() => {
@@ -38,7 +39,9 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <AuthProvider>
-      <Component {...pageProps} />
+      <ComunidadProvider>
+        <Component {...pageProps} />
+      </ComunidadProvider>
     </AuthProvider>
   );
 }

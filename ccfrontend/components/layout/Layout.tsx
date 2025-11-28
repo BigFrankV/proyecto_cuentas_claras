@@ -29,12 +29,12 @@ export default function Layout({
         <Sidebar />
 
         {/* Contenido principal */}
-        <div className='main-content flex-grow-1 bg-light'>
+        <div className='main-content flex-grow-1 bg-light d-flex flex-column'>
           {/* Navbar móvil */}
           <MobileNavbar />
 
           {/* Contenido */}
-          <main>{children}</main>
+          <main className='flex-grow-1'>{children}</main>
         </div>
       </div>
 

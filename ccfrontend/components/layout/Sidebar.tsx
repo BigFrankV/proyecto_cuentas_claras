@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+import GlobalComunidadSelector from './GlobalComunidadSelector';
 import profileService from '@/lib/profileService';
 import { useAuth } from '@/lib/useAuth';
 import {
@@ -186,6 +187,9 @@ export default function Sidebar() {
           </span>
           <span className='fs-4'>Cuentas Claras</span>
         </Link>
+
+        {/* Selector global de comunidad */}
+        <GlobalComunidadSelector />
 
         {/* Información del usuario */}
         <div className='d-flex align-items-center mb-3 px-2'>

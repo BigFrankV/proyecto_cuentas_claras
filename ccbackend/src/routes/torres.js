@@ -79,6 +79,51 @@ const { requireCommunity } = require('../middleware/tenancy');
 router.get('/edificio/:edificioId/listado', authenticate, async (req, res) => {
   try {
     const edificioId = Number(req.params.edificioId);
+    const userId = req.user.persona_id;
+    const isSuperadmin = req.user.is_superadmin;
+
+    // CRÍTICO: Verificar acceso al edificio
+    const [edificio] = await db.query(
+      'SELECT comunidad_id FROM edificio WHERE id = ?',
+      [edificioId]
+    );
+
+    if (!edificio.length) {
+      return res.status(404).json({ error: 'Edificio no encontrado' });
+    }
+
+    const comunidadId = edificio[0].comunidad_id;
+
+    // Validar que usuario tenga acceso a esta comunidad
+    if (!isSuperadmin) {
+      const [membership] = await db.query(
+        'SELECT rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+        [userId, comunidadId]
+      );
+
+      if (!membership.length) {
+        return res.status(403).json({ error: 'No tienes acceso a esta comunidad' });
+      }
+
+      const rol = membership[0].rol;
+
+      // Si es rol básico, verificar que tenga unidades en este edificio
+      if (!['admin', 'admin_comunidad'].includes(rol)) {
+        const [unidades] = await db.query(
+          `SELECT 1 FROM unidad u
+           INNER JOIN titulares_unidad tu ON tu.unidad_id = u.id
+           WHERE u.edificio_id = ? 
+             AND tu.persona_id = ?
+             AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
+           LIMIT 1`,
+          [edificioId, userId]
+        );
+
+        if (!unidades.length) {
+          return res.status(403).json({ error: 'No tienes acceso a este edificio' });
+        }
+      }
+    }
 
     const [rows] = await db.query(
       `
@@ -1748,19 +1793,42 @@ router.patch(
   authenticate,
   authorize('admin', 'superadmin'),
   async (req, res) => {
-    const id = req.params.id;
-    const fields = ['nombre'];
-    const updates = [];
-    const values = [];
-    fields.forEach((f) => {
-      if (req.body[f] !== undefined) {
-        updates.push(`${f} = ?`);
-        values.push(req.body[f]);
-      }
-    });
-    if (!updates.length) return res.status(400).json({ error: 'no fields' });
-    values.push(id);
     try {
+      const id = req.params.id;
+      const isSuperadmin = req.user.is_superadmin;
+
+      // ALTO: Admin solo puede editar torres de SU comunidad
+      if (!isSuperadmin) {
+        // Verificar que la torre pertenece a un edificio de su comunidad
+        const [torreCheck] = await db.query(
+          `SELECT t.id 
+           FROM torre t
+           INNER JOIN edificio e ON t.edificio_id = e.id
+           INNER JOIN usuario_miembro_comunidad umc 
+             ON e.comunidad_id = umc.comunidad_id
+             AND umc.persona_id = ?
+             AND umc.rol IN ('admin', 'admin_comunidad')
+           WHERE t.id = ?`,
+          [req.user.persona_id, id]
+        );
+
+        if (!torreCheck.length) {
+          return res.status(403).json({ error: 'No tienes permisos para editar esta torre' });
+        }
+      }
+
+      const fields = ['nombre'];
+      const updates = [];
+      const values = [];
+      fields.forEach((f) => {
+        if (req.body[f] !== undefined) {
+          updates.push(`${f} = ?`);
+          values.push(req.body[f]);
+        }
+      });
+      if (!updates.length) return res.status(400).json({ error: 'no fields' });
+      values.push(id);
+      
       await db.query(
         `UPDATE torre SET ${updates.join(', ')} WHERE id = ?`,
         values

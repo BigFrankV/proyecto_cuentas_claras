@@ -6,6 +6,7 @@ import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/ui/PageHeader';
 import apiClient from '@/lib/api';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Unidad {
@@ -118,6 +119,7 @@ const mockUnidades: Unidad[] = [
 
 export default function UnidadesListado() {
   const { hasPermission } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
   const [unidades, setUnidades] = useState<Unidad[]>([]);
   const [filteredUnidades, setFilteredUnidades] = useState<Unidad[]>([]);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
@@ -143,15 +145,25 @@ export default function UnidadesListado() {
   const [comunidadesState, setComunidadesState] = useState<any[]>([]);
 
   useEffect(() => {
-    // load comunidades dropdown
+    // load comunidades dropdown - USAR SOLO LAS DEL USUARIO desde contexto global
     let mounted = true;
     (async () => {
       try {
-        const res = await apiClient.get('/unidades/dropdowns/comunidades');
+        // eslint-disable-next-line no-console
+        console.log('🏘️ [Unidades] Comunidad global cambió a:', comunidadSeleccionada);
+        
+        // En lugar de llamar al endpoint, usar las comunidades del contexto global
+        // que ya están filtradas por usuario
+        const res = await apiClient.get('/comunidades/');
         if (!mounted) {
           return;
         }
-        setComunidadesState(res.data || []);
+        // Mapear al formato esperado por el dropdown
+        const mapped = (res.data || []).map((c: any) => ({
+          id: c.id,
+          nombre: c.razon_social || c.nombre
+        }));
+        setComunidadesState(mapped);
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('Error loading comunidades dropdown', err);
@@ -160,7 +172,7 @@ export default function UnidadesListado() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [comunidadSeleccionada]);
 
   useEffect(() => {
     // load edificios for selected comunidad

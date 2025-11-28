@@ -19,27 +19,60 @@ router.get(
   authenticate,
   requireCommunity('comunidadId'),
   async (req, res) => {
-    const comunidadId = Number(req.params.comunidadId);
-    const [rows] = await db.query(
-      `
-    SELECT 
-      u.id, 
-      u.codigo, 
-      u.edificio_id, 
-      u.torre_id,
-      e.nombre as edificio_nombre,
-      t.nombre as torre_nombre,
-      u.alicuota, 
-      u.activa 
-    FROM unidad u
-    LEFT JOIN edificio e ON e.id = u.edificio_id
-    LEFT JOIN torre t ON t.id = u.torre_id
-    WHERE u.comunidad_id = ? 
-    LIMIT 500
-  `,
-      [comunidadId]
-    );
-    res.json(rows);
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const userId = req.user.persona_id;
+      const isSuperadmin = req.user.is_superadmin;
+
+      // Obtener rol del usuario en esta comunidad
+      let rol = null;
+      if (!isSuperadmin) {
+        const [rolRows] = await db.query(
+          'SELECT rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+          [userId, comunidadId]
+        );
+        rol = rolRows[0]?.rol;
+      }
+
+      let query = `
+      SELECT 
+        u.id, 
+        u.codigo, 
+        u.edificio_id, 
+        u.torre_id,
+        e.nombre as edificio_nombre,
+        t.nombre as torre_nombre,
+        u.alicuota, 
+        u.activa 
+      FROM unidad u
+      LEFT JOIN edificio e ON e.id = u.edificio_id
+      LEFT JOIN torre t ON t.id = u.torre_id
+    `;
+
+      const params = [comunidadId];
+
+      // CRÍTICO: Roles básicos solo ven SUS unidades
+      if (!isSuperadmin && !['admin', 'admin_comunidad'].includes(rol)) {
+        query += `
+        INNER JOIN titulares_unidad tu ON tu.unidad_id = u.id
+        WHERE u.comunidad_id = ? 
+          AND tu.persona_id = ?
+          AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
+      `;
+        params.push(userId);
+      } else {
+        // Admin/Superadmin: todas de la comunidad
+        query += ` WHERE u.comunidad_id = ? `;
+      }
+
+      query += ` LIMIT 500`;
+
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error en GET /comunidad/:comunidadId:', err);
+      res.status(500).json({ error: 'Error al obtener unidades' });
+    }
   }
 );
 
