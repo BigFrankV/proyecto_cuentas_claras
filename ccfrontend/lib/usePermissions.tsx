@@ -573,22 +573,53 @@ export function usePermissions() {
     permission: Permission,
     communityId?: number,
   ): boolean => {
-    const rolePermissions = ROLE_PERMISSIONS[currentRole] || [];
-    const hasBasePermission = rolePermissions.includes(permission);
-
-    // Si no tiene el permiso base, denegar
-    if (!hasBasePermission) {
-      return false;
-    }
-
     // Si es superadmin, permitir siempre
     if (user?.is_superadmin) {
       return true;
     }
 
+    // Determinar el rol a usar: si hay communityId, usar rol de esa comunidad
+    let roleToCheck = currentRole;
+    if (communityId && user?.memberships) {
+      const membership = user.memberships.find(
+        (m: any) => m.comunidadId === communityId || m.comunidad_id === communityId,
+      );
+      if (membership) {
+        const rolComunidad = membership.rol?.toLowerCase();
+        // Mapear rol de la comunidad a UserRole
+        if (rolComunidad === 'admin_comunidad' || rolComunidad === 'admin') {
+          roleToCheck = UserRole.ADMIN;
+        } else if (rolComunidad === 'propietario') {
+          roleToCheck = UserRole.OWNER;
+        } else if (rolComunidad === 'inquilino') {
+          roleToCheck = UserRole.TENANT;
+        } else if (rolComunidad === 'residente') {
+          roleToCheck = UserRole.RESIDENT;
+        } else if (rolComunidad === 'conserje') {
+          roleToCheck = UserRole.CONCIERGE;
+        } else if (rolComunidad === 'contador') {
+          roleToCheck = UserRole.ACCOUNTANT;
+        } else if (rolComunidad === 'tesorero') {
+          roleToCheck = UserRole.TESORERO;
+        } else if (rolComunidad === 'presidente_comite') {
+          roleToCheck = UserRole.PRESIDENTE_COMITE;
+        }
+      } else {
+        // Si no pertenece a esa comunidad, denegar
+        return false;
+      }
+    }
+
+    const rolePermissions = ROLE_PERMISSIONS[roleToCheck] || [];
+    const hasBasePermission = rolePermissions.includes(permission);
+
+    // Si no tiene el permiso base con ese rol, denegar
+    if (!hasBasePermission) {
+      return false;
+    }
 
     // Para ADMIN, limitar MANAGE_COMMUNITIES a comunidades propias
-    if (currentRole === UserRole.ADMIN && permission === Permission.MANAGE_COMMUNITIES) {
+    if (roleToCheck === UserRole.ADMIN && permission === Permission.MANAGE_COMMUNITIES) {
       if (!communityId) {
         return false; // No permitir gestión global (crear/eliminar)
       }
