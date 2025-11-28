@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
-import GlobalComunidadSelector from './GlobalComunidadSelector';
 import profileService from '@/lib/profileService';
 import { useAuth } from '@/lib/useAuth';
 import {
@@ -11,6 +10,8 @@ import {
   PermissionGuard,
   Permission,
 } from '@/lib/usePermissions';
+
+import GlobalComunidadSelector from './GlobalComunidadSelector';
 
 // Definición de las secciones del menú (igual, pero con permisos asociados)
 const menuSections = [
@@ -188,9 +189,6 @@ export default function Sidebar() {
           <span className='fs-4'>Cuentas Claras</span>
         </Link>
 
-        {/* Selector global de comunidad */}
-        <GlobalComunidadSelector />
-
         {/* Información del usuario */}
         <div className='d-flex align-items-center mb-3 px-2'>
           {profilePhoto ? (
@@ -240,11 +238,14 @@ export default function Sidebar() {
                 {getUserRoleName().toUpperCase()}
               </span>
             </span>
-            <span className='small text-white-50'>
-              {user?.email || 'Sin email configurado'}
+            <span className='d-block text-white-50' style={{ fontSize: '0.85rem' }}>
+              {user?.email}
             </span>
           </div>
         </div>
+
+        {/* Selector global de comunidad (ahora debajo del usuario) */}
+        <GlobalComunidadSelector />
 
         <hr />
 
