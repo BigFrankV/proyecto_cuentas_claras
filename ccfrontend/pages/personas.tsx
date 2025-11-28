@@ -12,7 +12,8 @@ import {
   PersonaPagination,
 } from '@/components/personas';
 import { usePersonas } from '@/hooks/usePersonas';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 import { Persona, PersonaFilters as ApiFilters } from '@/types/personas';
 
@@ -31,6 +32,8 @@ interface PersonaUI {
 
 const PersonasListado = () => {
   const { hasPermission } = usePermissions();
+  const { user } = useAuth();
+  const { comunidadSeleccionada } = useComunidad();
   const [searchTerm, setSearchTerm] = useState('');
   const [tipoFilter, setTipoFilter] = useState('todos');
   const [estadoFilter, setEstadoFilter] = useState('todos');
@@ -38,28 +41,54 @@ const PersonasListado = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   const { listarPersonas, obtenerEstadisticas, loading, error } = usePersonas();
 
   const itemsPerPage = 20;
 
-  // Cargar datos iniciales
+  // Cargar datos cuando cambia la comunidad seleccionada
   useEffect(() => {
     cargarPersonas();
     cargarEstadisticas();
-  }, []);
+  }, [comunidadSeleccionada]);
 
   // Cargar personas con filtros
   useEffect(() => {
     cargarPersonas();
-  }, [searchTerm, tipoFilter, estadoFilter, currentPage]);
+  }, [comunidadSeleccionada, searchTerm, tipoFilter, estadoFilter, currentPage]);
+
+  useEffect(() => {
+    cargarEstadisticas();
+  }, [comunidadSeleccionada]);
 
   const cargarPersonas = async () => {
+    // Verificar si el usuario tiene rol admin en la comunidad seleccionada
+    if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+      const communityId = Number(comunidadSeleccionada.id);
+      const membership = user?.memberships?.find(m => m.comunidadId === communityId);
+      const isAdmin = membership && ['admin', 'admin_comunidad'].includes(membership.rol);
+      
+      if (!isAdmin && !user?.is_superadmin) {
+        setAccessDenied(true);
+        setPersonas([]);
+        setStats({ total: 0, propietarios: 0, inquilinos: 0, administradores: 0 });
+        return;
+      }
+    }
+    
+    setAccessDenied(false);
+    
     try {
       const filters: ApiFilters = {
         limit: itemsPerPage,
         offset: (currentPage - 1) * itemsPerPage,
       };
+
+      // Filtrar por comunidad seleccionada
+      if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+        filters.comunidad_id = Number(comunidadSeleccionada.id);
+      }
 
       if (searchTerm) {
         filters.search = searchTerm;
@@ -73,31 +102,50 @@ const PersonasListado = () => {
 
       const data = await listarPersonas(filters);
       setPersonas(data);
-    } catch (err) {
+    } catch (err: any) {
       // eslint-disable-next-line no-console
       console.error('Error al cargar personas:', err);
+      // Si es 403, mostrar mensaje específico
+      if (err.response?.status === 403) {
+        setPersonas([]);
+        setStats({ total: 0, propietarios: 0, inquilinos: 0, administradores: 0 });
+      }
     }
   };
 
   const cargarEstadisticas = async () => {
+    // Verificar si el usuario tiene rol admin en la comunidad seleccionada
+    if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+      const communityId = Number(comunidadSeleccionada.id);
+      const membership = user?.memberships?.find(m => m.comunidadId === communityId);
+      const isAdmin = membership && ['admin', 'admin_comunidad'].includes(membership.rol);
+      
+      if (!isAdmin && !user?.is_superadmin) {
+        return;
+      }
+    }
+    
     try {
-      const data = await obtenerEstadisticas();
+      const filters: any = {};
+      
+      // Filtrar por comunidad seleccionada
+      if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+        filters.comunidad_id = Number(comunidadSeleccionada.id);
+      }
+
+      const data = await obtenerEstadisticas(filters);
       setStats({
         total: data.total_personas,
         propietarios: data.propietarios,
         inquilinos: data.inquilinos,
         administradores: data.administradores,
       });
-    } catch (err) {
+    } catch (err: any) {
       // eslint-disable-next-line no-console
       console.error('Error al cargar estadísticas:', err);
-      // Si falla, usar valores por defecto vacíos
-      setStats({
-        total: 0,
-        propietarios: 0,
-        inquilinos: 0,
-        administradores: 0,
-      });
+      if (err.response?.status === 403) {
+        setStats({ total: 0, propietarios: 0, inquilinos: 0, administradores: 0 });
+      }
     }
   };
 
@@ -193,7 +241,7 @@ const PersonasListado = () => {
                   </p>
                 </div>
               </div>
-              {hasPermission(Permission.CREATE_PERSONA) && (
+              {hasPermission(Permission.CREATE_PERSONA, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                 <div className='text-end'>
                   <Link
                     href='/personas/nueva'
@@ -345,7 +393,23 @@ const PersonasListado = () => {
             </div>
           )}
 
+          {/* Mensaje de acceso denegado */}
+          {accessDenied && (
+            <div className='alert alert-warning d-flex align-items-center' role='alert'>
+              <i className='material-icons me-3' style={{ fontSize: '48px' }}>lock</i>
+              <div>
+                <h5 className='alert-heading mb-2'>Acceso Denegado</h5>
+                <p className='mb-0'>
+                  No tienes permisos de administrador en la comunidad <strong>{comunidadSeleccionada?.nombre}</strong>.
+                  Solo los administradores pueden gestionar personas y residentes.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Filtros */}
+          {!accessDenied && (
+          <>
           <PersonaFilters
             searchTerm={searchTerm}
             tipoFilter={tipoFilter}
@@ -402,7 +466,7 @@ const PersonasListado = () => {
           )}
 
           {/* Mensaje cuando no hay resultados */}
-          {!loading && filteredPersonas.length === 0 && (
+          {!loading && filteredPersonas.length === 0 && !accessDenied && (
             <div className='text-center py-5'>
               <i
                 className='material-icons'
@@ -416,8 +480,10 @@ const PersonasListado = () => {
               </p>
             </div>
           )}
+          </>
+          )}
         </div>
-      </Layout>
+        </Layout>
       </ProtectedPage>
     </ProtectedRoute>
   );

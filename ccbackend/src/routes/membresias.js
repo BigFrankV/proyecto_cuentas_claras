@@ -69,93 +69,216 @@ router.get('/', authenticate, async (req, res) => {
     offset = 0,
   } = req.query;
 
-  let query = `
-    SELECT 
-      urc.id,
-      urc.usuario_id,
-      u.username,
-      p.nombres,
-      p.apellidos,
-      CONCAT(p.nombres, ' ', p.apellidos) AS nombre_completo,
-      p.rut,
-      p.dv,
-      CONCAT(p.rut, '-', p.dv) AS rut_completo,
-      c.id AS comunidad_id,
-      c.razon_social AS comunidad_nombre,
-      rs.id AS rol_id,
-      rs.nombre AS rol_nombre,
-      rs.codigo AS rol_codigo,
-      rs.nivel_acceso,
-      urc.desde,
-      urc.hasta,
-      urc.activo,
-      urc.created_at,
-      urc.updated_at
-    FROM usuario_rol_comunidad urc
-    JOIN usuario u ON urc.usuario_id = u.id
-    JOIN persona p ON u.persona_id = p.id
-    JOIN comunidad c ON urc.comunidad_id = c.id
-    JOIN rol_sistema rs ON urc.rol_id = rs.id
-    WHERE 1=1
-  `;
-  const params = [];
+  try {
+    const personaId = req.user.persona_id;
+    const isSuperadmin = req.user.is_superadmin;
 
-  if (comunidad_id) {
-    query += ' AND urc.comunidad_id = ?';
-    params.push(comunidad_id);
-  }
-  if (usuario_id) {
-    query += ' AND urc.usuario_id = ?';
-    params.push(usuario_id);
-  }
-  if (rol_id) {
-    query += ' AND urc.rol_id = ?';
-    params.push(rol_id);
-  }
-  if (activo !== undefined) {
-    query += ' AND urc.activo = ?';
-    params.push(activo === 'true' ? 1 : 0);
-  }
+    // ✅ Superadmin ve todas las membresías
+    if (isSuperadmin) {
+      let query = `
+        SELECT 
+          urc.id,
+          urc.usuario_id,
+          u.username,
+          p.nombres,
+          p.apellidos,
+          CONCAT(p.nombres, ' ', p.apellidos) AS nombre_completo,
+          p.rut,
+          p.dv,
+          CONCAT(p.rut, '-', p.dv) AS rut_completo,
+          c.id AS comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          rs.id AS rol_id,
+          rs.nombre AS rol_nombre,
+          rs.codigo AS rol_codigo,
+          rs.nivel_acceso,
+          urc.desde,
+          urc.hasta,
+          urc.activo,
+          urc.created_at,
+          urc.updated_at
+        FROM usuario_rol_comunidad urc
+        JOIN usuario u ON urc.usuario_id = u.id
+        JOIN persona p ON u.persona_id = p.id
+        JOIN comunidad c ON urc.comunidad_id = c.id
+        JOIN rol_sistema rs ON urc.rol_id = rs.id
+        WHERE 1=1
+      `;
+      const params = [];
 
-  query += ' ORDER BY urc.created_at DESC LIMIT ? OFFSET ?';
-  params.push(parseInt(limit), parseInt(offset));
+      if (comunidad_id) {
+        query += ' AND urc.comunidad_id = ?';
+        params.push(Number(comunidad_id));
+      }
+      if (usuario_id) {
+        query += ' AND urc.usuario_id = ?';
+        params.push(usuario_id);
+      }
+      if (rol_id) {
+        query += ' AND urc.rol_id = ?';
+        params.push(rol_id);
+      }
+      if (activo !== undefined) {
+        query += ' AND urc.activo = ?';
+        params.push(activo === 'true' ? 1 : 0);
+      }
 
-  const [rows] = await db.query(query, params);
+      query += ' ORDER BY urc.created_at DESC LIMIT ? OFFSET ?';
+      params.push(parseInt(limit), parseInt(offset));
 
-  // Contar total
-  const countQuery = `
-    SELECT COUNT(*) as total
-    FROM usuario_rol_comunidad urc
-    WHERE 1=1
-  `;
-  const countParams = [];
-  if (comunidad_id) {
-    // eslint-disable-next-line no-const-assign
-    countQuery += ' AND comunidad_id = ?';
-    countParams.push(comunidad_id);
-  }
-  if (usuario_id) {
-    countQuery += ' AND usuario_id = ?';
-    countParams.push(usuario_id);
-  }
-  if (rol_id) {
-    countQuery += ' AND rol_id = ?';
-    countParams.push(rol_id);
-  }
-  if (activo !== undefined) {
-    countQuery += ' AND activo = ?';
-    countParams.push(activo === 'true' ? 1 : 0);
-  }
-  const [[{ total }]] = await db.query(countQuery, countParams);
+      const [rows] = await db.query(query, params);
 
-  res.json({
-    data: rows,
-    meta: {
-      total,
-      page: Math.floor(offset / limit) + 1,
-      pageSize: parseInt(limit),
-    },
-  });
+      // Contar total
+      let countQuery = `
+        SELECT COUNT(*) as total
+        FROM usuario_rol_comunidad urc
+        WHERE 1=1
+      `;
+      const countParams = [];
+      if (comunidad_id) {
+        countQuery += ' AND comunidad_id = ?';
+        countParams.push(Number(comunidad_id));
+      }
+      if (usuario_id) {
+        countQuery += ' AND usuario_id = ?';
+        countParams.push(usuario_id);
+      }
+      if (rol_id) {
+        countQuery += ' AND rol_id = ?';
+        countParams.push(rol_id);
+      }
+      if (activo !== undefined) {
+        countQuery += ' AND activo = ?';
+        countParams.push(activo === 'true' ? 1 : 0);
+      }
+      const [[{ total }]] = await db.query(countQuery, countParams);
+
+      return res.json({
+        data: rows,
+        meta: { total, limit: parseInt(limit), offset: parseInt(offset) },
+      });
+    }
+
+    // ✅ Verificar rol del usuario en comunidades
+    if (!personaId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
+    const [rolRows] = await db.query(
+      'SELECT comunidad_id, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+      [personaId]
+    );
+
+    const esAdminEnAlgunaComunidad = rolRows.some((r) =>
+      ['admin', 'admin_comunidad'].includes(r.rol)
+    );
+
+    // ❌ Roles básicos NO tienen acceso
+    if (!esAdminEnAlgunaComunidad) {
+      return res.status(403).json({
+        error: 'Acceso denegado. Solo administradores pueden gestionar membresías.',
+      });
+    }
+
+    // Admin ve membresías de SUS comunidades
+    const comunidadesAdmin = rolRows
+      .filter((r) => ['admin', 'admin_comunidad'].includes(r.rol))
+      .map((r) => r.comunidad_id);
+
+    if (comunidadesAdmin.length === 0) {
+      return res.json({
+        data: [],
+        meta: { total: 0, limit: parseInt(limit), offset: parseInt(offset) },
+      });
+    }
+
+    let query = `
+      SELECT 
+        urc.id,
+        urc.usuario_id,
+        u.username,
+        p.nombres,
+        p.apellidos,
+        CONCAT(p.nombres, ' ', p.apellidos) AS nombre_completo,
+        p.rut,
+        p.dv,
+        CONCAT(p.rut, '-', p.dv) AS rut_completo,
+        c.id AS comunidad_id,
+        c.razon_social AS comunidad_nombre,
+        rs.id AS rol_id,
+        rs.nombre AS rol_nombre,
+        rs.codigo AS rol_codigo,
+        rs.nivel_acceso,
+        urc.desde,
+        urc.hasta,
+        urc.activo,
+        urc.created_at,
+        urc.updated_at
+      FROM usuario_rol_comunidad urc
+      JOIN usuario u ON urc.usuario_id = u.id
+      JOIN persona p ON u.persona_id = p.id
+      JOIN comunidad c ON urc.comunidad_id = c.id
+      JOIN rol_sistema rs ON urc.rol_id = rs.id
+      WHERE urc.comunidad_id IN (${comunidadesAdmin.map(() => '?').join(',')})
+    `;
+    const params = [...comunidadesAdmin];
+
+    // Filtro adicional por comunidad específica
+    if (comunidad_id) {
+      query += ' AND urc.comunidad_id = ?';
+      params.push(Number(comunidad_id));
+    }
+    if (usuario_id) {
+      query += ' AND urc.usuario_id = ?';
+      params.push(usuario_id);
+    }
+    if (rol_id) {
+      query += ' AND urc.rol_id = ?';
+      params.push(rol_id);
+    }
+    if (activo !== undefined) {
+      query += ' AND urc.activo = ?';
+      params.push(activo === 'true' ? 1 : 0);
+    }
+
+    query += ' ORDER BY urc.created_at DESC LIMIT ? OFFSET ?';
+    params.push(parseInt(limit), parseInt(offset));
+
+    const [rows] = await db.query(query, params);
+
+    // Contar total
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM usuario_rol_comunidad urc
+      WHERE urc.comunidad_id IN (${comunidadesAdmin.map(() => '?').join(',')})
+    `;
+    const countParams = [...comunidadesAdmin];
+    if (comunidad_id) {
+      countQuery += ' AND comunidad_id = ?';
+      countParams.push(Number(comunidad_id));
+    }
+    if (usuario_id) {
+      countQuery += ' AND usuario_id = ?';
+      countParams.push(usuario_id);
+    }
+    if (rol_id) {
+      countQuery += ' AND rol_id = ?';
+      countParams.push(rol_id);
+    }
+    if (activo !== undefined) {
+      countQuery += ' AND activo = ?';
+      countParams.push(activo === 'true' ? 1 : 0);
+    }
+    const [[{ total }]] = await db.query(countQuery, countParams);
+
+    res.json({
+      data: rows,
+      meta: { total, limit: parseInt(limit), offset: parseInt(offset) },
+    });
+  } catch (err) {
+    console.error('Error en GET /membresias:', err);
+    res.status(500).json({ error: 'server error' });
+  }
 });
 
 /**

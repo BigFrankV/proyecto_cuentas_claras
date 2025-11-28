@@ -143,13 +143,18 @@ export const usePersonas = () => {
   }, []);
 
   // Obtener estadísticas
-  const obtenerEstadisticas = useCallback(async (): Promise<PersonaStats> => {
+  const obtenerEstadisticas = useCallback(async (filters: any = {}): Promise<PersonaStats> => {
     setLoading(true);
     setError(null);
     try {
       // Primero intentamos con el endpoint
       try {
-        const response = await apiClient.get('/personas/estadisticas');
+        const params = new URLSearchParams();
+        if (filters.comunidad_id) {
+          params.append('comunidad_id', filters.comunidad_id.toString());
+        }
+        
+        const response = await apiClient.get(`/personas/estadisticas${params.toString() ? `?${params.toString()}` : ''}`);
         return response.data;
       } catch (err: any) {
         // Si el endpoint no existe (404), calculamos las estadísticas localmente

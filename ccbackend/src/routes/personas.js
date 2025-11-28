@@ -60,7 +60,7 @@ const { authorize, allowSelfOrRoles } = require('../middleware/authorize');
  *         description: Lista de personas filtradas
  */
 router.get('/', authenticate, async (req, res) => {
-  const { rut, search, tipo, estado, limit = 500, offset = 0 } = req.query;
+  const { rut, search, tipo, estado, comunidad_id, limit = 500, offset = 0 } = req.query;
 
   try {
     // ✅ Superadmin ve TODAS las personas
@@ -115,6 +115,15 @@ router.get('/', authenticate, async (req, res) => {
         WHERE 1 = 1
       `;
       const params = [];
+
+      // Filtro por comunidad específica
+      if (comunidad_id) {
+        query += ` AND EXISTS (
+          SELECT 1 FROM usuario_miembro_comunidad mc
+          WHERE mc.persona_id = p.id AND mc.comunidad_id = ?
+        )`;
+        params.push(Number(comunidad_id));
+      }
 
       // Filtro por RUT específico
       if (rut) {
@@ -188,15 +197,41 @@ router.get('/', authenticate, async (req, res) => {
       return res.json(personas);
     }
 
-    // ✅ Usuarios normales solo ven personas de SUS comunidades
+    // ✅ SOLO Admin/Admin_comunidad pueden ver personas de sus comunidades
     const personaId = req.user.persona_id;
     if (!personaId) {
       return res.status(403).json({ error: 'forbidden' });
     }
 
+    // Obtener rol del usuario en comunidades
+    const [rolRows] = await db.query(
+      'SELECT comunidad_id, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+      [personaId]
+    );
+
+    const esAdminEnAlgunaComunidad = rolRows.some((r) =>
+      ['admin', 'admin_comunidad'].includes(r.rol)
+    );
+
+    // ❌ Roles básicos NO tienen acceso
+    if (!esAdminEnAlgunaComunidad) {
+      return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden gestionar personas.' });
+    }
+
+    // Admin ve personas de SUS comunidades
+    const comunidadesAdmin = rolRows
+      .filter((r) => ['admin', 'admin_comunidad'].includes(r.rol))
+      .map((r) => r.comunidad_id);
+
+    if (comunidadesAdmin.length === 0) {
+      return res.json([]);
+    }
+
     let query = `
       SELECT DISTINCT
         p.id,
+        p.apellidos,
+        p.nombres,
         COALESCE(p.nombres, '') AS nombres,
         COALESCE(p.apellidos, '') AS apellidos,
         COALESCE(p.rut, '') AS rut,
@@ -242,12 +277,15 @@ router.get('/', authenticate, async (req, res) => {
       FROM persona p
       LEFT JOIN usuario u ON u.persona_id = p.id
       JOIN usuario_miembro_comunidad mc ON p.id = mc.persona_id
-      WHERE mc.comunidad_id IN (
-        SELECT comunidad_id FROM usuario_miembro_comunidad 
-        WHERE persona_id = ? AND activo = 1
-      )
+      WHERE mc.comunidad_id IN (${comunidadesAdmin.map(() => '?').join(',')})
     `;
-    const params = [personaId];
+    const params = [...comunidadesAdmin];
+
+    // Filtro adicional por comunidad específica (si se pasa en query)
+    if (comunidad_id) {
+      query += ' AND mc.comunidad_id = ?';
+      params.push(Number(comunidad_id));
+    }
 
     // Filtro por RUT específico
     if (rut) {
@@ -711,7 +749,80 @@ router.delete(
  */
 router.get('/estadisticas', authenticate, async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    const { comunidad_id } = req.query;
+
+    // ✅ Superadmin ve estadísticas globales o por comunidad
+    if (req.user.is_superadmin) {
+      let query = `
+        SELECT
+          COUNT(DISTINCT p.id) AS total_personas,
+          COUNT(DISTINCT CASE WHEN EXISTS (
+            SELECT 1 FROM usuario_rol_comunidad ucr
+            JOIN rol_sistema r ON r.id = ucr.rol_id
+            WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+          ) THEN p.id END) AS administradores,
+          COUNT(DISTINCT CASE WHEN EXISTS (
+            SELECT 1 FROM titulares_unidad tu
+            WHERE tu.persona_id = p.id AND tu.tipo = 'arrendatario'
+            AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+          ) THEN p.id END) AS inquilinos,
+          COUNT(DISTINCT CASE WHEN NOT EXISTS (
+            SELECT 1 FROM titulares_unidad tu
+            WHERE tu.persona_id = p.id AND tu.tipo = 'arrendatario'
+            AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+          ) AND NOT EXISTS (
+            SELECT 1 FROM usuario_rol_comunidad ucr
+            JOIN rol_sistema r ON r.id = ucr.rol_id
+            WHERE ucr.usuario_id = u.id AND r.codigo IN ('admin', 'superadmin') AND ucr.activo = 1
+          ) THEN p.id END) AS propietarios,
+          COUNT(DISTINCT CASE WHEN COALESCE(u.activo, 0) = 1 THEN p.id END) AS activos,
+          COUNT(DISTINCT CASE WHEN COALESCE(u.activo, 0) = 0 OR u.activo IS NULL THEN p.id END) AS inactivos
+        FROM persona p
+        LEFT JOIN usuario u ON u.persona_id = p.id
+      `;
+
+      const params = [];
+
+      if (comunidad_id) {
+        query += ` JOIN usuario_miembro_comunidad mc ON p.id = mc.persona_id
+                   WHERE mc.comunidad_id = ?`;
+        params.push(Number(comunidad_id));
+      }
+
+      const [rows] = await db.query(query, params);
+      return res.json(rows[0]);
+    }
+
+    // ✅ Admin_comunidad ve estadísticas de SUS comunidades
+    const personaId = req.user.persona_id;
+    if (!personaId) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+
+    // Verificar rol
+    const [rolRows] = await db.query(
+      'SELECT comunidad_id, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+      [personaId]
+    );
+
+    const esAdminEnAlgunaComunidad = rolRows.some((r) =>
+      ['admin', 'admin_comunidad'].includes(r.rol)
+    );
+
+    // ❌ Roles básicos NO tienen acceso
+    if (!esAdminEnAlgunaComunidad) {
+      return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden ver estadísticas.' });
+    }
+
+    const comunidadesAdmin = rolRows
+      .filter((r) => ['admin', 'admin_comunidad'].includes(r.rol))
+      .map((r) => r.comunidad_id);
+
+    if (comunidadesAdmin.length === 0) {
+      return res.json({ total_personas: 0, administradores: 0, inquilinos: 0, propietarios: 0, activos: 0, inactivos: 0 });
+    }
+
+    let query = `
       SELECT
         COUNT(DISTINCT p.id) AS total_personas,
         COUNT(DISTINCT CASE WHEN EXISTS (
@@ -737,8 +848,19 @@ router.get('/estadisticas', authenticate, async (req, res) => {
         COUNT(DISTINCT CASE WHEN COALESCE(u.activo, 0) = 0 OR u.activo IS NULL THEN p.id END) AS inactivos
       FROM persona p
       LEFT JOIN usuario u ON u.persona_id = p.id
-    `);
+      JOIN usuario_miembro_comunidad mc ON p.id = mc.persona_id
+      WHERE mc.comunidad_id IN (${comunidadesAdmin.map(() => '?').join(',')})
+    `;
 
+    const params = [...comunidadesAdmin];
+
+    // Filtro adicional por comunidad específica
+    if (comunidad_id) {
+      query += ' AND mc.comunidad_id = ?';
+      params.push(Number(comunidad_id));
+    }
+
+    const [rows] = await db.query(query, params);
     res.json(rows[0]);
   } catch (err) {
     console.error('Error al obtener estadísticas de personas:', err);

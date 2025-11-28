@@ -285,7 +285,54 @@ router.post(
 
 router.get('/:id/residentes', authenticate, async (req, res) => {
   const unidadId = req.params.id;
+  const personaId = req.user.persona_id;
+  const isSuperadmin = req.user.is_superadmin;
+
   try {
+    // Obtener la comunidad de la unidad
+    const [unidadRows] = await db.query(
+      'SELECT comunidad_id FROM unidad WHERE id = ?',
+      [unidadId]
+    );
+
+    if (unidadRows.length === 0) {
+      return res.status(404).json({ error: 'Unidad no encontrada' });
+    }
+
+    const comunidadId = unidadRows[0].comunidad_id;
+
+    // ✅ Superadmin: acceso total
+    if (isSuperadmin) {
+      const today = new Date().toISOString().slice(0, 10);
+      const [rows] = await db.query(
+        "SELECT p.id, p.rut, p.dv, p.nombres, p.apellidos, t.tipo, t.desde, t.hasta, t.porcentaje FROM titulares_unidad t JOIN persona p ON p.id = t.persona_id WHERE t.unidad_id = ? AND t.tipo IN ('propietario','arrendatario') AND (t.hasta IS NULL OR t.hasta >= ?) ORDER BY t.desde DESC",
+        [unidadId, today]
+      );
+      return res.json(rows);
+    }
+
+    // Verificar membresía y rol en la comunidad
+    const [rolRows] = await db.query(
+      'SELECT rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND activo = 1',
+      [personaId, comunidadId]
+    );
+
+    if (rolRows.length === 0) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes acceso a esta comunidad' });
+    }
+
+    const rol = rolRows[0].rol;
+
+    // ❌ Roles básicos NO tienen acceso a ver residentes
+    if (!['admin', 'admin_comunidad'].includes(rol)) {
+      return res.status(403).json({
+        error: 'Acceso denegado. Solo administradores pueden ver residentes.',
+      });
+    }
+
+    // ✅ Admin puede ver residentes
     const today = new Date().toISOString().slice(0, 10);
     const [rows] = await db.query(
       "SELECT p.id, p.rut, p.dv, p.nombres, p.apellidos, t.tipo, t.desde, t.hasta, t.porcentaje FROM titulares_unidad t JOIN persona p ON p.id = t.persona_id WHERE t.unidad_id = ? AND t.tipo IN ('propietario','arrendatario') AND (t.hasta IS NULL OR t.hasta >= ?) ORDER BY t.desde DESC",
