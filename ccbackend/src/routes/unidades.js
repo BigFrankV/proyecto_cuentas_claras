@@ -19,27 +19,60 @@ router.get(
   authenticate,
   requireCommunity('comunidadId'),
   async (req, res) => {
-    const comunidadId = Number(req.params.comunidadId);
-    const [rows] = await db.query(
-      `
-    SELECT 
-      u.id, 
-      u.codigo, 
-      u.edificio_id, 
-      u.torre_id,
-      e.nombre as edificio_nombre,
-      t.nombre as torre_nombre,
-      u.alicuota, 
-      u.activa 
-    FROM unidad u
-    LEFT JOIN edificio e ON e.id = u.edificio_id
-    LEFT JOIN torre t ON t.id = u.torre_id
-    WHERE u.comunidad_id = ? 
-    LIMIT 500
-  `,
-      [comunidadId]
-    );
-    res.json(rows);
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const userId = req.user.persona_id;
+      const isSuperadmin = req.user.is_superadmin;
+
+      // Obtener rol del usuario en esta comunidad
+      let rol = null;
+      if (!isSuperadmin) {
+        const [rolRows] = await db.query(
+          'SELECT rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+          [userId, comunidadId]
+        );
+        rol = rolRows[0]?.rol;
+      }
+
+      let query = `
+      SELECT 
+        u.id, 
+        u.codigo, 
+        u.edificio_id, 
+        u.torre_id,
+        e.nombre as edificio_nombre,
+        t.nombre as torre_nombre,
+        u.alicuota, 
+        u.activa 
+      FROM unidad u
+      LEFT JOIN edificio e ON e.id = u.edificio_id
+      LEFT JOIN torre t ON t.id = u.torre_id
+    `;
+
+      const params = [comunidadId];
+
+      // CRÍTICO: Roles básicos solo ven SUS unidades
+      if (!isSuperadmin && !['admin', 'admin_comunidad'].includes(rol)) {
+        query += `
+        INNER JOIN titulares_unidad tu ON tu.unidad_id = u.id
+        WHERE u.comunidad_id = ? 
+          AND tu.persona_id = ?
+          AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
+      `;
+        params.push(userId);
+      } else {
+        // Admin/Superadmin: todas de la comunidad
+        query += ` WHERE u.comunidad_id = ? `;
+      }
+
+      query += ` LIMIT 500`;
+
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error en GET /comunidad/:comunidadId:', err);
+      res.status(500).json({ error: 'Error al obtener unidades' });
+    }
   }
 );
 
@@ -252,7 +285,54 @@ router.post(
 
 router.get('/:id/residentes', authenticate, async (req, res) => {
   const unidadId = req.params.id;
+  const personaId = req.user.persona_id;
+  const isSuperadmin = req.user.is_superadmin;
+
   try {
+    // Obtener la comunidad de la unidad
+    const [unidadRows] = await db.query(
+      'SELECT comunidad_id FROM unidad WHERE id = ?',
+      [unidadId]
+    );
+
+    if (unidadRows.length === 0) {
+      return res.status(404).json({ error: 'Unidad no encontrada' });
+    }
+
+    const comunidadId = unidadRows[0].comunidad_id;
+
+    // ✅ Superadmin: acceso total
+    if (isSuperadmin) {
+      const today = new Date().toISOString().slice(0, 10);
+      const [rows] = await db.query(
+        "SELECT p.id, p.rut, p.dv, p.nombres, p.apellidos, t.tipo, t.desde, t.hasta, t.porcentaje FROM titulares_unidad t JOIN persona p ON p.id = t.persona_id WHERE t.unidad_id = ? AND t.tipo IN ('propietario','arrendatario') AND (t.hasta IS NULL OR t.hasta >= ?) ORDER BY t.desde DESC",
+        [unidadId, today]
+      );
+      return res.json(rows);
+    }
+
+    // Verificar membresía y rol en la comunidad
+    const [rolRows] = await db.query(
+      'SELECT rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND activo = 1',
+      [personaId, comunidadId]
+    );
+
+    if (rolRows.length === 0) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes acceso a esta comunidad' });
+    }
+
+    const rol = rolRows[0].rol;
+
+    // ❌ Roles básicos NO tienen acceso a ver residentes
+    if (!['admin', 'admin_comunidad'].includes(rol)) {
+      return res.status(403).json({
+        error: 'Acceso denegado. Solo administradores pueden ver residentes.',
+      });
+    }
+
+    // ✅ Admin puede ver residentes
     const today = new Date().toISOString().slice(0, 10);
     const [rows] = await db.query(
       "SELECT p.id, p.rut, p.dv, p.nombres, p.apellidos, t.tipo, t.desde, t.hasta, t.porcentaje FROM titulares_unidad t JOIN persona p ON p.id = t.persona_id WHERE t.unidad_id = ? AND t.tipo IN ('propietario','arrendatario') AND (t.hasta IS NULL OR t.hasta >= ?) ORDER BY t.desde DESC",
@@ -336,21 +416,43 @@ router.get('/', authenticate, async (req, res) => {
     // Agregar filtro por permisos si no es superadmin
     let comunidadFilter = '';
     let comunidadParams = [];
+    let rolesBasicosFilter = '';
+    let rolesBasicosParams = [];
+
     if (!req.user?.is_superadmin) {
+      // Obtener comunidades y roles del usuario
       const [comRows] = await db.query(
-        `SELECT DISTINCT comunidad_id 
+        `SELECT DISTINCT comunidad_id, rol 
          FROM usuario_miembro_comunidad 
          WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
         [req.user.persona_id]
       );
-      const comunidadIds = comRows.map((r) => r.comunidad_id);
-      if (comunidadIds.length === 0) {
+
+      if (comRows.length === 0) {
         return res.json([]); // Usuario sin comunidades asignadas
       }
+
+      const comunidadIds = comRows.map((r) => r.comunidad_id);
       comunidadFilter = ` AND u.comunidad_id IN (${comunidadIds
         .map(() => '?')
         .join(',')})`;
       comunidadParams = comunidadIds;
+
+      // Si NO es admin en NINGUNA comunidad, aplicar filtro de titulares_unidad
+      const esAdminEnAlgunaComunidad = comRows.some((r) =>
+        ['admin', 'admin_comunidad'].includes(r.rol)
+      );
+
+      if (!esAdminEnAlgunaComunidad) {
+        // Roles básicos: solo sus unidades
+        rolesBasicosFilter = ` AND EXISTS (
+          SELECT 1 FROM titulares_unidad tu 
+          WHERE tu.unidad_id = u.id 
+            AND tu.persona_id = ?
+            AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+        )`;
+        rolesBasicosParams = [req.user.persona_id];
+      }
     }
 
     const sql = `
@@ -388,6 +490,7 @@ router.get('/', authenticate, async (req, res) => {
         AND (? IS NULL OR u.torre_id = ?)
         AND (? IS NULL OR u.activa = ?)
         ${comunidadFilter}
+        ${rolesBasicosFilter}
         AND (
           ? IS NULL
           OR u.codigo LIKE CONCAT('%', ?, '%')
@@ -413,6 +516,7 @@ router.get('/', authenticate, async (req, res) => {
       params[3],
       params[3],
       ...comunidadParams,
+      ...rolesBasicosParams,
       params[4],
       params[4],
       params[4],

@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import apiClient from '@/lib/api';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Torre {
@@ -24,6 +25,7 @@ export default function TorresListado() {
   const router = useRouter();
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('nombre-asc');
@@ -40,20 +42,71 @@ export default function TorresListado() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [edificios, setEdificios] = useState<any[]>([]);
+  const [selectedEdificioId, setSelectedEdificioId] = useState<number | null>(null);
 
-  // Hardcoded edificio ID for now - should come from route params or context
-  const edificioId = 1;
+  // Load edificios when comunidad changes
+  useEffect(() => {
+    const loadEdificios = async () => {
+      try {
+        // eslint-disable-next-line no-console
+        console.log('🗼 [Torres] Comunidad global cambió a:', comunidadSeleccionada);
 
-  // Load data from API
+        // Si no hay comunidad seleccionada, limpiar
+        if (!comunidadSeleccionada) {
+          setEdificios([]);
+          setSelectedEdificioId(null);
+          setTorres([]);
+          setStats({ totalTorres: 0, totalUnidades: 0, promedioUnidades: 0 });
+          return;
+        }
+
+        // Cargar edificios de la comunidad seleccionada
+        const params: any = {};
+        if (comunidadSeleccionada.id !== 'todas') {
+          params.comunidadId = comunidadSeleccionada.id;
+        }
+
+        const edifResponse = await apiClient.get('/edificios/', { params });
+        const edifs = edifResponse.data || [];
+        setEdificios(edifs);
+
+        // Auto-seleccionar primer edificio si hay
+        if (edifs.length > 0) {
+          setSelectedEdificioId(edifs[0].id);
+        } else {
+          setSelectedEdificioId(null);
+          setTorres([]);
+          setStats({ totalTorres: 0, totalUnidades: 0, promedioUnidades: 0 });
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading edificios:', err);
+        setError('Error al cargar edificios');
+      }
+    };
+
+    loadEdificios();
+  }, [comunidadSeleccionada]);
+
+  // Load data from API - RESPETA FILTRO GLOBAL
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
 
+        // Si no hay edificio seleccionado, no cargar
+        if (!selectedEdificioId) {
+          setTorres([]);
+          setStats({ totalTorres: 0, totalUnidades: 0, promedioUnidades: 0 });
+          setLoading(false);
+          return;
+        }
+
         // Load torres list
         const torresResponse = await apiClient.get(
-          `/torres/edificio/${edificioId}/listado`,
+          `/torres/edificio/${selectedEdificioId}/listado`,
         );
         const torresData = torresResponse.data.map((torre: any) => ({
           id: String(torre.id),
@@ -69,7 +122,7 @@ export default function TorresListado() {
 
         // Load statistics
         const statsResponse = await apiClient.get(
-          `/torres/edificio/${edificioId}/estadisticas`,
+          `/torres/edificio/${selectedEdificioId}/estadisticas`,
         );
         const statsData = statsResponse.data;
         setStats({
@@ -87,7 +140,7 @@ export default function TorresListado() {
     };
 
     loadData();
-  }, [edificioId]);
+  }, [selectedEdificioId]);
 
   // Funciones de filtrado y ordenamiento usando API
   const filteredAndSortedTorres = useMemo(() => {
@@ -259,7 +312,7 @@ export default function TorresListado() {
                 </div>
               </div>
               <div className='text-end'>
-                {hasPermission(Permission.CREATE_TORRE) && (
+                {hasPermission(Permission.CREATE_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                   <Link href='/torres/nueva' className='btn btn-light btn-lg'>
                     <i className='material-icons me-2'>add</i>
                     Nueva Torre
@@ -406,9 +459,61 @@ export default function TorresListado() {
             </div>
           )}
 
-          {!loading && !error && (
+          {/* Sin comunidad seleccionada */}
+          {!loading && !error && !comunidadSeleccionada && (
+            <div className='alert alert-info' role='alert'>
+              <i className='material-icons align-middle me-2'>info</i>
+              Selecciona una comunidad en el filtro superior para ver las torres
+            </div>
+          )}
+
+          {/* Sin edificios disponibles */}
+          {!loading && !error && comunidadSeleccionada && edificios.length === 0 && (
+            <div className='alert alert-warning' role='alert'>
+              <i className='material-icons align-middle me-2'>warning</i>
+              No hay edificios disponibles en esta comunidad
+            </div>
+          )}
+
+          {!loading && !error && comunidadSeleccionada && edificios.length > 0 && (
             <>
+              {/* Selector de Edificio */}
+              {edificios.length > 0 && (
+                <div className='card mb-4'>
+                  <div className='card-body'>
+                    <div className='row align-items-center'>
+                      <div className='col-md-4'>
+                        <label className='form-label fw-bold'>
+                          <i className='material-icons align-middle me-2'>business</i>
+                          Seleccionar Edificio
+                        </label>
+                        <select
+                          className='form-select'
+                          value={selectedEdificioId || ''}
+                          onChange={(e) => setSelectedEdificioId(Number(e.target.value))}
+                        >
+                          {edificios.map((edif) => (
+                            <option key={edif.id} value={edif.id}>
+                              {edif.nombre} - {edif.comunidad_nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className='col-md-8'>
+                        <div className='text-muted'>
+                          <small>
+                            <i className='material-icons align-middle' style={{ fontSize: '16px' }}>info</i>
+                            {' '}Mostrando torres del edificio seleccionado en la comunidad actual
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Información del Edificio */}
+              {selectedEdificioId && (
               <div className='card mb-4' style={{ backgroundColor: '#f8f9fa' }}>
                 <div className='card-body'>
                   <div className='row align-items-center'>
@@ -434,7 +539,7 @@ export default function TorresListado() {
                           </i>
                         </div>
                         <div>
-                          <h4 className='mb-0'>Edificio Central</h4>
+                          <h4 className='mb-0'>{edificios.find(e => e.id === selectedEdificioId)?.nombre || 'Edificio'}</h4>
                           <p className='text-muted mb-0'>
                             Av. Principal 123, Santiago
                           </p>
@@ -451,7 +556,7 @@ export default function TorresListado() {
                     </div>
                     <div className='col-md-3 text-md-end mt-3 mt-md-0'>
                       <Link
-                        href='/edificios/1'
+                        href={`/edificios/${selectedEdificioId}`}
                         className='btn btn-outline-secondary me-1'
                       >
                         <i className='material-icons align-middle me-1'>
@@ -469,6 +574,7 @@ export default function TorresListado() {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Filtros y acciones */}
               <div className='row mb-4'>
@@ -769,7 +875,7 @@ export default function TorresListado() {
                                       visibility
                                     </i>
                                   </Link>
-                                  {hasPermission(Permission.EDIT_TORRE) && (
+                                  {hasPermission(Permission.EDIT_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                     <Link
                                       href={`/torres/${torre.id}`}
                                       className='btn btn-sm btn-outline-primary'
@@ -784,7 +890,7 @@ export default function TorresListado() {
                                       </i>
                                     </Link>
                                   )}
-                                  {hasPermission(Permission.DELETE_TORRE) && (
+                                  {hasPermission(Permission.DELETE_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                     <button
                                       type='button'
                                       className='btn btn-sm btn-outline-danger'
@@ -875,7 +981,7 @@ export default function TorresListado() {
                             role='presentation'
                           >
                             <div className='btn-group'>
-                              {hasPermission(Permission.EDIT_TORRE) && (
+                              {hasPermission(Permission.EDIT_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <Link
                                   href={`/torres/${torre.id}`}
                                   className='btn btn-sm btn-light'
@@ -888,7 +994,7 @@ export default function TorresListado() {
                                   </i>
                                 </Link>
                               )}
-                              {hasPermission(Permission.DELETE_TORRE) && (
+                              {hasPermission(Permission.DELETE_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <button
                                   type='button'
                                   className='btn btn-sm btn-light'
@@ -948,7 +1054,7 @@ export default function TorresListado() {
                               </i>
                               Ver detalle
                             </Link>
-                            {hasPermission(Permission.EDIT_TORRE) && (
+                            {hasPermission(Permission.EDIT_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                               <Link
                                 href={`/torres/${torre.id}`}
                                 className='btn btn-primary btn-sm'

@@ -3,11 +3,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+import ComunidadFilter from '@/components/common/ComunidadFilter';
 import Layout from '@/components/layout/Layout';
 import ModernPagination from '@/components/ui/ModernPagination';
 import { useEdificios } from '@/hooks/useEdificios';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 import {
   Edificio,
@@ -22,6 +24,7 @@ export default function EdificiosListado() {
   const { user } = useAuth();
   const router = useRouter();
   const { hasPermission } = usePermissions();
+  const { comunidadSeleccionada, comunidades } = useComunidad();
 
   // Hooks personalizados
   const {
@@ -34,40 +37,53 @@ export default function EdificiosListado() {
     filterEdificios,
   } = useEdificios();
 
-  // Estado local
+  // Estado local - AHORA USA EL FILTRO GLOBAL
   const [filters, setFilters] = useState<EdificioFilters>({});
   const [vista, setVista] = useState<VistaListado>('tabla');
   const [selectedEdificios, setSelectedEdificios] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Edificios filtrados
-  const filteredEdificios = filterEdificios(filters);
+  // Edificios filtrados - combina filtro global + filtros locales
+  const combinedFilters = {
+    ...filters,
+    // Si hay comunidad seleccionada globalmente, usarla (a menos que filtro local lo override)
+    ...(comunidadSeleccionada && !filters.comunidadId ? { comunidadId: comunidadSeleccionada.id } : {}),
+  };
 
-  // Cargar datos al montar el componente
+  const filteredEdificios = filterEdificios(combinedFilters);
+
+  // Cargar datos cuando cambia la comunidad seleccionada GLOBALMENTE
   useEffect(() => {
-    fetchEdificios();
-  }, [fetchEdificios]);
+    // eslint-disable-next-line no-console
+    console.log('🏗️ [Edificios] Comunidad cambió a:', comunidadSeleccionada);
+    // eslint-disable-next-line no-console
+    console.log('🏗️ [Edificios] Filtros combinados:', combinedFilters);
+    
+    fetchEdificios(combinedFilters as EdificioFilters).catch(() => {});
+    setCurrentPage(1);
+  }, [comunidadSeleccionada, fetchEdificios]);
 
   // Calcular estadísticas basadas en los edificios cargados
+  // Usar los edificios filtrados para calcular estadísticas según la selección actual
   const statsCalculadas = {
-    totalEdificios: edificios.length,
-    edificiosActivos: edificios.filter(e => e.estado === 'activo').length,
-    totalUnidades: edificios.reduce(
+    totalEdificios: filteredEdificios.length,
+    edificiosActivos: filteredEdificios.filter(e => e.estado === 'activo').length,
+    totalUnidades: filteredEdificios.reduce(
       (sum, e) => sum + (e.totalUnidades || 0),
       0,
     ),
-    unidadesOcupadas: edificios.reduce(
+    unidadesOcupadas: filteredEdificios.reduce(
       (sum, e) => sum + (e.totalUnidadesOcupadas || 0),
       0,
     ),
     ocupacion:
-      edificios.length > 0
-        ? (edificios.reduce(
+      filteredEdificios.length > 0
+        ? (filteredEdificios.reduce(
             (sum, e) => sum + (e.totalUnidadesOcupadas || 0),
             0,
           ) /
-            edificios.reduce((sum, e) => sum + (e.totalUnidades || 1), 0)) *
+            filteredEdificios.reduce((sum, e) => sum + (e.totalUnidades || 1), 0)) *
           100
         : 0,
   };
@@ -79,13 +95,33 @@ export default function EdificiosListado() {
   console.log('Estadísticas calculadas:', statsCalculadas);
   // eslint-disable-next-line no-console
   console.log('Muestra de edificios:', edificios.slice(0, 2));
+  // eslint-disable-next-line no-console
+  console.log('Comunidad seleccionada globalmente:', comunidadSeleccionada);
+  
+  // Determinar comunidad a mostrar en header: priorizar global, luego local
+  const displayedCommunity = comunidadSeleccionada || 
+    (filters.comunidadId 
+      ? comunidades.find(c => String(c.id) === String(filters.comunidadId)) || null
+      : null);
 
   const handleFilterChange = (key: keyof EdificioFilters, value: string) => {
-    setFilters(prev => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       [key]: value || undefined,
-    }));
+    } as EdificioFilters;
+
+    setFilters(newFilters);
     setCurrentPage(1);
+
+    // Combinar con filtro global al recargar
+    const finalFilters = {
+      ...newFilters,
+      ...(comunidadSeleccionada && !newFilters.comunidadId ? { comunidadId: comunidadSeleccionada.id } : {}),
+    };
+
+    fetchEdificios(finalFilters).catch(() => {
+      // el manejo de errores ya ocurre dentro de fetchEdificios
+    });
   };
 
   const handleDeleteEdificio = async (id: string, nombre: string) => {
@@ -97,7 +133,7 @@ export default function EdificiosListado() {
       const success = await deleteEdificio(id);
       if (success) {
         // Actualizar la lista
-        await fetchEdificios();
+        await fetchEdificios(filters);
       }
     }
   };
@@ -209,6 +245,13 @@ export default function EdificiosListado() {
                         </div>
                       </div>
                     </div>
+                      {displayedCommunity && (
+                        <div className='mt-2 pt-2 border-top border-white border-opacity-25'>
+                          <small className='text-white-50 d-block'>Comunidad seleccionada (local):</small>
+                          <div className='fw-semibold text-white'>{displayedCommunity.nombre}</div>
+                          <small className='text-white-50'>Rol: {displayedCommunity.rol}</small>
+                        </div>
+                      )}
                   </div>
                 </div>
 
@@ -227,7 +270,7 @@ export default function EdificiosListado() {
                     </div>
 
                     {/* Botón de nuevo edificio */}
-                    {hasPermission(Permission.CREATE_EDIFICIO) && (
+                    {hasPermission(Permission.CREATE_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                       <Link href='/edificios/nuevo' className='btn btn-light d-flex align-items-center'>
                         <span className='material-icons me-2'>add</span>
                         Nuevo Edificio
@@ -244,10 +287,10 @@ export default function EdificiosListado() {
 
           {/* Filtros y acciones */}
           <div className='row mb-4'>
-            <div className='col-lg-8'>
+            <div className='col-lg-10'>
               <div className='filter-container'>
                 <div className='row g-3'>
-                  <div className='col-md-4'>
+                  <div className='col-md-3'>
                     <div className='search-icon-container'>
                       <i className='material-icons search-icon'>search</i>
                       <input
@@ -255,19 +298,27 @@ export default function EdificiosListado() {
                         className='form-control search-input'
                         placeholder='Buscar edificios...'
                         value={filters.busqueda || ''}
-                        onChange={e =>
-                          handleFilterChange('busqueda', e.target.value)
-                        }
+                        onChange={e => handleFilterChange('busqueda', e.target.value)}
+                        disabled={loading}
                       />
                     </div>
                   </div>
-                  <div className='col-md-3'>
+                  <div className='col-md-2'>
+                    <ComunidadFilter
+                      value={filters.comunidadId || ''}
+                      onChange={(value) => handleFilterChange('comunidadId', value)}
+                      disabled={loading}
+                      className="form-select"
+                      showAllOption={true}
+                      allOptionLabel="Todas las comunidades"
+                    />
+                  </div>
+                  <div className='col-md-2'>
                     <select
                       className='form-select'
                       value={filters.estado || ''}
-                      onChange={e =>
-                        handleFilterChange('estado', e.target.value)
-                      }
+                      onChange={e => handleFilterChange('estado', e.target.value)}
+                      disabled={loading}
                     >
                       <option value=''>Todos los estados</option>
                       {ESTADOS_EDIFICIO.map(estado => (
@@ -277,11 +328,12 @@ export default function EdificiosListado() {
                       ))}
                     </select>
                   </div>
-                  <div className='col-md-3'>
+                  <div className='col-md-2'>
                     <select
                       className='form-select'
                       value={filters.tipo || ''}
                       onChange={e => handleFilterChange('tipo', e.target.value)}
+                      disabled={loading}
                     >
                       <option value=''>Todos los tipos</option>
                       {TIPOS_EDIFICIO.map(tipo => (
@@ -291,19 +343,51 @@ export default function EdificiosListado() {
                       ))}
                     </select>
                   </div>
-                  <div className='col-md-2'>
+                  <div className='col-md-1'>
+                    <input
+                      type='date'
+                      className='form-control'
+                      placeholder='Fecha desde'
+                      value={filters.fechaDesde || ''}
+                      onChange={e => handleFilterChange('fechaDesde', e.target.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                    <div className='col-md-2'>
                     <button
                       className='btn btn-outline-secondary w-100'
-                      onClick={() => setFilters({})}
+                      onClick={() => {
+                        // Limpiar solo filtros locales, mantener filtro global de comunidad
+                        const empty: EdificioFilters = {};
+                        setFilters(empty);
+                        setCurrentPage(1);
+                        
+                        // Al limpiar, aplicar el filtro global si existe
+                        const finalFilters = comunidadSeleccionada 
+                          ? { comunidadId: comunidadSeleccionada.id } 
+                          : {};
+                        
+                        fetchEdificios(finalFilters).catch(() => {});
+                      }}
+                      disabled={loading}
                     >
-                      Limpiar
+                      {loading ? (
+                        <div className='spinner-border spinner-border-sm' role='status'>
+                          <span className='visually-hidden'>Loading...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <i className='material-icons me-1'>clear</i>
+                          Limpiar
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
               </div>
             </div>
-            <div className='col-lg-4 d-flex justify-content-end'>
-              {hasPermission(Permission.CREATE_EDIFICIO) && (
+            <div className='col-lg-2 d-flex justify-content-end align-items-end'>
+              {hasPermission(Permission.CREATE_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                 <Link href='/edificios/nuevo' className='btn btn-primary'>
                   <i className='material-icons me-2'>add</i>
                   Nuevo Edificio
@@ -577,7 +661,7 @@ export default function EdificiosListado() {
                               >
                                 <i className='material-icons'>visibility</i>
                               </Link>
-                              {hasPermission(Permission.EDIT_EDIFICIO) && (
+                              {hasPermission(Permission.EDIT_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <button
                                   className='btn btn-sm btn-outline-secondary'
                                   title='Editar'
@@ -590,7 +674,7 @@ export default function EdificiosListado() {
                                   <i className='material-icons'>edit</i>
                                 </button>
                               )}
-                              {hasPermission(Permission.DELETE_EDIFICIO) && (
+                              {hasPermission(Permission.DELETE_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <button
                                   className='btn btn-sm btn-outline-danger'
                                   title='Eliminar'
@@ -712,7 +796,7 @@ export default function EdificiosListado() {
                           >
                             <i className='material-icons'>visibility</i>
                           </Link>
-                          {hasPermission(Permission.EDIT_EDIFICIO) && (
+                          {hasPermission(Permission.EDIT_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                             <button
                               className='btn btn-sm btn-outline-secondary'
                               onClick={() =>

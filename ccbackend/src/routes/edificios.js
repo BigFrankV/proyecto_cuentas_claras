@@ -88,12 +88,26 @@ router.get('/', authenticate, async (req, res) => {
         ) AS porcentaje_ocupacion
       FROM edificio e
       INNER JOIN comunidad c ON e.comunidad_id = c.id
+    `;
+
+    const params = [];
+
+    // Filtros de acceso basado en roles
+    if (!req.user.is_superadmin) {
+      // Todos los usuarios (admin y básicos) ven edificios de sus comunidades
+      // Solo filtramos por membresía en usuario_miembro_comunidad
+      query += `
+        INNER JOIN usuario_miembro_comunidad umc ON c.id = umc.comunidad_id
+          AND umc.persona_id = ?
+      `;
+      params.push(req.user.persona_id);
+    }
+
+    query += `
       LEFT JOIN torre t ON e.id = t.edificio_id
       LEFT JOIN unidad u ON e.id = u.edificio_id
       WHERE 1=1
     `;
-
-    const params = [];
 
     // Filtros
     if (search) {
@@ -155,7 +169,7 @@ router.get('/', authenticate, async (req, res) => {
 // GET /edificios/stats - Obtener estadísticas generales
 router.get('/stats', authenticate, async (req, res) => {
   try {
-    const [stats] = await db.query(`
+    let query = `
       SELECT 
         COUNT(*) AS total_edificios,
         COUNT(CASE WHEN (
@@ -169,8 +183,32 @@ router.get('/stats', authenticate, async (req, res) => {
            NULLIF(SUM((SELECT COUNT(DISTINCT u.id) FROM unidad u WHERE u.edificio_id = e.id)), 0)) * 100, 2
         ) AS ocupacion
       FROM edificio e
-    `);
+      INNER JOIN comunidad c ON e.comunidad_id = c.id
+    `;
 
+    const params = [];
+
+    // Filtros de acceso basado en roles
+    if (!req.user.is_superadmin) {
+      if (req.user.rol === 'admin') {
+        query += `
+          INNER JOIN usuario_miembro_comunidad umc ON c.id = umc.comunidad_id
+            AND umc.persona_id = ?
+            AND umc.rol = 'admin'
+        `;
+        params.push(req.user.persona_id);
+      } else {
+        // Roles básicos: filtrar por unidades
+        query += `
+          INNER JOIN unidad u2 ON e.id = u2.edificio_id
+          INNER JOIN titulares_unidad tu ON u2.id = tu.unidad_id
+            AND tu.persona_id = ?
+        `;
+        params.push(req.user.persona_id);
+      }
+    }
+
+    const [stats] = await db.query(query, params);
     res.json(stats[0]);
   } catch (error) {
     console.error('Error al obtener estadísticas:', error);
@@ -191,17 +229,42 @@ router.get('/stats', authenticate, async (req, res) => {
 // GET /edificios/comunidades-opciones - Obtener comunidades para formularios
 router.get('/comunidades-opciones', authenticate, async (req, res) => {
   try {
-    const [rows] = await db.query(`
+    let query = `
       SELECT 
         id AS value, 
         razon_social AS label,
         direccion,
         email_contacto,
         telefono_contacto
-      FROM comunidad 
-      ORDER BY razon_social
-    `);
+      FROM comunidad c
+    `;
 
+    const params = [];
+
+    // Filtros de acceso basado en roles
+    if (!req.user.is_superadmin) {
+      if (req.user.rol === 'admin') {
+        query += `
+          INNER JOIN usuario_miembro_comunidad umc ON c.id = umc.comunidad_id
+            AND umc.persona_id = ?
+            AND umc.rol = 'admin'
+        `;
+        params.push(req.user.persona_id);
+      } else {
+        // Roles básicos: filtrar comunidades donde tienen unidades
+        query += `
+          INNER JOIN edificio e ON c.id = e.comunidad_id
+          INNER JOIN unidad u ON e.id = u.edificio_id
+          INNER JOIN titulares_unidad tu ON u.id = tu.unidad_id
+            AND tu.persona_id = ?
+        `;
+        params.push(req.user.persona_id);
+      }
+    }
+
+    query += ` ORDER BY razon_social`;
+
+    const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error al obtener comunidades:', error);
@@ -351,8 +414,7 @@ router.get(
       const searchTerm = req.query.q;
       const limit = parseInt(req.query.limit) || 10;
 
-      const [rows] = await db.query(
-        `
+      let query = `
       SELECT 
         e.id,
         e.nombre,
@@ -362,25 +424,52 @@ router.get(
         COUNT(DISTINCT u.id) AS total_unidades
       FROM edificio e
       INNER JOIN comunidad c ON e.comunidad_id = c.id
-      LEFT JOIN unidad u ON e.id = u.edificio_id
-      WHERE (
-        e.nombre LIKE ? OR
-        e.codigo LIKE ? OR
-        e.direccion LIKE ? OR
-        c.razon_social LIKE ?
-      )
-      GROUP BY e.id
-      ORDER BY e.nombre
-      LIMIT ?
-    `,
-        [
-          `%${searchTerm}%`,
-          `%${searchTerm}%`,
-          `%${searchTerm}%`,
-          `%${searchTerm}%`,
-          limit,
-        ]
+    `;
+
+      const params = [];
+
+      // Filtros de acceso basado en roles
+      if (!req.user.is_superadmin) {
+        if (req.user.rol === 'admin') {
+          query += `
+            INNER JOIN membresia m ON c.id = m.comunidad_id
+              AND m.usuario_id = ?
+              AND m.rol = 'admin'
+          `;
+          params.push(req.user.persona_id);
+        } else {
+          // Roles básicos: filtrar por unidades
+          query += `
+            INNER JOIN unidad u2 ON e.id = u2.edificio_id
+            INNER JOIN titulares_unidad tu ON u2.id = tu.unidad_id
+              AND tu.persona_id = ?
+          `;
+          params.push(req.user.persona_id);
+        }
+      }
+
+      query += `
+        LEFT JOIN unidad u ON e.id = u.edificio_id
+        WHERE (
+          e.nombre LIKE ? OR
+          e.codigo LIKE ? OR
+          e.direccion LIKE ? OR
+          c.razon_social LIKE ?
+        )
+        GROUP BY e.id
+        ORDER BY e.nombre
+        LIMIT ?
+      `;
+
+      params.push(
+        `%${searchTerm}%`,
+        `%${searchTerm}%`,
+        `%${searchTerm}%`,
+        `%${searchTerm}%`,
+        limit
       );
+
+      const [rows] = await db.query(query, params);
 
       res.json(rows);
     } catch (error) {
@@ -689,6 +778,21 @@ router.post(
       }
 
       const { nombre, direccion, codigo, comunidadId } = req.body;
+      const isSuperadmin = req.user.is_superadmin;
+
+      // ALTO: Admin solo puede crear edificios en SU comunidad
+      if (!isSuperadmin) {
+        const [membership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin", "admin_comunidad")',
+          [req.user.persona_id, comunidadId]
+        );
+
+        if (!membership.length) {
+          return res
+            .status(403)
+            .json({ error: 'No tienes permisos en esta comunidad' });
+        }
+      }
 
       // Verificar que la comunidad existe
       const [comunidadCheck] = await db.query(
@@ -827,6 +931,29 @@ router.patch(
       }
 
       const id = req.params.id;
+      const isSuperadmin = req.user.is_superadmin;
+
+      // ALTO: Admin solo puede editar edificios de SU comunidad
+      if (!isSuperadmin) {
+        // Verificar que el edificio pertenece a una comunidad donde es admin
+        const [edificioCheck] = await db.query(
+          `SELECT e.comunidad_id 
+           FROM edificio e
+           INNER JOIN usuario_miembro_comunidad umc 
+             ON e.comunidad_id = umc.comunidad_id
+             AND umc.persona_id = ?
+             AND umc.rol IN ('admin', 'admin_comunidad')
+           WHERE e.id = ?`,
+          [req.user.persona_id, id]
+        );
+
+        if (!edificioCheck.length) {
+          return res
+            .status(403)
+            .json({ error: 'No tienes permisos para editar este edificio' });
+        }
+      }
+
       const fields = ['nombre', 'direccion', 'codigo'];
       const updates = [];
       const values = [];

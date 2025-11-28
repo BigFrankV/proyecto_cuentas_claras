@@ -15,6 +15,7 @@ import {
 } from '@/lib/dashboardService';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions';
 // Importar tipos
 import { Comunidad } from '@/types/comunidades';
@@ -23,11 +24,9 @@ import { EstadoPago } from '@/types/pagos';
 export default function Dashboard() {
   const { user } = useAuth();
   const { isSuperUser, getUserRoleName } = usePermissions();
+  const { comunidadSeleccionada, comunidades: comunidadesGlobal } = useComunidad();
 
-  // Estados para datos dinámicos
-  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(
-    null,
-  );
+  // Estados para datos dinámicos - AHORA USA FILTRO GLOBAL
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [searchComunidad, setSearchComunidad] = useState('');
   const [showComunidadDropdown, setShowComunidadDropdown] = useState(false);
@@ -37,27 +36,13 @@ export default function Dashboard() {
   const [, setIsLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
 
-  // Cargar datos iniciales - SOLO si el usuario está autenticado
+  // Cargar comunidades para búsqueda local (mantener compatibilidad)
   useEffect(() => {
     let isMounted = true;
 
-    const loadInitialData = async () => {
+    const loadComunidades = async () => {
       try {
-        // eslint-disable-next-line no-console
-        console.log('📊 [Dashboard] loadInitialData - Iniciando');
-        // eslint-disable-next-line no-console
-        console.log('📊 [Dashboard] Usuario actual:', user);
-        console.log(
-          '📊 [Dashboard] Token:',
-          localStorage.getItem('auth_token'),
-        );
-
-        // ✅ NUEVA VERIFICACIÓN: Si no hay usuario, no continuar
         if (!user) {
-          // eslint-disable-next-line no-console
-          console.log(
-            '❌ [Dashboard] Sin usuario autenticado, abortando carga de datos',
-          );
           setIsLoading(false);
           return;
         }
@@ -65,60 +50,38 @@ export default function Dashboard() {
         const comunidadesData = await comunidadesService.getComunidades();
 
         if (!isMounted) {
-          // eslint-disable-next-line no-console
-          console.log('📊 [Dashboard] Componente desmontado, abortando');
           return;
         }
 
-        // eslint-disable-next-line no-console
-        console.log(
-          '📊 [Dashboard] Comunidades recibidas:',
-          comunidadesData.length,
-        );
         setComunidades(comunidadesData);
-
-        // Inicializar con la primera comunidad si existe
-        if (comunidadesData.length > 0) {
-          const primeraComunidad = comunidadesData[0];
-          if (primeraComunidad) {
-            // eslint-disable-next-line no-console
-            console.log(
-              '📊 [Dashboard] Estableciendo primera comunidad:',
-              primeraComunidad.id,
-            );
-            setSelectedComunidad(primeraComunidad.id);
-          }
-        } else {
-          // eslint-disable-next-line no-console
-
-          // eslint-disable-next-line no-console
-          console.warn('📊 [Dashboard] ⚠️ No hay comunidades disponibles');
-        }
       } catch (err) {
         if (isMounted) {
           // eslint-disable-next-line no-console
-          console.error('❌ [Dashboard] Error loading initial data:', err);
-          setError('Error al cargar los datos iniciales');
+          console.error('❌ [Dashboard] Error loading comunidades:', err);
+          setError('Error al cargar las comunidades');
         }
       } finally {
         if (isMounted) {
-          // eslint-disable-next-line no-console
-          console.log('📊 [Dashboard] loadInitialData - Completado');
           setIsLoading(false);
         }
       }
     };
 
-    loadInitialData();
+    loadComunidades();
 
     return () => {
       isMounted = false;
     };
   }, [user]);
 
-  // Función para cargar datos del dashboard
-  const loadDashboardData = async (comunidadId: number) => {
+  // Función para cargar datos del dashboard usando FILTRO GLOBAL
+  const loadDashboardData = async (comunidadId: number | null) => {
     try {
+      if (!comunidadId) {
+        // Si no hay comunidad seleccionada, limpiar dashboard
+        setDashboardData(null);
+        return;
+      }
       const data = await dashboardService.getResumenCompleto(comunidadId);
       setDashboardData(data);
     } catch (err) {
@@ -128,22 +91,27 @@ export default function Dashboard() {
     }
   };
 
-  // Cargar datos del dashboard cuando cambia la comunidad seleccionada
+  // Cargar datos del dashboard cuando cambia la comunidad GLOBAL
   useEffect(() => {
-    if (selectedComunidad && selectedComunidad > 0) {
-      setIsLoading(true);
-      loadDashboardData(selectedComunidad);
-      setIsLoading(false);
-    }
-  }, [selectedComunidad]);
+    // eslint-disable-next-line no-console
+    console.log('📊 [Dashboard] Comunidad global cambió a:', comunidadSeleccionada);
+    
+    const comunidadId = comunidadSeleccionada 
+      ? parseInt(comunidadSeleccionada.id) 
+      : null;
 
-  // Función para cambiar de comunidad
-  const handleComunidadChange = async (comunidadId: number) => {
-    setSelectedComunidad(comunidadId);
-    setIsLoading(true);
-    await loadDashboardData(comunidadId);
-    setIsLoading(false);
-  };
+    if (comunidadId) {
+      setIsLoading(true);
+      loadDashboardData(comunidadId).finally(() => setIsLoading(false));
+    } else {
+      // Si es "todas", mostrar mensaje o vista agregada
+      setDashboardData(null);
+    }
+  }, [comunidadSeleccionada]);
+
+  function handleComunidadChange(id: number) {
+    throw new Error('Function not implemented.');
+  }
 
   return (
     <ProtectedRoute>
@@ -179,16 +147,31 @@ export default function Dashboard() {
                 </div>
 
                 {/* Información de la comunidad seleccionada */}
-                {selectedComunidad && (
+                {comunidadSeleccionada && (
                   <div className='bg-white bg-opacity-10 rounded p-3'>
                     <div className='d-flex align-items-center'>
                       <span className='material-icons me-2'>apartment</span>
                       <div>
                         <h6 className='mb-1 fw-semibold'>
-                          {comunidades.find(c => c.id === selectedComunidad)?.nombre || 'Comunidad'}
+                          {comunidadSeleccionada.nombre}
                         </h6>
                         <small className='opacity-75'>
-                          {comunidades.find(c => c.id === selectedComunidad)?.direccion || ''}
+                          Rol: {comunidadSeleccionada.rol}
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!comunidadSeleccionada && (
+                  <div className='bg-white bg-opacity-10 rounded p-3'>
+                    <div className='d-flex align-items-center'>
+                      <span className='material-icons me-2'>dashboard</span>
+                      <div>
+                        <h6 className='mb-1 fw-semibold'>
+                          Vista General
+                        </h6>
+                        <small className='opacity-75'>
+                          Selecciona una comunidad para ver detalles
                         </small>
                       </div>
                     </div>
@@ -329,7 +312,7 @@ export default function Dashboard() {
                     value={
                       showComunidadDropdown
                         ? searchComunidad
-                        : comunidades.find(c => c.id === selectedComunidad)
+                        : comunidades.find(c => c.id === Number(comunidadSeleccionada?.id))
                             ?.nombre || 'Seleccionar Comunidad'
                     }
                     onChange={e => {
@@ -372,7 +355,7 @@ export default function Dashboard() {
                         <button
                           key={comunidad.id}
                           className={`d-block w-100 text-start px-3 py-2 border-0 bg-white hover-bg-light ${
-                            comunidad.id === selectedComunidad ? 'bg-primary bg-opacity-10 fw-semibold' : ''
+                            comunidad.id === Number(comunidadSeleccionada?.id) ? 'bg-primary bg-opacity-10 fw-semibold' : ''
                           }`}
                           style={{ cursor: 'pointer' }}
                           onMouseDown={() => {
@@ -394,7 +377,7 @@ export default function Dashboard() {
                                 {comunidad.direccion}
                               </small>
                             </div>
-                            {comunidad.id === selectedComunidad && (
+                            {comunidad.id === Number(comunidadSeleccionada?.id) && (
                               <span className='material-icons ms-auto text-primary'>
                                 check
                               </span>
@@ -416,11 +399,11 @@ export default function Dashboard() {
               </div>
 
               {/* Información de la comunidad seleccionada */}
-              {selectedComunidad && (
+              {comunidadSeleccionada && comunidadSeleccionada.id !== 'todas' && (
                 <div className='bg-light rounded p-2 border'>
                   <small className='text-muted d-block'>Comunidad activa</small>
                   <strong className='text-primary'>
-                    {comunidades.find(c => c.id === selectedComunidad)?.nombre}
+                    {comunidadSeleccionada.nombre}
                   </strong>
                 </div>
               )}
@@ -698,7 +681,7 @@ export default function Dashboard() {
           </div>
 
           {/* Gráficos implementados con Chart.js */}
-          <DashboardCharts comunidadId={selectedComunidad || 0} dashboardData={dashboardData} />
+          <DashboardCharts comunidadId={comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : 0} dashboardData={dashboardData} />
 
           {/* Tablas de datos */}
           <div className='row g-4 mb-4'>

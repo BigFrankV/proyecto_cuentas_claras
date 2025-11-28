@@ -155,6 +155,7 @@ export interface PersonaFilters {
   search?: string;
   tipo?: 'Administrador' | 'Inquilino' | 'Propietario';
   estado?: 'Activo' | 'Inactivo';
+  comunidad_id?: number;
   limit?: number;
   offset?: number;
 }

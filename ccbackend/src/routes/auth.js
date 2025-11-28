@@ -1056,15 +1056,26 @@ router.get('/me', authenticate, async (req, res) => {
     };
 
     const [membresias] = await db.query(
-      'SELECT comunidad_id AS comunidadId, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
-      [user.persona_id]
+      `
+      SELECT ucr.comunidad_id, r.codigo as rol, r.nivel_acceso, c.razon_social AS comunidadNombre
+      FROM usuario_rol_comunidad ucr
+      INNER JOIN rol_sistema r ON r.id = ucr.rol_id
+      LEFT JOIN comunidad c ON ucr.comunidad_id = c.id
+      WHERE ucr.usuario_id = ? AND ucr.activo = 1
+    `,
+      [req.user.sub]
+    );
+    // Normalizar roles (lowercase) y eliminar duplicados
+    const roles = Array.from(
+      new Set(membresias.map((m) => String(m.rol || '').toLowerCase()))
     );
     const memberships = (membresias || []).map((m) => ({
-      comunidadId: m.comunidadId,
+      comunidadId: m.comunidad_id,
       rol: String(m.rol || '').toLowerCase(),
+      comunidad: {
+        razon_social: m.comunidadNombre,
+      },
     }));
-    // roles globales derivados de memberships
-    const roles = Array.from(new Set(memberships.map((m) => m.rol)));
     return res.json({ ...response, roles, memberships });
   } catch (err) {
     console.error(err);

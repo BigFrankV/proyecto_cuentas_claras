@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
+import { useComunidad } from '@/lib/useComunidad';
 import {
   Edificio,
   EdificioFormData,
@@ -11,6 +12,7 @@ import {
 
 // Hook para manejo de edificios
 export const useEdificios = () => {
+  const { comunidadSeleccionada } = useComunidad();
   const [edificios, setEdificios] = useState<Edificio[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +35,18 @@ export const useEdificios = () => {
 
       try {
         const api = await getApi();
-        const data = await api.edificios.getAll(filters);
+        // Incluir filtro de comunidad: si no se pasa ningún `filters` usamos la
+        // `comunidadSeleccionada` global; si se pasa un objeto `filters`, se
+        // respeta tal cual (incluso si `comunidadId` es undefined) para permitir
+        // que la página controle localmente la comunidad.
+        const resolvedComunidadId =
+          typeof filters === 'undefined' ? comunidadSeleccionada?.id : filters.comunidadId;
+
+        const finalFilters = {
+          ...filters,
+          comunidadId: resolvedComunidadId,
+        } as EdificioFilters | undefined;
+        const data = await api.edificios.getAll(finalFilters);
         setEdificios(data);
       } catch (err) {
         setError(
@@ -45,8 +58,13 @@ export const useEdificios = () => {
         setLoading(false);
       }
     },
-    [getApi],
+    [getApi, comunidadSeleccionada],
   );
+
+  // Cargar datos al montar el componente y cuando cambie la comunidad
+  useEffect(() => {
+    fetchEdificios();
+  }, [fetchEdificios]);
 
   // Crear un nuevo edificio
   const createEdificio = useCallback(
@@ -223,11 +241,11 @@ export const useEdificios = () => {
           }
         }
 
-        if (
-          filters.comunidadId &&
-          edificio.comunidadId !== filters.comunidadId
-        ) {
-          return false;
+        if (filters.comunidadId) {
+          // Normalizar tipos (string/number) para evitar falsos negativos
+          if (String(edificio.comunidadId) !== String(filters.comunidadId)) {
+            return false;
+          }
         }
 
         if (filters.estado && edificio.estado !== filters.estado) {

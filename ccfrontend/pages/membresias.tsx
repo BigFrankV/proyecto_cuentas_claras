@@ -8,25 +8,25 @@ import {
   Membresia,
   MembresiaFilters,
 } from '@/hooks/useMembresias';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 
 const MembresiasListado = () => {
   const { hasPermission } = usePermissions();
+  const { user } = useAuth();
+  const { comunidadSeleccionada } = useComunidad();
   const [searchTerm, setSearchTerm] = useState('');
   const [nivelFilter, setNivelFilter] = useState<number | 'todos'>('todos');
   const [estadoFilter, setEstadoFilter] = useState<
     'todos' | 'activo' | 'inactivo'
   >('todos');
-  const [comunidadFilter, setComunidadFilter] = useState<number | 'todos'>(
-    'todos',
-  );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [currentPage, setCurrentPage] = useState(1);
   const [membresias, setMembresias] = useState<Membresia[]>([]);
   const [total, setTotal] = useState(0);
   const [roles, setRoles] = useState<any[]>([]);
-  const [comunidades, setComunidades] = useState<any[]>([]);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   const { listarMembresias, listarRoles, listarComunidades, loading, error } =
     useMembresias();
@@ -35,7 +35,7 @@ const MembresiasListado = () => {
 
   useEffect(() => {
     cargarMembresias();
-  }, [searchTerm, nivelFilter, estadoFilter, comunidadFilter, currentPage]);
+  }, [searchTerm, nivelFilter, estadoFilter, comunidadSeleccionada, currentPage]);
 
   useEffect(() => {
     cargarCatalogos();
@@ -43,12 +43,8 @@ const MembresiasListado = () => {
 
   const cargarCatalogos = async () => {
     try {
-      const [rolesData, comunidadesData] = await Promise.all([
-        listarRoles(),
-        listarComunidades(),
-      ]);
+      const rolesData = await listarRoles();
       setRoles(rolesData);
-      setComunidades(comunidadesData);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error al cargar catálogos:', err);
@@ -56,6 +52,22 @@ const MembresiasListado = () => {
   };
 
   const cargarMembresias = async () => {
+    // Verificar si el usuario tiene rol admin en la comunidad seleccionada
+    if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+      const communityId = Number(comunidadSeleccionada.id);
+      const membership = user?.memberships?.find(m => m.comunidadId === communityId);
+      const isAdmin = membership && ['admin', 'admin_comunidad'].includes(membership.rol);
+      
+      if (!isAdmin && !user?.is_superadmin) {
+        setAccessDenied(true);
+        setMembresias([]);
+        setTotal(0);
+        return;
+      }
+    }
+    
+    setAccessDenied(false);
+    
     try {
       const filters: MembresiaFilters = {
         limit: itemsPerPage,
@@ -66,8 +78,9 @@ const MembresiasListado = () => {
         filters.rol_id = nivelFilter;
       }
 
-      if (comunidadFilter !== 'todos') {
-        filters.comunidad_id = comunidadFilter;
+      // Usar filtro global de comunidad
+      if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+        filters.comunidad_id = Number(comunidadSeleccionada.id);
       }
 
       const response = await listarMembresias(filters);
@@ -357,9 +370,37 @@ const MembresiasListado = () => {
           </div>
         </div>
 
+        {/* Alerta informativa del filtro global */}
+        {comunidadSeleccionada && comunidadSeleccionada.id !== 'todas' && (
+          <div className='container-fluid mt-3'>
+            <div className='alert alert-info d-flex align-items-center' role='alert'>
+              <i className='material-icons me-2'>info</i>
+              <div>
+                Mostrando membresías de: <strong>{comunidadSeleccionada.nombre}</strong>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Contenido principal */}
         <div className='container-fluid pt-4 pb-4'>
+          {/* Mensaje de acceso denegado */}
+          {accessDenied && (
+            <div className='alert alert-warning d-flex align-items-center' role='alert'>
+              <i className='material-icons me-3' style={{ fontSize: '48px' }}>lock</i>
+              <div>
+                <h5 className='alert-heading mb-2'>Acceso Denegado</h5>
+                <p className='mb-0'>
+                  No tienes permisos de administrador en la comunidad <strong>{comunidadSeleccionada?.nombre}</strong>.
+                  Solo los administradores pueden gestionar membresías.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Filtros */}
+          {!accessDenied && (
+          <>
           <div className='row mb-4'>
             <div className='col-12'>
               <div
@@ -432,26 +473,6 @@ const MembresiasListado = () => {
                       <option value='todos'>Todos los estados</option>
                       <option value='activo'>Activo</option>
                       <option value='inactivo'>Inactivo</option>
-                    </select>
-                  </div>
-                  <div className='col-12 col-md-2 col-lg-2'>
-                    <select
-                      className='form-select'
-                      value={comunidadFilter}
-                      onChange={e =>
-                        setComunidadFilter(
-                          e.target.value === 'todos'
-                            ? 'todos'
-                            : parseInt(e.target.value),
-                        )
-                      }
-                    >
-                      <option value='todos'>Todas las comunidades</option>
-                      {comunidades.map(comunidad => (
-                        <option key={comunidad.id} value={comunidad.id}>
-                          {comunidad.nombre}
-                        </option>
-                      ))}
                     </select>
                   </div>
                   <div className='col-12 col-md-3 col-lg-2 d-flex gap-2'>
@@ -1095,6 +1116,8 @@ const MembresiasListado = () => {
               )}
             </div>
           </div>
+          </>
+          )}
         </div>
 
         <style jsx>{`
