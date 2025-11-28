@@ -102,27 +102,13 @@ router.get('/edificio/:edificioId/listado', authenticate, async (req, res) => {
       );
 
       if (!membership.length) {
-        return res.status(403).json({ error: 'No tienes acceso a esta comunidad' });
+        return res
+          .status(403)
+          .json({ error: 'No tienes acceso a esta comunidad' });
       }
 
-      const rol = membership[0].rol;
-
-      // Si es rol básico, verificar que tenga unidades en este edificio
-      if (!['admin', 'admin_comunidad'].includes(rol)) {
-        const [unidades] = await db.query(
-          `SELECT 1 FROM unidad u
-           INNER JOIN titulares_unidad tu ON tu.unidad_id = u.id
-           WHERE u.edificio_id = ? 
-             AND tu.persona_id = ?
-             AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
-           LIMIT 1`,
-          [edificioId, userId]
-        );
-
-        if (!unidades.length) {
-          return res.status(403).json({ error: 'No tienes acceso a este edificio' });
-        }
-      }
+      // Todos los roles (admin y básicos) pueden ver torres de su comunidad
+      // No se requiere tener unidades específicas
     }
 
     const [rows] = await db.query(
@@ -1813,7 +1799,9 @@ router.patch(
         );
 
         if (!torreCheck.length) {
-          return res.status(403).json({ error: 'No tienes permisos para editar esta torre' });
+          return res
+            .status(403)
+            .json({ error: 'No tienes permisos para editar esta torre' });
         }
       }
 
@@ -1828,7 +1816,6 @@ router.patch(
       });
       if (!updates.length) return res.status(400).json({ error: 'no fields' });
       values.push(id);
-      
       await db.query(
         `UPDATE torre SET ${updates.join(', ')} WHERE id = ?`,
         values

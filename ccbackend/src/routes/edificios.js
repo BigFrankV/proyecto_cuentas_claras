@@ -94,34 +94,13 @@ router.get('/', authenticate, async (req, res) => {
 
     // Filtros de acceso basado en roles
     if (!req.user.is_superadmin) {
-      // Obtener rol del usuario en sus comunidades
-      const [userRoles] = await db.query(
-        'SELECT comunidad_id, rol FROM usuario_miembro_comunidad WHERE persona_id = ?',
-        [req.user.persona_id]
-      );
-      const adminComunidades = userRoles
-        .filter((r) => ['admin', 'admin_comunidad'].includes(r.rol))
-        .map((r) => r.comunidad_id);
-      if (adminComunidades.length > 0) {
-        // Admin: edificios de sus comunidades
-        query += `
-          INNER JOIN usuario_miembro_comunidad umc ON c.id = umc.comunidad_id
-            AND umc.persona_id = ?
-            AND umc.rol IN ('admin', 'admin_comunidad')
-        `;
-        params.push(req.user.persona_id);
-      } else {
-        // CRÍTICO: Roles básicos solo ven edificios donde tienen unidades
-        query += `
-          INNER JOIN usuario_miembro_comunidad umc ON c.id = umc.comunidad_id
-            AND umc.persona_id = ?
-          INNER JOIN unidad u2 ON e.id = u2.edificio_id
-          INNER JOIN titulares_unidad tu ON u2.id = tu.unidad_id
-            AND tu.persona_id = ?
-            AND (tu.hasta IS NULL OR tu.hasta >= CURRENT_DATE)
-        `;
-        params.push(req.user.persona_id, req.user.persona_id);
-      }
+      // Todos los usuarios (admin y básicos) ven edificios de sus comunidades
+      // Solo filtramos por membresía en usuario_miembro_comunidad
+      query += `
+        INNER JOIN usuario_miembro_comunidad umc ON c.id = umc.comunidad_id
+          AND umc.persona_id = ?
+      `;
+      params.push(req.user.persona_id);
     }
 
     query += `

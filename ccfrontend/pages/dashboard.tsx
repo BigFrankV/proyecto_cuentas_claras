@@ -109,6 +109,10 @@ export default function Dashboard() {
     }
   }, [comunidadSeleccionada]);
 
+  function handleComunidadChange(id: number) {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <ProtectedRoute>
       <Head>
@@ -308,7 +312,7 @@ export default function Dashboard() {
                     value={
                       showComunidadDropdown
                         ? searchComunidad
-                        : comunidades.find(c => c.id === selectedComunidad)
+                        : comunidades.find(c => c.id === Number(comunidadSeleccionada?.id))
                             ?.nombre || 'Seleccionar Comunidad'
                     }
                     onChange={e => {
@@ -351,7 +355,7 @@ export default function Dashboard() {
                         <button
                           key={comunidad.id}
                           className={`d-block w-100 text-start px-3 py-2 border-0 bg-white hover-bg-light ${
-                            comunidad.id === selectedComunidad ? 'bg-primary bg-opacity-10 fw-semibold' : ''
+                            comunidad.id === Number(comunidadSeleccionada?.id) ? 'bg-primary bg-opacity-10 fw-semibold' : ''
                           }`}
                           style={{ cursor: 'pointer' }}
                           onMouseDown={() => {
@@ -373,7 +377,7 @@ export default function Dashboard() {
                                 {comunidad.direccion}
                               </small>
                             </div>
-                            {comunidad.id === selectedComunidad && (
+                            {comunidad.id === Number(comunidadSeleccionada?.id) && (
                               <span className='material-icons ms-auto text-primary'>
                                 check
                               </span>
@@ -395,11 +399,11 @@ export default function Dashboard() {
               </div>
 
               {/* Información de la comunidad seleccionada */}
-              {selectedComunidad && (
+              {comunidadSeleccionada && comunidadSeleccionada.id !== 'todas' && (
                 <div className='bg-light rounded p-2 border'>
                   <small className='text-muted d-block'>Comunidad activa</small>
                   <strong className='text-primary'>
-                    {comunidades.find(c => c.id === selectedComunidad)?.nombre}
+                    {comunidadSeleccionada.nombre}
                   </strong>
                 </div>
               )}
@@ -677,7 +681,7 @@ export default function Dashboard() {
           </div>
 
           {/* Gráficos implementados con Chart.js */}
-          <DashboardCharts comunidadId={selectedComunidad || 0} dashboardData={dashboardData} />
+          <DashboardCharts comunidadId={comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : 0} dashboardData={dashboardData} />
 
           {/* Tablas de datos */}
           <div className='row g-4 mb-4'>

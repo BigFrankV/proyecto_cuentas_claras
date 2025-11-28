@@ -270,7 +270,7 @@ export default function EdificiosListado() {
                     </div>
 
                     {/* Botón de nuevo edificio */}
-                    {hasPermission(Permission.CREATE_EDIFICIO) && (
+                    {hasPermission(Permission.CREATE_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                       <Link href='/edificios/nuevo' className='btn btn-light d-flex align-items-center'>
                         <span className='material-icons me-2'>add</span>
                         Nuevo Edificio
@@ -387,7 +387,7 @@ export default function EdificiosListado() {
               </div>
             </div>
             <div className='col-lg-2 d-flex justify-content-end align-items-end'>
-              {hasPermission(Permission.CREATE_EDIFICIO) && (
+              {hasPermission(Permission.CREATE_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                 <Link href='/edificios/nuevo' className='btn btn-primary'>
                   <i className='material-icons me-2'>add</i>
                   Nuevo Edificio
@@ -661,7 +661,7 @@ export default function EdificiosListado() {
                               >
                                 <i className='material-icons'>visibility</i>
                               </Link>
-                              {hasPermission(Permission.EDIT_EDIFICIO) && (
+                              {hasPermission(Permission.EDIT_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <button
                                   className='btn btn-sm btn-outline-secondary'
                                   title='Editar'
@@ -674,7 +674,7 @@ export default function EdificiosListado() {
                                   <i className='material-icons'>edit</i>
                                 </button>
                               )}
-                              {hasPermission(Permission.DELETE_EDIFICIO) && (
+                              {hasPermission(Permission.DELETE_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <button
                                   className='btn btn-sm btn-outline-danger'
                                   title='Eliminar'
@@ -796,7 +796,7 @@ export default function EdificiosListado() {
                           >
                             <i className='material-icons'>visibility</i>
                           </Link>
-                          {hasPermission(Permission.EDIT_EDIFICIO) && (
+                          {hasPermission(Permission.EDIT_EDIFICIO, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                             <button
                               className='btn btn-sm btn-outline-secondary'
                               onClick={() =>

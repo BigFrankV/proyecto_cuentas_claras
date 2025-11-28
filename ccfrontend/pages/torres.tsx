@@ -312,7 +312,7 @@ export default function TorresListado() {
                 </div>
               </div>
               <div className='text-end'>
-                {hasPermission(Permission.CREATE_TORRE) && (
+                {hasPermission(Permission.CREATE_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                   <Link href='/torres/nueva' className='btn btn-light btn-lg'>
                     <i className='material-icons me-2'>add</i>
                     Nueva Torre
@@ -875,7 +875,7 @@ export default function TorresListado() {
                                       visibility
                                     </i>
                                   </Link>
-                                  {hasPermission(Permission.EDIT_TORRE) && (
+                                  {hasPermission(Permission.EDIT_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                     <Link
                                       href={`/torres/${torre.id}`}
                                       className='btn btn-sm btn-outline-primary'
@@ -890,7 +890,7 @@ export default function TorresListado() {
                                       </i>
                                     </Link>
                                   )}
-                                  {hasPermission(Permission.DELETE_TORRE) && (
+                                  {hasPermission(Permission.DELETE_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                     <button
                                       type='button'
                                       className='btn btn-sm btn-outline-danger'
@@ -981,7 +981,7 @@ export default function TorresListado() {
                             role='presentation'
                           >
                             <div className='btn-group'>
-                              {hasPermission(Permission.EDIT_TORRE) && (
+                              {hasPermission(Permission.EDIT_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <Link
                                   href={`/torres/${torre.id}`}
                                   className='btn btn-sm btn-light'
@@ -994,7 +994,7 @@ export default function TorresListado() {
                                   </i>
                                 </Link>
                               )}
-                              {hasPermission(Permission.DELETE_TORRE) && (
+                              {hasPermission(Permission.DELETE_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <button
                                   type='button'
                                   className='btn btn-sm btn-light'
@@ -1054,7 +1054,7 @@ export default function TorresListado() {
                               </i>
                               Ver detalle
                             </Link>
-                            {hasPermission(Permission.EDIT_TORRE) && (
+                            {hasPermission(Permission.EDIT_TORRE, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                               <Link
                                 href={`/torres/${torre.id}`}
                                 className='btn btn-primary btn-sm'

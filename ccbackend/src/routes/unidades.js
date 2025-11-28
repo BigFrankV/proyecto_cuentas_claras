@@ -369,21 +369,43 @@ router.get('/', authenticate, async (req, res) => {
     // Agregar filtro por permisos si no es superadmin
     let comunidadFilter = '';
     let comunidadParams = [];
+    let rolesBasicosFilter = '';
+    let rolesBasicosParams = [];
+
     if (!req.user?.is_superadmin) {
+      // Obtener comunidades y roles del usuario
       const [comRows] = await db.query(
-        `SELECT DISTINCT comunidad_id 
+        `SELECT DISTINCT comunidad_id, rol 
          FROM usuario_miembro_comunidad 
          WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
         [req.user.persona_id]
       );
-      const comunidadIds = comRows.map((r) => r.comunidad_id);
-      if (comunidadIds.length === 0) {
+
+      if (comRows.length === 0) {
         return res.json([]); // Usuario sin comunidades asignadas
       }
+
+      const comunidadIds = comRows.map((r) => r.comunidad_id);
       comunidadFilter = ` AND u.comunidad_id IN (${comunidadIds
         .map(() => '?')
         .join(',')})`;
       comunidadParams = comunidadIds;
+
+      // Si NO es admin en NINGUNA comunidad, aplicar filtro de titulares_unidad
+      const esAdminEnAlgunaComunidad = comRows.some((r) =>
+        ['admin', 'admin_comunidad'].includes(r.rol)
+      );
+
+      if (!esAdminEnAlgunaComunidad) {
+        // Roles básicos: solo sus unidades
+        rolesBasicosFilter = ` AND EXISTS (
+          SELECT 1 FROM titulares_unidad tu 
+          WHERE tu.unidad_id = u.id 
+            AND tu.persona_id = ?
+            AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+        )`;
+        rolesBasicosParams = [req.user.persona_id];
+      }
     }
 
     const sql = `
@@ -421,6 +443,7 @@ router.get('/', authenticate, async (req, res) => {
         AND (? IS NULL OR u.torre_id = ?)
         AND (? IS NULL OR u.activa = ?)
         ${comunidadFilter}
+        ${rolesBasicosFilter}
         AND (
           ? IS NULL
           OR u.codigo LIKE CONCAT('%', ?, '%')
@@ -446,6 +469,7 @@ router.get('/', authenticate, async (req, res) => {
       params[3],
       params[3],
       ...comunidadParams,
+      ...rolesBasicosParams,
       params[4],
       params[4],
       params[4],

@@ -127,7 +127,6 @@ export default function UnidadesListado() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
-    comunidad: '',
     edificio: '',
     torre: '',
     estado: '',
@@ -161,7 +160,7 @@ export default function UnidadesListado() {
         // Mapear al formato esperado por el dropdown
         const mapped = (res.data || []).map((c: any) => ({
           id: c.id,
-          nombre: c.razon_social || c.nombre
+          nombre: c.razon_social || c.nombre,
         }));
         setComunidadesState(mapped);
       } catch (err) {
@@ -175,16 +174,16 @@ export default function UnidadesListado() {
   }, [comunidadSeleccionada]);
 
   useEffect(() => {
-    // load edificios for selected comunidad
+    // load edificios for selected comunidad - USAR FILTRO GLOBAL
     let mounted = true;
     (async () => {
       try {
-        if (!filters.comunidad) {
+        if (!comunidadSeleccionada || comunidadSeleccionada.id === 'todas') {
           setAvailableEdificios([]);
           return;
         }
-        const res = await apiClient.get('/unidades/dropdowns/edificios', {
-          params: { comunidad_id: filters.comunidad },
+        const res = await apiClient.get('/edificios/', {
+          params: { comunidadId: comunidadSeleccionada.id },
         });
         if (!mounted) {
           return;
@@ -198,7 +197,7 @@ export default function UnidadesListado() {
     return () => {
       mounted = false;
     };
-  }, [filters.comunidad]);
+  }, [comunidadSeleccionada]);
 
   useEffect(() => {
     // load torres for selected edificio
@@ -228,7 +227,7 @@ export default function UnidadesListado() {
 
   // (removed legacy useMemo for availableTorres)
 
-  // Aplicar filtros y búsqueda
+  // Aplicar filtros y búsqueda LOCAL (solo para filtros que no se envían al backend)
   useEffect(() => {
     let filtered = unidades;
 
@@ -245,44 +244,10 @@ export default function UnidadesListado() {
       );
     }
 
-    // Filtrar por comunidad
-    if (filters.comunidad) {
-      const comunidadNombre = comunidadesState.find(
-        (c: any) => c.id === filters.comunidad,
-      )?.nombre;
-      filtered = filtered.filter(
-        unidad => unidad.comunidad === comunidadNombre,
-      );
-    }
-
-    // Filtrar por edificio
-    if (filters.edificio) {
-      const edificioNombre = availableEdificios.find(
-        (e: any) => e.id === filters.edificio,
-      )?.nombre;
-      filtered = filtered.filter(unidad => unidad.edificio === edificioNombre);
-    }
-
-    // Filtrar por torre
-    if (filters.torre) {
-      const torreNombre = availableTorres.find(
-        (t: any) => t.id === filters.torre,
-      )?.nombre;
-      filtered = filtered.filter(unidad => unidad.torre === torreNombre);
-    }
-
-    // Filtrar por estado
-    if (filters.estado) {
-      filtered = filtered.filter(unidad => unidad.estado === filters.estado);
-    }
-
-    // Filtrar por tipo
-    if (filters.tipo) {
-      filtered = filtered.filter(unidad => unidad.tipo === filters.tipo);
-    }
+    // NO filtrar por comunidad/edificio/torre aquí - ya se filtran en el backend
 
     setFilteredUnidades(filtered);
-  }, [unidades, searchTerm, filters]);
+  }, [unidades, searchTerm]);
 
   const handleFilterChange = (filterName: string, value: string) => {
     const newFilters = { ...filters, [filterName]: value };
@@ -402,18 +367,24 @@ export default function UnidadesListado() {
     return { total, activas, inactivas, mantenimiento, saldoTotal };
   }, [filteredUnidades]);
 
-  // Load unidades from API
+  // Load unidades from API - USAR FILTRO GLOBAL
   useEffect(() => {
     let mounted = true;
     const load = async () => {
       setLoading(true);
       setError(null);
       try {
+        // eslint-disable-next-line no-console
+        console.log('🏘️ [Unidades] Comunidad global cambió a:', comunidadSeleccionada);
+
         const params: any = {};
-        // map filters from UI to API params (basic)
-        if (filters.comunidad) {
-          params.comunidad_id = filters.comunidad;
+        
+        // USAR FILTRO GLOBAL de comunidad si existe
+        if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+          params.comunidad_id = comunidadSeleccionada.id;
         }
+        
+        // Filtros locales adicionales
         if (filters.edificio) {
           params.edificio_id = filters.edificio;
         }
@@ -473,7 +444,7 @@ export default function UnidadesListado() {
       mounted = false;
     };
   }, [
-    filters.comunidad,
+    comunidadSeleccionada,
     filters.edificio,
     filters.torre,
     filters.estado,
@@ -492,7 +463,7 @@ export default function UnidadesListado() {
           title="Unidades"
           subtitle="Gestión completa de unidades y departamentos"
           icon="apartment"
-          primaryAction={hasPermission(Permission.CREATE_UNIDAD) ? {
+          primaryAction={hasPermission(Permission.CREATE_UNIDAD, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) ? {
             href: '/unidades/nueva',
             label: 'Nueva Unidad',
             icon: 'add',
@@ -539,28 +510,16 @@ export default function UnidadesListado() {
                 }}
               >
                 <div className='row g-3'>
-                  <div className='col-md-3'>
-                    <label
-                      htmlFor='comunidadFilter'
-                      className='form-label small'
-                    >
-                      Comunidad
-                    </label>
-                    <select
-                      className='form-select form-select-sm'
-                      id='comunidadFilter'
-                      value={filters.comunidad}
-                      onChange={e =>
-                        handleFilterChange('comunidad', e.target.value)
-                      }
-                    >
-                      <option value=''>Todas las comunidades</option>
-                      {(comunidadesState || []).map((comunidad: any) => (
-                        <option key={comunidad.id} value={comunidad.id}>
-                          {comunidad.nombre}
-                        </option>
-                      ))}
-                    </select>
+                  <div className='col-md-12 mb-2'>
+                    <div className='alert alert-info mb-0' role='alert'>
+                      <i className='material-icons align-middle me-2' style={{fontSize: '18px'}}>info</i>
+                      <strong>Filtro activo:</strong> {comunidadSeleccionada ? comunidadSeleccionada.nombre : 'Todas las comunidades'}
+                      {comunidadSeleccionada && comunidadSeleccionada.rol && (
+                        <span className='ms-2'>
+                          (<small>Rol: {comunidadSeleccionada.rol}</small>)
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className='col-md-3'>
                     <label
@@ -576,7 +535,7 @@ export default function UnidadesListado() {
                       onChange={e =>
                         handleFilterChange('edificio', e.target.value)
                       }
-                      disabled={!filters.comunidad}
+                      disabled={!comunidadSeleccionada || comunidadSeleccionada.id === 'todas'}
                     >
                       <option value=''>Todos los edificios</option>
                       {availableEdificios.map(edificio => (
@@ -700,13 +659,13 @@ export default function UnidadesListado() {
                 {selectedUnidades.length} unidad(es) seleccionada(s)
               </span>
               <div>
-                {hasPermission(Permission.EDIT_UNIDAD) && (
+                {hasPermission(Permission.EDIT_UNIDAD, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                   <button className='btn btn-sm btn-outline-primary me-2'>
                     <i className='material-icons me-1'>receipt</i>
                     Generar Cargos
                   </button>
                 )}
-                {hasPermission(Permission.DELETE_UNIDAD) && (
+                {hasPermission(Permission.DELETE_UNIDAD, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                   <button className='btn btn-sm btn-outline-danger'>
                     <i className='material-icons me-1'>delete</i>
                     Eliminar
@@ -838,7 +797,7 @@ export default function UnidadesListado() {
                                   visibility
                                 </i>
                               </Link>
-                              {hasPermission(Permission.EDIT_UNIDAD) && (
+                              {hasPermission(Permission.EDIT_UNIDAD, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                                 <Link
                                   href={`/unidades/${unidad.id}/cargos`}
                                   className='btn btn-sm btn-outline-secondary'
@@ -960,7 +919,7 @@ export default function UnidadesListado() {
                           </i>
                           Ver
                         </Link>
-                        {hasPermission(Permission.EDIT_UNIDAD) && (
+                        {hasPermission(Permission.EDIT_UNIDAD, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined) && (
                           <Link
                             href={`/unidades/${unidad.id}/cargos`}
                             className='btn btn-primary btn-sm'
