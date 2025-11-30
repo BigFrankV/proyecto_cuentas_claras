@@ -14,11 +14,13 @@ import {
 } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
 
+
 import Layout from '@/components/layout/Layout';
 import { createCompra } from '@/lib/comprasService';
 import comunidadesService from '@/lib/comunidadesService';
 import { ProtectedRoute } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
 interface Comunidad {
   id: number;
@@ -60,9 +62,12 @@ interface PurchaseItem {
 
 export default function NuevaCompra() {
   const router = useRouter();
-  const { isSuperUser, getUserCommunities } = usePermissions();
+  const { isSuperUser, getUserCommunities, hasPermission } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
-  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
+  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(
+    comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const loadedComunidadesRef = useRef(false);
@@ -108,7 +113,9 @@ export default function NuevaCompra() {
         .catch(() => toast.error('Error cargando comunidades'));
     } else if (!isSuperUser) {
       const userCommunities = getUserCommunities();
-      setSelectedComunidadId(userCommunities[0]?.comunidadId || null);
+      const rawId = userCommunities[0]?.comunidadId ?? comunidadSeleccionada?.id ?? null;
+      // eslint-disable-next-line eqeqeq
+      setSelectedComunidadId(rawId != null ? Number(rawId) : null);
     }
   }, [isSuperUser, getUserCommunities]);
 
@@ -340,6 +347,12 @@ export default function NuevaCompra() {
       return;
     }
 
+    // Verificar permiso por comunidad antes de enviar
+    if (!hasPermission(Permission.CREATE_COMPRA, selectedComunidadId)) {
+      setError('No tienes permiso para crear compras en la comunidad seleccionada');
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -362,7 +375,12 @@ export default function NuevaCompra() {
       toast.success('Compra creada exitosamente');
       router.push('/compras');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error al crear la compra');
+      const status = error?.response?.status;
+      if (status === 403) {
+        toast.error('No tienes permiso para crear compras en la comunidad seleccionada');
+      } else {
+        toast.error(error.response?.data?.error || 'Error al crear la compra');
+      }
     } finally {
       setLoading(false);
     }

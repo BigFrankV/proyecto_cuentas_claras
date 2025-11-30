@@ -6,6 +6,9 @@ import { useState, useEffect } from 'react';
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
 import Layout from '@/components/layout/Layout';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface EmissionDetail {
   id: string;
@@ -64,12 +67,29 @@ export default function EmisionProrrateo() {
   const [loading, setLoading] = useState(true);
   const [selectedUnit, setSelectedUnit] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'summary' | 'detailed'>('summary');
+  const [accessDenied, setAccessDenied] = useState(false);
+  const { comunidadSeleccionada } = useComunidad();
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
 
   useEffect(() => {
-    if (id) {
-      loadProrrateoData();
+    if (!id) {return;}
+
+    // Determinar comunidad efectiva
+    const comunidadIdNum = comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : null;
+
+    // Verificar permiso para ver emisión en la comunidad
+    const allowed = user?.is_superadmin || hasPermission(Permission.VIEW_EMISION, comunidadIdNum);
+    if (!allowed) {
+      setAccessDenied(true);
+      setLoading(false);
+      return;
     }
-  }, [id]);
+
+    setAccessDenied(false);
+    loadProrrateoData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, comunidadSeleccionada, user]);
 
   const loadProrrateoData = () => {
     // Mock data

@@ -18,6 +18,8 @@ import {
 import Layout from '@/components/layout/Layout';
 import { comprasApi } from '@/lib/api/compras';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 import { CompraBackend } from '@/types/compras';
 
 // Función para formatear moneda chilena
@@ -140,6 +142,9 @@ export default function DetallePurchase() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [newNote, setNewNote] = useState('');
   const [activeTab, setActiveTab] = useState('details');
+  const { comunidadSeleccionada } = useComunidad();
+  const { hasPermission } = usePermissions();
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -194,9 +199,16 @@ export default function DetallePurchase() {
 
       setPurchase(mappedPurchase);
       setDocuments([]); // por ahora vacío
+      setAccessDenied(false);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
+      const status = (error as any)?.response?.status;
+      if (status === 403) {
+        setAccessDenied(true);
+        setDocuments([]);
+        return;
+      }
       setPurchase(null);
       setDocuments([]);
     } finally {
@@ -430,6 +442,20 @@ export default function DetallePurchase() {
     );
   }
 
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='text-center py-5'>
+            <span className='material-icons text-danger mb-3' style={{ fontSize: '4rem' }}>block</span>
+            <h4>Acceso Denegado</h4>
+            <p className='text-muted'>No tienes permisos para ver esta compra en la comunidad seleccionada.</p>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
   const statusInfo = getStatusInfo(purchase.status);
   const priorityInfo = getPriorityInfo(purchase.priority);
   const typeInfo = getTypeInfo(purchase.type);
@@ -491,7 +517,7 @@ export default function DetallePurchase() {
             </div>
 
             <div className='d-flex gap-2'>
-              {canApprove() && (
+              {canApprove() && hasPermission(Permission.APPROVE_PAYMENTS, comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : null) && (
                 <>
                   <Button
                     variant='outline-danger'
@@ -516,7 +542,7 @@ export default function DetallePurchase() {
                 <span className='material-icons me-2'>note_add</span>
                 Agregar Nota
               </Button>
-              {canEdit() && (
+              {canEdit() && hasPermission(Permission.EDIT_COMPRA, comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : null) && (
                 <Button
                   variant='primary'
                   onClick={() => router.push(`/compras/editar/${purchase.id}`)}

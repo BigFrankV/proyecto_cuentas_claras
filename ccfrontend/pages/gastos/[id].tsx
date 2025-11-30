@@ -12,6 +12,8 @@ import {
   updateGasto,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 import { mapBackendToExpense, Expense } from '@/types/gastos';
 
 interface ExpenseFormData {
@@ -48,7 +50,10 @@ export default function GastoDetalle() {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useAuth();
+  const { comunidadSeleccionada } = useComunidad();
+  const { hasPermission } = usePermissions();
 
+  const [accessDenied, setAccessDenied] = useState(false);
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -68,9 +73,16 @@ export default function GastoDetalle() {
       setLoading(true);
       const data = await getGastoById(Number(id));
       setExpense(mapBackendToExpense(data));
+      // Reset accessDenied si es que antes estaba marcado
+      setAccessDenied(false);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
+      const status = (err as any)?.response?.status;
+      if (status === 403) {
+        setAccessDenied(true);
+        return;
+      }
     } finally {
       setLoading(false);
     }
@@ -229,6 +241,21 @@ export default function GastoDetalle() {
     );
   }
 
+  // Early return: Acceso denegado (evaluado antes de render principal)
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='text-center py-5'>
+            <span className='material-icons text-danger mb-3' style={{ fontSize: '4rem' }}>block</span>
+            <h4>Acceso Denegado</h4>
+            <p className='text-muted'>No tienes permisos para ver este gasto en la comunidad seleccionada.</p>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
   if (!expense) {
     return (
       <ProtectedRoute>
@@ -297,7 +324,7 @@ export default function GastoDetalle() {
                 <span className="material-icons">arrow_back</span>
                 Volver
               </button>
-              
+
               <button
                 className="btn-secondary"
                 onClick={() => router.push(`/gastos/editar/${expense.id}`)}
@@ -342,7 +369,7 @@ export default function GastoDetalle() {
                     <span className="amount-value">{formatCurrency(expense.amount)}</span>
                   </div>
                 </div>
-                
+
                 <div className="badges-row">
                   {getStatusBadge(expense.status)}
                   {getPriorityBadge(expense.priority)}
@@ -472,7 +499,7 @@ export default function GastoDetalle() {
                 <div className="approval-status">
                   <div className="progress-container">
                     <div className="progress-bar">
-                      <div 
+                      <div
                         className="progress-fill"
                         style={{ width: `${(expense.currentApprovals / expense.requiredApprovals) * 100}%` }}
                       ></div>
@@ -481,7 +508,7 @@ export default function GastoDetalle() {
                       {expense.currentApprovals} de {expense.requiredApprovals} aprobaciones
                     </div>
                   </div>
-                  
+
                   {expense.status === 'pending' && (
                     <div className="status-alert warning">
                       <span className="material-icons">schedule</span>
@@ -519,52 +546,82 @@ export default function GastoDetalle() {
               {/* Danger Zone */}
               <div className="content-card sidebar-card danger-zone">
                 <h3 className="card-title text-danger">Zona de Peligro</h3>
-                <button 
-                  className="btn-danger-outline"
-                  onClick={() => setShowDeleteModal(true)}
-                >
-                  <span className="material-icons">delete</span>
-                  Eliminar Gasto
-                </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    className="btn-danger-outline"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <span className="material-icons">delete</span>
+                    Eliminar Gasto
+                  </button>
+
+                  {hasPermission(
+                    Permission.EDIT_GASTO,
+                    Number(comunidadSeleccionada?.id ?? user?.comunidad_id),
+                  ) && (
+                      <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => router.push(`/gastos/editar/${expense.id}`)}
+                      >
+                        <span className="material-icons">edit</span>
+                        Editar
+                      </button>
+                    )}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Modals */}
-        <Modal show={showApprovalModal} onHide={() => setShowApprovalModal(false)} centered>
-          <Modal.Header closeButton>
-            <Modal.Title>Aprobar o Rechazar</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>¿Qué acción deseas realizar con este gasto?</p>
-            <div className="d-flex gap-2 justify-content-end mt-4">
-              <button className="btn-danger" onClick={handleRejectExpense} disabled={actionLoading}>
-                <span className="material-icons">close</span> Rechazar
-              </button>
-              <button className="btn-success" onClick={handleApproveExpense} disabled={actionLoading}>
-                <span className="material-icons">check</span> Aprobar
-              </button>
-            </div>
-          </Modal.Body>
-        </Modal>
+              {/* Modales (fuera de botones) */}
+              <Modal show={showApprovalModal} onHide={() => setShowApprovalModal(false)} centered>
+                <Modal.Header closeButton>
+                  <Modal.Title>Aprobar o Rechazar</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <p>¿Qué acción deseas realizar con este gasto?</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <div className="d-flex gap-2">
+                    <button className="btn-secondary" onClick={() => setShowApprovalModal(false)}>
+                      Cancelar
+                    </button>
+                    {hasPermission(
+                      Permission.APPROVE_PAYMENTS,
+                      Number(comunidadSeleccionada?.id ?? user?.comunidad_id),
+                    ) && (
+                        <>
+                          <button className="btn-danger" onClick={handleRejectExpense} disabled={actionLoading}>
+                            <span className="material-icons">close</span> Rechazar
+                          </button>
+                          <button className="btn-primary" onClick={handleApproveExpense} disabled={actionLoading}>
+                            <span className="material-icons">how_to_vote</span> Aprobar
+                          </button>
+                        </>
+                      )}
+                  </div>
+                </Modal.Footer>
+              </Modal>
 
-        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-          <Modal.Header closeButton>
-            <Modal.Title className="text-danger">Eliminar Gasto</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p>¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.</p>
-            <div className="d-flex gap-2 justify-content-end mt-4">
-              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</button>
-              <button className="btn-danger" onClick={handleDeleteExpense} disabled={actionLoading}>
-                Eliminar Definitivamente
-              </button>
-            </div>
-          </Modal.Body>
-        </Modal>
+              <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+                <Modal.Header closeButton>
+                  <Modal.Title className="text-danger">Eliminar Gasto</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                  <p>¿Estás seguro de que deseas eliminar este gasto? Esta acción no se puede deshacer.</p>
+                </Modal.Body>
+                <Modal.Footer>
+                  <div className="d-flex gap-2">
+                    <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                      Cancelar
+                    </button>
+                    <button className="btn-danger" onClick={handleDeleteExpense} disabled={actionLoading}>
+                      Eliminar Definitivamente
+                    </button>
+                  </div>
+                </Modal.Footer>
+              </Modal>
 
-        <style jsx>{`
+              <style jsx>{`
           .gasto-detalle-page {
             padding: 1.5rem;
             background-color: #f8f9fa;
@@ -985,7 +1042,12 @@ export default function GastoDetalle() {
             }
           }
         `}</style>
+
+            </div>
+          </div>
+        </div>
       </Layout>
     </ProtectedRoute>
   );
 }
+
