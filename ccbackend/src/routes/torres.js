@@ -6,6 +6,68 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
+// Verifica la comunidad asociada a una torre (o edificio) y la membresía del usuario
+function ensureTorreCommunity(requireAdmin = false) {
+  return async (req, res, next) => {
+    try {
+      if (req.user && req.user.is_superadmin) return next();
+
+      const torreId = req.params.id;
+      const edificioId = req.params.edificioId || req.body.edificio_id;
+
+      let comunidadId = null;
+
+      if (torreId) {
+        const [rows] = await db.query(
+          `SELECT e.comunidad_id FROM torre t JOIN edificio e ON t.edificio_id = e.id WHERE t.id = ? LIMIT 1`,
+          [Number(torreId)]
+        );
+        if (!rows.length)
+          return res.status(404).json({ error: 'Torre no encontrada' });
+        comunidadId = rows[0].comunidad_id;
+      } else if (edificioId) {
+        const [erows] = await db.query(
+          'SELECT comunidad_id FROM edificio WHERE id = ? LIMIT 1',
+          [Number(edificioId)]
+        );
+        if (!erows.length)
+          return res.status(404).json({ error: 'Edificio no encontrado' });
+        comunidadId = erows[0].comunidad_id;
+      } else {
+        return res
+          .status(400)
+          .json({ error: 'ID de torre o edificio requerido' });
+      }
+
+      if (!requireAdmin) {
+        const [membership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+          [req.user.persona_id, comunidadId]
+        );
+        if (!membership.length)
+          return res
+            .status(403)
+            .json({ error: 'No tienes acceso a esta comunidad' });
+        return next();
+      }
+
+      const [adminMembership] = await db.query(
+        'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin","admin_comunidad")',
+        [req.user.persona_id, comunidadId]
+      );
+      if (!adminMembership.length)
+        return res.status(403).json({
+          error: 'Se requieren permisos de administrador en esta comunidad',
+        });
+
+      next();
+    } catch (err) {
+      console.error('Error en ensureTorreCommunity:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  };
+}
+
 /**
  * @swagger
  * components:
@@ -362,12 +424,16 @@ router.get(
  *       404:
  *         description: Torre no encontrada
  */
-router.get('/:id/detalle', authenticate, async (req, res) => {
-  try {
-    const torreId = Number(req.params.id);
+router.get(
+  '/:id/detalle',
+  authenticate,
+  ensureTorreCommunity(false),
+  async (req, res) => {
+    try {
+      const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT
         -- 1. Información de la Torre y Entidades Superiores
         t.id,
@@ -425,19 +491,20 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
                e.nombre, e.direccion, e.codigo, c.id, c.razon_social, c.direccion, c.tz,
                adm.username, adm_per.nombres
     `,
-      [torreId]
-    );
+        [torreId]
+      );
 
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Torre no encontrada' });
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Torre no encontrada' });
+      }
+
+      res.json(rows[0]);
+    } catch (error) {
+      console.error('Error fetching torre detalle:', error);
+      res.status(500).json({ error: 'Error al obtener detalle de torre' });
     }
-
-    res.json(rows[0]);
-  } catch (error) {
-    console.error('Error fetching torre detalle:', error);
-    res.status(500).json({ error: 'Error al obtener detalle de torre' });
   }
-});
+);
 
 /**
  * @swagger
@@ -478,12 +545,16 @@ router.get('/:id/detalle', authenticate, async (req, res) => {
  *                   piso:
  *                     type: integer
  */
-router.get('/:id/unidades', authenticate, async (req, res) => {
-  try {
-    const torreId = Number(req.params.id);
+router.get(
+  '/:id/unidades',
+  authenticate,
+  ensureTorreCommunity(false),
+  async (req, res) => {
+    try {
+      const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         u.id,
         u.codigo AS numero,
@@ -527,15 +598,16 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
                u.nro_estacionamiento, u.alicuota, u.activa
       ORDER BY piso ASC, u.codigo ASC
     `,
-      [torreId]
-    );
+        [torreId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching unidades:', error);
-    res.status(500).json({ error: 'Error al obtener unidades' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching unidades:', error);
+      res.status(500).json({ error: 'Error al obtener unidades' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -560,29 +632,33 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
  *       200:
  *         description: Unidades filtradas
  */
-router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
-  try {
-    const torreId = Number(req.params.id);
-    const estadoFilter = req.query.estado || 'todas';
+router.get(
+  '/:id/unidades/filtradas',
+  authenticate,
+  ensureTorreCommunity(false),
+  async (req, res) => {
+    try {
+      const torreId = Number(req.params.id);
+      const estadoFilter = req.query.estado || 'todas';
 
-    let whereClause = 'u.torre_id = ? AND u.activa = 1';
+      let whereClause = 'u.torre_id = ? AND u.activa = 1';
 
-    if (estadoFilter === 'ocupada') {
-      whereClause += ` AND EXISTS (
+      if (estadoFilter === 'ocupada') {
+        whereClause += ` AND EXISTS (
         SELECT 1 FROM titulares_unidad tu2 
         WHERE tu2.unidad_id = u.id 
           AND (tu2.hasta IS NULL OR tu2.hasta >= CURRENT_DATE)
       )`;
-    } else if (estadoFilter === 'vacante') {
-      whereClause += ` AND NOT EXISTS (
+      } else if (estadoFilter === 'vacante') {
+        whereClause += ` AND NOT EXISTS (
         SELECT 1 FROM titulares_unidad tu3 
         WHERE tu3.unidad_id = u.id 
           AND (tu3.hasta IS NULL OR tu3.hasta >= CURRENT_DATE)
       )`;
-    }
+      }
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         u.id,
         u.codigo AS numero,
@@ -609,15 +685,16 @@ router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
       GROUP BY u.id, u.codigo, u.m2_utiles
       ORDER BY u.codigo ASC
     `,
-      [torreId]
-    );
+        [torreId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching unidades filtradas:', error);
-    res.status(500).json({ error: 'Error al obtener unidades filtradas' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching unidades filtradas:', error);
+      res.status(500).json({ error: 'Error al obtener unidades filtradas' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -653,12 +730,16 @@ router.get('/:id/unidades/filtradas', authenticate, async (req, res) => {
  *                   superficiePromedio:
  *                     type: number
  */
-router.get('/:id/estadisticas-por-piso', authenticate, async (req, res) => {
-  try {
-    const torreId = Number(req.params.id);
+router.get(
+  '/:id/estadisticas-por-piso',
+  authenticate,
+  ensureTorreCommunity(false),
+  async (req, res) => {
+    try {
+      const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         CAST(SUBSTRING_INDEX(u.codigo, '-', 1) AS UNSIGNED) AS piso,
         COUNT(u.id) AS totalUnidades,
@@ -677,15 +758,16 @@ router.get('/:id/estadisticas-por-piso', authenticate, async (req, res) => {
       GROUP BY piso
       ORDER BY piso ASC
     `,
-      [torreId]
-    );
+        [torreId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching estadisticas por piso:', error);
-    res.status(500).json({ error: 'Error al obtener estadísticas por piso' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching estadisticas por piso:', error);
+      res.status(500).json({ error: 'Error al obtener estadísticas por piso' });
+    }
   }
-});
+);
 
 // ============================================================================
 // ENDPOINTS DE VALIDACIÓN
@@ -836,12 +918,16 @@ router.get(
  *       404:
  *         description: Torre no encontrada
  */
-router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
-  try {
-    const torreId = Number(req.params.id);
+router.get(
+  '/:id/puede-eliminar',
+  authenticate,
+  ensureTorreCommunity(false),
+  async (req, res) => {
+    try {
+      const torreId = Number(req.params.id);
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         t.id,
         t.nombre,
@@ -852,29 +938,30 @@ router.get('/:id/puede-eliminar', authenticate, async (req, res) => {
       WHERE t.id = ?
       GROUP BY t.id, t.nombre
     `,
-      [torreId]
-    );
+        [torreId]
+      );
 
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Torre no encontrada' });
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Torre no encontrada' });
+      }
+
+      const torre = rows[0];
+      const puedeEliminar = torre.unidades_activas === 0;
+
+      res.json({
+        puedeEliminar,
+        mensaje: puedeEliminar
+          ? 'La torre puede ser eliminada'
+          : `No se puede eliminar. La torre tiene ${torre.unidades_activas} unidades activas`,
+        totalUnidades: torre.total_unidades,
+        unidadesActivas: torre.unidades_activas,
+      });
+    } catch (error) {
+      console.error('Error checking puede eliminar:', error);
+      res.status(500).json({ error: 'Error al verificar si puede eliminar' });
     }
-
-    const torre = rows[0];
-    const puedeEliminar = torre.unidades_activas === 0;
-
-    res.json({
-      puedeEliminar,
-      mensaje: puedeEliminar
-        ? 'La torre puede ser eliminada'
-        : `No se puede eliminar. La torre tiene ${torre.unidades_activas} unidades activas`,
-      totalUnidades: torre.total_unidades,
-      unidadesActivas: torre.unidades_activas,
-    });
-  } catch (error) {
-    console.error('Error checking puede eliminar:', error);
-    res.status(500).json({ error: 'Error al verificar si puede eliminar' });
   }
-});
+);
 
 // ============================================================================
 // ENDPOINTS DE REPORTES
@@ -1562,11 +1649,15 @@ router.get(
  *       500:
  *         description: Error del servidor
  */
-router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
-  try {
-    const comunidadId = Number(req.params.comunidadId);
-    const [rows] = await db.query(
-      `
+router.get(
+  '/comunidad/:comunidadId',
+  authenticate,
+  requireCommunity('comunidadId'),
+  async (req, res) => {
+    try {
+      const comunidadId = Number(req.params.comunidadId);
+      const [rows] = await db.query(
+        `
       SELECT t.id, t.nombre, t.edificio_id, e.nombre as edificio_nombre
       FROM torre t
       INNER JOIN edificio e ON e.id = t.edificio_id
@@ -1574,14 +1665,15 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
       ORDER BY e.nombre, t.nombre
       LIMIT 200
     `,
-      [comunidadId]
-    );
-    res.json(rows);
-  } catch (error) {
-    console.error('Error fetching torres:', error);
-    res.status(500).json({ error: 'Error fetching torres' });
+        [comunidadId]
+      );
+      res.json(rows);
+    } catch (error) {
+      console.error('Error fetching torres:', error);
+      res.status(500).json({ error: 'Error fetching torres' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1613,14 +1705,37 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
  *       500:
  *         description: Error del servidor
  */
-router.get('/edificio/:edificioId', authenticate, async (req, res) => {
-  const edificioId = Number(req.params.edificioId);
-  const [rows] = await db.query(
-    'SELECT id, nombre FROM torre WHERE edificio_id = ? LIMIT 200',
-    [edificioId]
-  );
-  res.json(rows);
-});
+router.get(
+  '/edificio/:edificioId',
+  [
+    authenticate,
+    async (req, res, next) => {
+      const edificioId = Number(req.params.edificioId);
+      try {
+        const [erows] = await db.query(
+          'SELECT comunidad_id FROM edificio WHERE id = ? LIMIT 1',
+          [edificioId]
+        );
+        if (!erows.length)
+          return res.status(404).json({ error: 'Edificio no encontrado' });
+        req.params.comunidadId = erows[0].comunidad_id;
+        next();
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'server error' });
+      }
+    },
+    requireCommunity('comunidadId'),
+  ],
+  async (req, res) => {
+    const edificioId = Number(req.params.edificioId);
+    const [rows] = await db.query(
+      'SELECT id, nombre FROM torre WHERE edificio_id = ? LIMIT 200',
+      [edificioId]
+    );
+    res.json(rows);
+  }
+);
 
 /**
  * @swagger
@@ -1729,14 +1844,19 @@ router.post(
  *       404:
  *         description: Torre no encontrada
  */
-router.get('/:id', authenticate, async (req, res) => {
-  const id = req.params.id;
-  const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [
-    id,
-  ]);
-  if (!rows.length) return res.status(404).json({ error: 'not found' });
-  res.json(rows[0]);
-});
+router.get(
+  '/:id',
+  authenticate,
+  ensureTorreCommunity(false),
+  async (req, res) => {
+    const id = req.params.id;
+    const [rows] = await db.query('SELECT * FROM torre WHERE id = ? LIMIT 1', [
+      id,
+    ]);
+    if (!rows.length) return res.status(404).json({ error: 'not found' });
+    res.json(rows[0]);
+  }
+);
 
 /**
  * @swagger
@@ -1777,6 +1897,7 @@ router.get('/:id', authenticate, async (req, res) => {
 router.patch(
   '/:id',
   authenticate,
+  ensureTorreCommunity(true),
   authorize('admin', 'superadmin'),
   async (req, res) => {
     try {
@@ -1856,6 +1977,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
+  ensureTorreCommunity(true),
   authorize('superadmin', 'admin'),
   async (req, res) => {
     const id = req.params.id;
@@ -1947,50 +2069,74 @@ module.exports = router;
  *       409:
  *         description: Código ya existe
  */
-router.post('/', authenticate, async (req, res) => {
-  try {
-    const {
-      edificio_id,
-      nombre,
-      codigo,
-      descripcion,
-      num_pisos,
-      tiene_ascensor = false,
-      tiene_porteria = false,
-      tiene_estacionamiento = false,
-      administrador_id,
-    } = req.body;
+router.post(
+  '/',
+  [
+    authenticate,
+    async (req, res, next) => {
+      const edificio_id = req.body.edificio_id;
+      if (!edificio_id)
+        return res.status(400).json({ error: 'edificio_id requerido' });
+      try {
+        const [erows] = await db.query(
+          'SELECT comunidad_id FROM edificio WHERE id = ? LIMIT 1',
+          [edificio_id]
+        );
+        if (!erows.length)
+          return res.status(400).json({ error: 'Edificio no encontrado' });
+        req.params.comunidadId = erows[0].comunidad_id;
+        next();
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'server error' });
+      }
+    },
+    requireCommunity('comunidadId', ['admin']),
+  ],
+  async (req, res) => {
+    try {
+      const {
+        edificio_id,
+        nombre,
+        codigo,
+        descripcion,
+        num_pisos,
+        tiene_ascensor = false,
+        tiene_porteria = false,
+        tiene_estacionamiento = false,
+        administrador_id,
+      } = req.body;
 
-    // Validaciones básicas
-    if (!edificio_id || !nombre || !codigo) {
-      return res
-        .status(400)
-        .json({ error: 'edificio_id, nombre y codigo son requeridos' });
-    }
+      // Validaciones básicas
+      if (!edificio_id || !nombre || !codigo) {
+        return res
+          .status(400)
+          .json({ error: 'edificio_id, nombre y codigo son requeridos' });
+      }
 
-    // Verificar que el edificio existe
-    const [edificioRows] = await db.query(
-      'SELECT id FROM edificio WHERE id = ?',
-      [edificio_id]
-    );
-    if (edificioRows.length === 0) {
-      return res.status(400).json({ error: 'Edificio no encontrado' });
-    }
+      // Verificar que el edificio existe
+      const [edificioRows] = await db.query(
+        'SELECT id FROM edificio WHERE id = ?',
+        [edificio_id]
+      );
+      if (edificioRows.length === 0) {
+        return res.status(400).json({ error: 'Edificio no encontrado' });
+      }
 
-    // Verificar que el código no existe
-    const [codigoRows] = await db.query(
-      'SELECT id FROM torre WHERE edificio_id = ? AND codigo = ?',
-      [edificio_id, codigo]
-    );
-    if (codigoRows.length > 0) {
-      return res
-        .status(409)
-        .json({ error: 'El código ya existe en este edificio' });
-    }
+      // Verificar que el código no existe
+      const [codigoRows] = await db.query(
+        'SELECT id FROM torre WHERE edificio_id = ? AND codigo = ?',
+        [edificio_id, codigo]
+      );
+      if (codigoRows.length > 0) {
+        return res
+          .status(409)
+          .json({ error: 'El código ya existe en este edificio' });
+      }
 
-    // Insertar la torre
-    const [result] = await db.query(
-      `
+      // Insertar la torre
+      const [result] = await db.query(
+        `
       INSERT INTO torre (
         edificio_id,
         nombre,
@@ -2005,28 +2151,29 @@ router.post('/', authenticate, async (req, res) => {
         updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `,
-      [
-        edificio_id,
-        nombre,
-        codigo,
-        descripcion || null,
-        num_pisos || null,
-        tiene_ascensor,
-        tiene_porteria,
-        tiene_estacionamiento,
-        administrador_id || null,
-      ]
-    );
+        [
+          edificio_id,
+          nombre,
+          codigo,
+          descripcion || null,
+          num_pisos || null,
+          tiene_ascensor,
+          tiene_porteria,
+          tiene_estacionamiento,
+          administrador_id || null,
+        ]
+      );
 
-    res.status(201).json({
-      id: result.insertId,
-      message: 'Torre creada exitosamente',
-    });
-  } catch (error) {
-    console.error('Error creando torre:', error);
-    res.status(500).json({ error: 'Error al crear la torre' });
+      res.status(201).json({
+        id: result.insertId,
+        message: 'Torre creada exitosamente',
+      });
+    } catch (error) {
+      console.error('Error creando torre:', error);
+      res.status(500).json({ error: 'Error al crear la torre' });
+    }
   }
-});
+);
 
 // PATCH: /torres/:id
 // DELETE: /torres/:id

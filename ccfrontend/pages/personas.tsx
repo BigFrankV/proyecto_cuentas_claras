@@ -43,7 +43,7 @@ const PersonasListado = () => {
   const [stats, setStats] = useState<any>(null);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  const { listarPersonas, obtenerEstadisticas, loading, error } = usePersonas();
+  const { listarPersonas, obtenerEstadisticas, loading, error, clearError } = usePersonas();
 
   const itemsPerPage = 20;
 
@@ -70,9 +70,11 @@ const PersonasListado = () => {
       const isAdmin = membership && ['admin', 'admin_comunidad'].includes(membership.rol);
       
       if (!isAdmin && !user?.is_superadmin) {
+        // Usuario no es admin: marcar acceso denegado y limpiar errores previos
         setAccessDenied(true);
         setPersonas([]);
         setStats({ total: 0, propietarios: 0, inquilinos: 0, administradores: 0 });
+        clearError();
         return;
       }
     }
@@ -105,11 +107,14 @@ const PersonasListado = () => {
     } catch (err: any) {
       // eslint-disable-next-line no-console
       console.error('Error al cargar personas:', err);
-      // Si es 403, mostrar mensaje específico
+      // Si es 403, mostrar mensaje específico y limpiar el error del hook
       if (err.response?.status === 403) {
         setPersonas([]);
         setStats({ total: 0, propietarios: 0, inquilinos: 0, administradores: 0 });
+        clearError();
+        return;
       }
+      // para otros errores, dejamos que el hook exponga el mensaje (se muestra en UI)
     }
   };
 
@@ -145,6 +150,8 @@ const PersonasListado = () => {
       console.error('Error al cargar estadísticas:', err);
       if (err.response?.status === 403) {
         setStats({ total: 0, propietarios: 0, inquilinos: 0, administradores: 0 });
+        clearError();
+        return;
       }
     }
   };

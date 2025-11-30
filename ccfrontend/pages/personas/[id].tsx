@@ -6,7 +6,8 @@ import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import { usePersonas } from '@/hooks/usePersonas';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import {
   Persona,
   UnidadAsociada,
@@ -49,14 +50,24 @@ export default function PersonaDetalle() {
     obtenerResumenFinanciero,
     loading,
     error,
+    clearError,
   } = usePersonas();
+
+  const { comunidadSeleccionada } = useComunidad();
+
+  const { user } = useAuth();
+
+  const isSelf = !!(user?.persona_id && persona && Number(user.persona_id) === Number(persona.id));
+  const userAdminCommunities = user?.memberships?.filter((m: any) => ['admin', 'admin_comunidad'].includes(m.rol)).map((m: any) => m.comunidadId) || [];
+  const personaCommunityIds = roles.map(r => r.comunidad_id);
+  const canManage = !!(user?.is_superadmin || isSelf || userAdminCommunities.some((id: number) => personaCommunityIds.includes(id)));
 
   // Cargar datos cuando cambia el ID
   useEffect(() => {
     if (id && typeof id === 'string') {
       cargarDatosPersona(parseInt(id));
     }
-  }, [id]);
+  }, [id, comunidadSeleccionada]);
 
   const cargarDatosPersona = async (personaId: number) => {
     try {
@@ -93,6 +104,14 @@ export default function PersonaDetalle() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error cargando datos de persona:', err);
+      // Si el backend indica 403, limpiar error del hook para evitar banner peligroso
+      // (el hook puede encapsular la respuesta, intentamos limpiar por seguridad)
+      // @ts-ignore
+      if (err?.response?.status === 403) {
+        clearError();
+        setPersona(null);
+        return;
+      }
     }
   };
 
@@ -225,50 +244,60 @@ export default function PersonaDetalle() {
                   Acciones
                 </button>
                 <ul className='dropdown-menu'>
-                  <li>
-                    <button type='button' className='dropdown-item'>
-                      <i
-                        className='material-icons me-2'
-                        style={{ fontSize: '16px' }}
-                      >
-                        email
-                      </i>
-                      Enviar email
-                    </button>
-                  </li>
-                  <li>
-                    <button type='button' className='dropdown-item'>
-                      <i
-                        className='material-icons me-2'
-                        style={{ fontSize: '16px' }}
-                      >
-                        vpn_key
-                      </i>
-                      Restablecer acceso
-                    </button>
-                  </li>
-                  <li>
-                    <hr className='dropdown-divider' />
-                  </li>
-                  <li>
-                    <button type='button' className='dropdown-item text-danger'>
-                      <i
-                        className='material-icons me-2'
-                        style={{ fontSize: '16px' }}
-                      >
-                        block
-                      </i>
-                      Desactivar
-                    </button>
-                  </li>
+                  {canManage ? (
+                    <>
+                      <li>
+                        <button type='button' className='dropdown-item'>
+                          <i
+                            className='material-icons me-2'
+                            style={{ fontSize: '16px' }}
+                          >
+                            email
+                          </i>
+                          Enviar email
+                        </button>
+                      </li>
+                      <li>
+                        <button type='button' className='dropdown-item'>
+                          <i
+                            className='material-icons me-2'
+                            style={{ fontSize: '16px' }}
+                          >
+                            vpn_key
+                          </i>
+                          Restablecer acceso
+                        </button>
+                      </li>
+                      <li>
+                        <hr className='dropdown-divider' />
+                      </li>
+                      <li>
+                        <button type='button' className='dropdown-item text-danger'>
+                          <i
+                            className='material-icons me-2'
+                            style={{ fontSize: '16px' }}
+                          >
+                            block
+                          </i>
+                          Desactivar
+                        </button>
+                      </li>
+                    </>
+                  ) : (
+                    <li>
+                      <div className='dropdown-item text-muted'>No tienes permisos</div>
+                    </li>
+                  )}
                 </ul>
               </div>
+              {canManage && (
               <button className='btn btn-primary'>
                 <i className='material-icons me-1' style={{ fontSize: '16px' }}>
                   edit
                 </i>
                 Editar
               </button>
+              )}
             </div>
           </div>
 
@@ -410,9 +439,11 @@ export default function PersonaDetalle() {
               <div className='card shadow-sm mb-4'>
                 <div className='card-header bg-transparent d-flex justify-content-between align-items-center'>
                   <h6 className='mb-0'>Información de Cuenta</h6>
+                  {canManage && (
                   <button className='btn btn-sm btn-outline-primary'>
                     Editar
                   </button>
+                  )}
                 </div>
                 <div className='card-body'>
                   <div className='mb-3'>
@@ -454,23 +485,29 @@ export default function PersonaDetalle() {
                   <h6 className='mb-0'>Acciones Rápidas</h6>
                 </div>
                 <div className='card-body'>
-                  <div className='d-grid gap-2'>
-                    <button className='btn btn-outline-primary text-start'>
-                      <i className='material-icons me-2'>email</i>
-                      Enviar email
-                    </button>
-                    <button className='btn btn-outline-primary text-start'>
-                      <i className='material-icons me-2'>receipt_long</i>
-                      Ver estado de cuenta
-                    </button>
-                    <button className='btn btn-outline-primary text-start'>
-                      <i className='material-icons me-2'>add_home</i>
-                      Asignar nueva unidad
-                    </button>
-                    <button className='btn btn-outline-primary text-start'>
-                      <i className='material-icons me-2'>vpn_key</i>
-                      Restablecer contraseña
-                    </button>
+                    <div className='d-grid gap-2'>
+                    {canManage ? (
+                      <>
+                        <button className='btn btn-outline-primary text-start'>
+                          <i className='material-icons me-2'>email</i>
+                          Enviar email
+                        </button>
+                        <button className='btn btn-outline-primary text-start'>
+                          <i className='material-icons me-2'>receipt_long</i>
+                          Ver estado de cuenta
+                        </button>
+                        <button className='btn btn-outline-primary text-start'>
+                          <i className='material-icons me-2'>add_home</i>
+                          Asignar nueva unidad
+                        </button>
+                        <button className='btn btn-outline-primary text-start'>
+                          <i className='material-icons me-2'>vpn_key</i>
+                          Restablecer contraseña
+                        </button>
+                      </>
+                    ) : (
+                      <div className='text-muted small'>No tienes acciones disponibles.</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -587,6 +624,7 @@ export default function PersonaDetalle() {
                   <div className='card shadow-sm'>
                     <div className='card-header bg-transparent d-flex justify-content-between align-items-center'>
                       <h6 className='mb-0'>Unidades Asociadas</h6>
+                      {canManage && (
                       <button className='btn btn-sm btn-primary'>
                         <i
                           className='material-icons me-1'
@@ -596,6 +634,7 @@ export default function PersonaDetalle() {
                         </i>
                         Asignar Unidad
                       </button>
+                      )}
                     </div>
                     <div className='card-body'>
                       {unidades.length === 0 ? (
@@ -698,6 +737,7 @@ export default function PersonaDetalle() {
                   <div className='card shadow-sm'>
                     <div className='card-header bg-transparent d-flex justify-content-between align-items-center'>
                       <h6 className='mb-0'>Historial de Pagos</h6>
+                      {canManage && (
                       <button className='btn btn-sm btn-primary'>
                         <i
                           className='material-icons me-1'
@@ -707,6 +747,7 @@ export default function PersonaDetalle() {
                         </i>
                         Registrar Pago
                       </button>
+                      )}
                     </div>
                     <div className='card-body'>
                       {pagos.length === 0 ? (
@@ -816,6 +857,7 @@ export default function PersonaDetalle() {
                   <div className='card shadow-sm'>
                     <div className='card-header bg-transparent d-flex justify-content-between align-items-center'>
                       <h6 className='mb-0'>Documentos</h6>
+                      {canManage && (
                       <button className='btn btn-sm btn-primary'>
                         <i
                           className='material-icons me-1'
@@ -825,6 +867,7 @@ export default function PersonaDetalle() {
                         </i>
                         Subir Documento
                       </button>
+                      )}
                     </div>
                     <div className='card-body'>
                       {documentos.length === 0 ? (
@@ -904,6 +947,7 @@ export default function PersonaDetalle() {
                   <div className='card shadow-sm'>
                     <div className='card-header bg-transparent d-flex justify-content-between align-items-center'>
                       <h6 className='mb-0'>Notas Internas</h6>
+                      {canManage && (
                       <button
                         className='btn btn-sm btn-primary'
                         onClick={() => setShowNewNoteForm(!showNewNoteForm)}
@@ -916,6 +960,7 @@ export default function PersonaDetalle() {
                         </i>
                         Nueva Nota
                       </button>
+                      )}
                     </div>
                     <div className='card-body'>
                       {notas.length === 0 ? (
@@ -947,7 +992,9 @@ export default function PersonaDetalle() {
                                 <div className='small text-muted'>
                                   Creado por: {nota.autor}
                                 </div>
-                                <div>
+                                  <div>
+                                  {canManage && (
+                                  <>
                                   <button className='btn btn-sm btn-outline-secondary me-1'>
                                     <i
                                       className='material-icons'
@@ -964,6 +1011,8 @@ export default function PersonaDetalle() {
                                       delete
                                     </i>
                                   </button>
+                                  </>
+                                  )}
                                 </div>
                               </div>
                             </div>

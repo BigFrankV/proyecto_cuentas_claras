@@ -564,12 +564,7 @@ export default function TorresListado() {
                         </i>
                         Volver
                       </Link>
-                      {hasPermission(Permission.CREATE_TORRE) && (
-                        <Link href='/torres/nueva' className='btn btn-primary'>
-                          <i className='material-icons align-middle me-1'>add</i>
-                          Nueva Torre
-                        </Link>
-                      )}
+                      
                     </div>
                   </div>
                 </div>

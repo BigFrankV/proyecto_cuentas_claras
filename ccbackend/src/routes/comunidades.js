@@ -4,6 +4,7 @@ const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
+const { requireCommunity } = require('../middleware/tenancy');
 
 /**
  * @swagger
@@ -188,7 +189,7 @@ router.get(
  *       404:
  *         description: Comunidad no encontrada
  */
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', authenticate, requireCommunity('id'), async (req, res) => {
   try {
     const id = req.params.id;
 
@@ -267,12 +268,16 @@ router.get('/:id', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de amenidades
  */
-router.get('/:id/amenidades', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/amenidades',
+  authenticate,
+  requireCommunity('id'),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 3.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 3.1
+      const query = `
       SELECT 
           a.id,
           a.nombre,
@@ -290,13 +295,14 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
       WHERE a.comunidad_id = ?
       ORDER BY a.nombre`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener amenidades:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener amenidades:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -317,12 +323,16 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de edificios con conteo de unidades
  */
-router.get('/:id/edificios', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/edificios',
+  authenticate,
+  requireCommunity('id'),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 4.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 4.1
+      const query = `
       SELECT 
           e.id,
           e.nombre,
@@ -337,13 +347,14 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
       GROUP BY e.id, e.nombre, e.codigo, e.direccion, e.created_at, e.updated_at
       ORDER BY e.nombre`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener edificios:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener edificios:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -366,12 +377,16 @@ router.get('/:id/edificios', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de contactos
  */
-router.get('/:id/contactos', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/contactos',
+  authenticate,
+  requireCommunity('id'),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 5.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 5.1
+      const query = `
       SELECT 
           p.id,
           CONCAT(p.nombres, ' ', p.apellidos) AS nombre,
@@ -389,13 +404,14 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
       AND (urc.hasta IS NULL OR urc.hasta > CURDATE())
       ORDER BY p.apellidos, p.nombres`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener contactos:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener contactos:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -416,12 +432,16 @@ router.get('/:id/contactos', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de documentos
  */
-router.get('/:id/documentos', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/documentos',
+  authenticate,
+  requireCommunity('id'),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 6.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 6.1
+      const query = `
       SELECT 
           dc.id,
           dc.titulo AS nombre,
@@ -435,13 +455,14 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
       WHERE dc.comunidad_id = ?
       ORDER BY dc.created_at DESC`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener documentos:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener documentos:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -465,12 +486,16 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de residentes con informaci�n de unidad
  */
-router.get('/:id/residentes', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/residentes',
+  authenticate,
+  requireCommunity('id', ['admin']),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 7.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 7.1
+      const query = `
       SELECT DISTINCT
           p.id,
           p.rut,
@@ -493,13 +518,14 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
       AND (tu.hasta IS NULL OR tu.hasta > CURDATE())
       ORDER BY p.apellidos, p.nombres`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener residentes:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener residentes:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 // Alias para compatibilidad con c�digo legacy
 /**
@@ -554,11 +580,15 @@ router.get('/:id/residentes', authenticate, async (req, res) => {
  *       404:
  *         description: Comunidad no encontrada
  */
-router.get('/:id/miembros', authenticate, async (req, res) => {
-  try {
-    const comunidadId = req.params.id;
+router.get(
+  '/:id/miembros',
+  authenticate,
+  requireCommunity('id', ['admin']),
+  async (req, res) => {
+    try {
+      const comunidadId = req.params.id;
 
-    const query = `
+      const query = `
       SELECT 
         urc.id,
         urc.comunidad_id,
@@ -577,20 +607,21 @@ router.get('/:id/miembros', authenticate, async (req, res) => {
       ORDER BY r.nivel_acceso DESC, u.persona_id
     `;
 
-    const [rows] = await db.query(query, [comunidadId]);
+      const [rows] = await db.query(query, [comunidadId]);
 
-    // Convertir activo a boolean
-    const miembros = rows.map((row) => ({
-      ...row,
-      activo: Boolean(row.activo),
-    }));
+      // Convertir activo a boolean
+      const miembros = rows.map((row) => ({
+        ...row,
+        activo: Boolean(row.activo),
+      }));
 
-    res.json(miembros);
-  } catch (err) {
-    console.error('Error al obtener miembros:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      res.json(miembros);
+    } catch (err) {
+      console.error('Error al obtener miembros:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -613,12 +644,16 @@ router.get('/:id/miembros', authenticate, async (req, res) => {
  *       404:
  *         description: No se encontraron par�metros
  */
-router.get('/:id/parametros', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/parametros',
+  authenticate,
+  requireCommunity('id', ['admin']),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 8.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 8.1
+      const query = `
       SELECT 
           pc.id,
           pc.comunidad_id,
@@ -634,18 +669,19 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
       WHERE pc.comunidad_id = ?
       LIMIT 1`;
 
-    const [rows] = await db.query(query, [id]);
+      const [rows] = await db.query(query, [id]);
 
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Par�metros no encontrados' });
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Par�metros no encontrados' });
+      }
+
+      res.json(rows[0]);
+    } catch (err) {
+      console.error('Error al obtener parámetros:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-
-    res.json(rows[0]);
-  } catch (err) {
-    console.error('Error al obtener parámetros:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -668,12 +704,16 @@ router.get('/:id/parametros', authenticate, async (req, res) => {
  *       200:
  *         description: Estad�sticas financieras
  */
-router.get('/:id/estadisticas', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/estadisticas',
+  authenticate,
+  requireCommunity('id', ['admin']),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 9.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 9.1
+      const query = `
       SELECT 
           COALESCE(SUM(ccu.monto_total), 0) AS totalIngresos,
           COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) AS ingresosPagados,
@@ -681,19 +721,20 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
       FROM cuenta_cobro_unidad ccu
       WHERE ccu.comunidad_id = ?`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(
-      rows[0] || {
-        totalIngresos: 0,
-        ingresosPagados: 0,
-        ingresosPendientes: 0,
-      }
-    );
-  } catch (err) {
-    console.error('Error al obtener estadísticas:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(
+        rows[0] || {
+          totalIngresos: 0,
+          ingresosPagados: 0,
+          ingresosPendientes: 0,
+        }
+      );
+    } catch (err) {
+      console.error('Error al obtener estadísticas:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -716,12 +757,16 @@ router.get('/:id/estadisticas', authenticate, async (req, res) => {
  *       200:
  *         description: Flujo de caja hist�rico
  */
-router.get('/:id/flujo-caja', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id/flujo-caja',
+  authenticate,
+  requireCommunity('id', ['admin']),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 10.1
-    const query = `
+      // Query basado en CONSULTAS_SQL_COMUNIDADES.sql secci�n 10.1
+      const query = `
       SELECT 
           e.periodo,
           e.fecha_vencimiento AS fecha,
@@ -737,13 +782,14 @@ router.get('/:id/flujo-caja', authenticate, async (req, res) => {
       ORDER BY e.periodo DESC
       LIMIT 12`;
 
-    const [rows] = await db.query(query, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener flujo de caja:', err);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      const [rows] = await db.query(query, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener flujo de caja:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -914,7 +960,9 @@ router.patch(
         );
 
         if (!membership.length) {
-          return res.status(403).json({ error: 'No tienes permisos para editar esta comunidad' });
+          return res
+            .status(403)
+            .json({ error: 'No tienes permisos para editar esta comunidad' });
         }
       }
 

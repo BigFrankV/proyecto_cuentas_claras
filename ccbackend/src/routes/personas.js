@@ -3,7 +3,61 @@ const router = express.Router();
 const db = require('../db');
 const { body, validationResult } = require('express-validator');
 const { authenticate } = require('../middleware/auth');
-const { authorize, allowSelfOrRoles } = require('../middleware/authorize');
+const { authorize } = require('../middleware/authorize');
+/**
+ * Middleware que permite ver el detalle de una persona solo si:
+ * - es superadmin
+ * - es la misma persona (self)
+ * - o el usuario es admin/admin_comunidad en alguna comunidad compartida con la persona objetivo
+ */
+async function authorizePersonaView(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+    if (req.user.is_superadmin) return next();
+
+    const targetPersonaId = Number(req.params.id);
+    const requesterPersonaId = req.user.persona_id;
+    if (
+      !isNaN(requesterPersonaId) &&
+      Number(requesterPersonaId) === targetPersonaId
+    ) {
+      return next();
+    }
+
+    // Obtener comunidades donde el solicitante es admin
+    const [rolRows] = await db.query(
+      'SELECT comunidad_id, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+      [requesterPersonaId]
+    );
+
+    const comunidadesAdmin = rolRows
+      .filter((r) => ['admin', 'admin_comunidad'].includes(r.rol))
+      .map((r) => r.comunidad_id);
+
+    if (!comunidadesAdmin.length) {
+      return res.status(403).json({
+        error: 'Acceso denegado. Solo administradores pueden ver este recurso.',
+      });
+    }
+
+    // Verificar si la persona objetivo pertenece a alguna de esas comunidades
+    const [membershipRows] = await db.query(
+      'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id IN (?) AND activo = 1 LIMIT 1',
+      [targetPersonaId, comunidadesAdmin]
+    );
+
+    if (!membershipRows.length) {
+      return res.status(403).json({
+        error: 'Acceso denegado. No tiene permisos para ver esta persona.',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('Error en authorizePersonaView:', err);
+    return res.status(500).json({ error: 'server error' });
+  }
+}
 
 /**
  * @swagger
@@ -60,7 +114,15 @@ const { authorize, allowSelfOrRoles } = require('../middleware/authorize');
  *         description: Lista de personas filtradas
  */
 router.get('/', authenticate, async (req, res) => {
-  const { rut, search, tipo, estado, comunidad_id, limit = 500, offset = 0 } = req.query;
+  const {
+    rut,
+    search,
+    tipo,
+    estado,
+    comunidad_id,
+    limit = 500,
+    offset = 0,
+  } = req.query;
 
   try {
     // ✅ Superadmin ve TODAS las personas
@@ -215,7 +277,10 @@ router.get('/', authenticate, async (req, res) => {
 
     // ❌ Roles básicos NO tienen acceso
     if (!esAdminEnAlgunaComunidad) {
-      return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden gestionar personas.' });
+      return res.status(403).json({
+        error:
+          'Acceso denegado. Solo administradores pueden gestionar personas.',
+      });
     }
 
     // Admin ve personas de SUS comunidades
@@ -450,7 +515,7 @@ router.post(
  *       200:
  *         description: Persona
  */
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id(\\d+)', authenticate, authorizePersonaView, async (req, res) => {
   const id = req.params.id;
   try {
     const [rows] = await db.query(
@@ -557,47 +622,42 @@ router.get('/:id', authenticate, async (req, res) => {
  *       200:
  *         description: Updated
  */
-router.patch(
-  '/:id',
-  authenticate,
-  allowSelfOrRoles('id', 'admin', 'superadmin'),
-  async (req, res) => {
-    const id = req.params.id;
-    const fields = [
-      'rut',
-      'dv',
-      'nombres',
-      'apellidos',
-      'email',
-      'telefono',
-      'direccion',
-    ];
-    const updates = [];
-    const values = [];
-    fields.forEach((f) => {
-      if (req.body[f] !== undefined) {
-        updates.push(`${f} = ?`);
-        values.push(req.body[f]);
-      }
-    });
-    if (!updates.length) return res.status(400).json({ error: 'no fields' });
-    values.push(id);
-    try {
-      await db.query(
-        `UPDATE persona SET ${updates.join(', ')} WHERE id = ?`,
-        values
-      );
-      const [rows] = await db.query(
-        'SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1',
-        [id]
-      );
-      res.json(rows[0]);
-    } catch (err) {
-      console.error('Error al actualizar persona:', err);
-      res.status(500).json({ error: 'server error' });
+router.patch('/:id(\\d+)', authenticate, authorizePersonaEdit, async (req, res) => {
+  const id = req.params.id;
+  const fields = [
+    'rut',
+    'dv',
+    'nombres',
+    'apellidos',
+    'email',
+    'telefono',
+    'direccion',
+  ];
+  const updates = [];
+  const values = [];
+  fields.forEach((f) => {
+    if (req.body[f] !== undefined) {
+      updates.push(`${f} = ?`);
+      values.push(req.body[f]);
     }
+  });
+  if (!updates.length) return res.status(400).json({ error: 'no fields' });
+  values.push(id);
+  try {
+    await db.query(
+      `UPDATE persona SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+    const [rows] = await db.query(
+      'SELECT id, rut, dv, nombres, apellidos FROM persona WHERE id = ? LIMIT 1',
+      [id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    console.error('Error al actualizar persona:', err);
+    res.status(500).json({ error: 'server error' });
   }
-);
+});
 
 /**
  * @swagger
@@ -643,7 +703,7 @@ router.put(
   '/:id',
   [
     authenticate,
-    allowSelfOrRoles('id', 'admin', 'superadmin'),
+    authorizePersonaEdit,
     body('rut').notEmpty(),
     body('dv').notEmpty(),
     body('nombres').notEmpty(),
@@ -701,22 +761,17 @@ router.put(
  *       204:
  *         description: No Content
  */
-router.delete(
-  '/:id',
-  authenticate,
-  allowSelfOrRoles('id', 'admin', 'superadmin'),
-  async (req, res) => {
-    const id = req.params.id;
-    try {
-      // only admins or self (allowSelfOrRoles applied) reach here
-      await db.query('DELETE FROM persona WHERE id = ?', [id]);
-      res.status(204).end();
-    } catch (err) {
-      console.error('Error al eliminar persona:', err);
-      res.status(500).json({ error: 'server error' });
-    }
+router.delete('/:id(\\d+)', authenticate, authorizePersonaEdit, async (req, res) => {
+  const id = req.params.id;
+  try {
+    // only admins or self (allowSelfOrRoles applied) reach here
+    await db.query('DELETE FROM persona WHERE id = ?', [id]);
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error al eliminar persona:', err);
+    res.status(500).json({ error: 'server error' });
   }
-);
+});
 
 /**
  * @swagger
@@ -811,7 +866,9 @@ router.get('/estadisticas', authenticate, async (req, res) => {
 
     // ❌ Roles básicos NO tienen acceso
     if (!esAdminEnAlgunaComunidad) {
-      return res.status(403).json({ error: 'Acceso denegado. Solo administradores pueden ver estadísticas.' });
+      return res.status(403).json({
+        error: 'Acceso denegado. Solo administradores pueden ver estadísticas.',
+      });
     }
 
     const comunidadesAdmin = rolRows
@@ -819,7 +876,14 @@ router.get('/estadisticas', authenticate, async (req, res) => {
       .map((r) => r.comunidad_id);
 
     if (comunidadesAdmin.length === 0) {
-      return res.json({ total_personas: 0, administradores: 0, inquilinos: 0, propietarios: 0, activos: 0, inactivos: 0 });
+      return res.json({
+        total_personas: 0,
+        administradores: 0,
+        inquilinos: 0,
+        propietarios: 0,
+        activos: 0,
+        inactivos: 0,
+      });
     }
 
     let query = `
@@ -860,6 +924,9 @@ router.get('/estadisticas', authenticate, async (req, res) => {
       params.push(Number(comunidad_id));
     }
 
+    // Log de depuración: mostrar la consulta y parámetros antes de ejecutar
+    console.log('[PERSONAS] Ejecutando consulta de estadísticas:', query);
+    console.log('[PERSONAS] Params:', params);
     const [rows] = await db.query(query, params);
     res.json(rows[0]);
   } catch (err) {
@@ -886,11 +953,15 @@ router.get('/estadisticas', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de unidades
  */
-router.get('/:id/unidades', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/unidades',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         u.id,
         u.codigo AS nombre,
@@ -924,15 +995,16 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
         AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
       ORDER BY tu.desde DESC
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener unidades de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener unidades de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -952,11 +1024,15 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de pagos
  */
-router.get('/:id/pagos', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/pagos',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         p.id,
         DATE(p.fecha) AS fecha,
@@ -986,15 +1062,16 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
       GROUP BY p.id, p.fecha, p.monto, p.medio, p.referencia, p.estado, p.comprobante_num, u.codigo, c.razon_social, eg.periodo
       ORDER BY p.fecha DESC
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener pagos de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener pagos de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1014,11 +1091,15 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de actividades
  */
-router.get('/:id/actividad', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/actividad',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         DATE(a.created_at) AS fecha,
         TIME(a.created_at) AS hora,
@@ -1047,15 +1128,16 @@ router.get('/:id/actividad', authenticate, async (req, res) => {
       ORDER BY a.created_at DESC
       LIMIT 100
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener actividad de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener actividad de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1075,11 +1157,15 @@ router.get('/:id/actividad', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de documentos
  */
-router.get('/:id/documentos', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/documentos',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         a.id,
         a.original_name AS nombre,
@@ -1109,15 +1195,16 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
         AND a.is_active = 1
       ORDER BY a.uploaded_at DESC
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener documentos de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener documentos de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1137,12 +1224,16 @@ router.get('/:id/documentos', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de notas
  */
-router.get('/:id/notas', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    // Combinar ambas opciones: registro_conserjeria y auditoria
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/notas',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      // Combinar ambas opciones: registro_conserjeria y auditoria
+      const [rows] = await db.query(
+        `
       SELECT * FROM (
         SELECT
           rc.id,
@@ -1178,15 +1269,16 @@ router.get('/:id/notas', authenticate, async (req, res) => {
       ) combined_notes
       ORDER BY orden_fecha DESC
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener notas de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener notas de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1206,11 +1298,15 @@ router.get('/:id/notas', authenticate, async (req, res) => {
  *       200:
  *         description: Lista de roles y comunidades
  */
-router.get('/:id/roles', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/roles',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         ucr.id,
         c.razon_social AS comunidad_nombre,
@@ -1226,15 +1322,16 @@ router.get('/:id/roles', authenticate, async (req, res) => {
       WHERE ucr.usuario_id = (SELECT id FROM usuario WHERE persona_id = ?)
       ORDER BY ucr.activo DESC, r.nivel_acceso DESC, ucr.desde DESC
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener roles de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener roles de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1254,11 +1351,15 @@ router.get('/:id/roles', authenticate, async (req, res) => {
  *       200:
  *         description: Resumen financiero por comunidad
  */
-router.get('/:id/resumen-financiero', authenticate, async (req, res) => {
-  const id = req.params.id;
-  try {
-    const [rows] = await db.query(
-      `
+router.get(
+  '/:id/resumen-financiero',
+  authenticate,
+  authorizePersonaView,
+  async (req, res) => {
+    const id = req.params.id;
+    try {
+      const [rows] = await db.query(
+        `
       SELECT
         c.razon_social AS comunidad,
         COUNT(DISTINCT u.id) AS unidades,
@@ -1275,15 +1376,16 @@ router.get('/:id/resumen-financiero', authenticate, async (req, res) => {
       GROUP BY c.id, c.razon_social
       ORDER BY c.razon_social
     `,
-      [id]
-    );
+        [id]
+      );
 
-    res.json(rows);
-  } catch (err) {
-    console.error('Error al obtener resumen financiero de persona:', err);
-    res.status(500).json({ error: 'server error' });
+      res.json(rows);
+    } catch (err) {
+      console.error('Error al obtener resumen financiero de persona:', err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1420,6 +1522,58 @@ router.get('/unidades/autocompletar', authenticate, async (req, res) => {
     res.status(500).json({ error: 'server error' });
   }
 });
+
+// Middleware para autorizar edición/eliminación de persona (self o admin en comunidad compartida)
+async function authorizePersonaEdit(req, res, next) {
+  try {
+    if (!req.user) return res.status(401).json({ error: 'unauthorized' });
+    if (req.user.is_superadmin) return next();
+
+    const targetPersonaId = Number(req.params.id);
+    const requesterPersonaId = req.user.persona_id;
+    if (
+      !isNaN(requesterPersonaId) &&
+      Number(requesterPersonaId) === targetPersonaId
+    ) {
+      return next();
+    }
+
+    // Obtener comunidades donde el solicitante es admin
+    const [rolRows] = await db.query(
+      'SELECT comunidad_id, rol FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+      [requesterPersonaId]
+    );
+
+    const comunidadesAdmin = rolRows
+      .filter((r) => ['admin', 'admin_comunidad'].includes(r.rol))
+      .map((r) => r.comunidad_id);
+
+    if (!comunidadesAdmin.length) {
+      return res.status(403).json({
+        error:
+          'Acceso denegado. Solo administradores pueden editar/eliminar personas.',
+      });
+    }
+
+    // Verificar si la persona objetivo pertenece a alguna de esas comunidades
+    const [membershipRows] = await db.query(
+      'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id IN (?) AND activo = 1 LIMIT 1',
+      [targetPersonaId, comunidadesAdmin]
+    );
+
+    if (!membershipRows.length) {
+      return res.status(403).json({
+        error:
+          'Acceso denegado. No tiene permisos para modificar esta persona.',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('Error en authorizePersonaEdit:', err);
+    return res.status(500).json({ error: 'server error' });
+  }
+}
 
 module.exports = router;
 

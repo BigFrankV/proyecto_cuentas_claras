@@ -14,7 +14,7 @@ function authenticate(req, res, next) {
   console.log('[AUTH Middleware] Verificando token');
   console.log('[AUTH Middleware] Headers:', {
     authorization: req.headers.authorization ? 'presente' : 'NO PRESENTE',
-    'content-type': req.headers['content-type'],
+    'content-type': req.headers['content-type'] || 'NO PRESENTE',
   });
 
   const auth = req.headers.authorization;
@@ -32,14 +32,16 @@ function authenticate(req, res, next) {
   try {
     const data = jwt.verify(token, secret);
     console.log('[AUTH Middleware] Token validado exitosamente');
+    // Normalizar id: algunos tokens usan `sub`, otros incluyen `id` explícito.
+    const user = Object.assign({}, data, { id: data.id || data.sub });
     console.log('[AUTH Middleware] Usuario:', {
-      sub: data.sub,
-      id: data.id,
-      username: data.username,
-      persona_id: data.persona_id,
-      is_superadmin: data.is_superadmin,
+      sub: user.sub,
+      id: user.id,
+      username: user.username,
+      persona_id: user.persona_id,
+      is_superadmin: user.is_superadmin,
     });
-    req.user = data;
+    req.user = user;
     next();
   } catch (err) {
     console.error('[AUTH Middleware] Error validando token:', err.message);

@@ -4,7 +4,10 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions } from '@/lib/usePermissions';
+
 
 interface MembershipData {
   id: string;
@@ -66,6 +69,10 @@ export default function MembresiaEditar() {
   const { id } = router.query;
   const [membership, setMembership] = useState<MembershipData | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const { user } = useAuth();
+  const { comunidadSeleccionada } = useComunidad();
+  const { hasPermission } = usePermissions();
+  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     // Mock data - reemplazar con API call
@@ -107,6 +114,20 @@ export default function MembresiaEditar() {
       ],
     });
   }, [id]);
+
+  // Re-evaluar permisos y acceso cuando cambia la comunidad global o el usuario
+  useEffect(() => {
+    if (!membership) {return;}
+    if (comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') {
+      const communityId = Number(comunidadSeleccionada.id);
+      const isAdmin = user?.memberships?.some((m: any) => m.comunidadId === communityId && ['admin', 'admin_comunidad'].includes(m.rol));
+      if (!isAdmin && !user?.is_superadmin && communityId !== Number(membership.community.id)) {
+        setAccessDenied(true);
+        return;
+      }
+    }
+    setAccessDenied(false);
+  }, [comunidadSeleccionada, membership, user]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -267,6 +288,22 @@ export default function MembresiaEditar() {
           </div>
         </div>
 
+        {/* Si el usuario no tiene permiso en la comunidad seleccionada, mostrar aviso */}
+        {accessDenied && (
+          <div className='container-fluid py-3'>
+            <div className='alert alert-warning d-flex align-items-center' role='alert'>
+              <i className='material-icons me-3' style={{ fontSize: '48px' }}>lock</i>
+              <div>
+                <h5 className='alert-heading mb-2'>Acceso Denegado</h5>
+                <p className='mb-0'>No tienes permisos de administrador en la comunidad <strong>{comunidadSeleccionada?.nombre || membership.community.name}</strong>. Solo los administradores pueden editar esta membresía.</p>
+              </div>
+            </div>
+            <div className='text-center'>
+              <Link href='/membresias' className='btn btn-primary'>Volver al listado</Link>
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         <div className='container-fluid py-3'>
           <div className='row'>
@@ -372,10 +409,15 @@ export default function MembresiaEditar() {
                         fontWeight: '600',
                       }}
                     >
-                      {membership.member.name
-                        .split(' ')
-                        .map(n => n[0])
-                        .join('')}
+                      {(() => {
+                        const getInitials = (fullName: string) => {
+                          if (!fullName) {return '';}
+                          const parts = fullName.trim().split(/\s+/);
+                          const initials = parts.slice(0, 2).map(p => p[0] || '').join('');
+                          return initials.toUpperCase();
+                        };
+                        return getInitials(membership.member.name);
+                      })()}
                     </div>
                     <div>
                       <h6 className='mb-1'>{membership.member.name}</h6>

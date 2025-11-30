@@ -6,6 +6,234 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
+// Verifica pertenencia del usuario a la comunidad de la unidad
+function ensureUnidadCommunity(requireAdmin = false) {
+  return async (req, res, next) => {
+    try {
+      if (req.user && req.user.is_superadmin) return next();
+
+      const unidadId = req.params.id || req.body.unidad_id;
+      if (!unidadId)
+        return res.status(400).json({ error: 'ID de unidad requerido' });
+
+      const [rows] = await db.query(
+        'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+        [Number(unidadId)]
+      );
+      if (!rows.length)
+        return res.status(404).json({ error: 'Unidad no encontrada' });
+      const comunidadId = rows[0].comunidad_id;
+
+      if (!requireAdmin) {
+        const [membership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+          [req.user.persona_id, comunidadId]
+        );
+        if (!membership.length)
+          return res
+            .status(403)
+            .json({ error: 'No tienes acceso a esta comunidad' });
+        return next();
+      }
+
+      const [adminMembership] = await db.query(
+        'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin","admin_comunidad")',
+        [req.user.persona_id, comunidadId]
+      );
+      if (!adminMembership.length)
+        return res.status(403).json({
+          error: 'Se requieren permisos de administrador en esta comunidad',
+        });
+
+      next();
+    } catch (err) {
+      console.error('Error en ensureUnidadCommunity:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  };
+}
+
+// Middleware genérico para recursos relacionados que no exponen unidad_id en la ruta
+function ensureRelatedResourceCommunity(
+  resourceType,
+  idParamName,
+  requireAdmin = false
+) {
+  return async (req, res, next) => {
+    try {
+      if (req.user && req.user.is_superadmin) return next();
+
+      const id = req.params[idParamName];
+      if (!id) return res.status(400).json({ error: 'ID requerido' });
+
+      let comunidadId = null;
+
+      switch (resourceType) {
+        case 'tenencia': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM titulares_unidad WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Tenencia no encontrada' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'pago': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM pago WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Pago no encontrado' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'pago_aplicacion': {
+          const [rows] = await db.query(
+            'SELECT pago_id, cuenta_cobro_unidad_id FROM pago_aplicacion WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Aplicación no encontrada' });
+          const cuentaId = rows[0].cuenta_cobro_unidad_id;
+          const [crows] = await db.query(
+            'SELECT unidad_id FROM cuenta_cobro_unidad WHERE id = ? LIMIT 1',
+            [cuentaId]
+          );
+          if (!crows.length)
+            return res.status(404).json({ error: 'Cuenta no encontrada' });
+          const unidadId = crows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'medidor': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM medidor WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Medidor no encontrado' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'multa': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM multa WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Multa no encontrada' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'reserva': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM reserva_amenidad WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Reserva no encontrada' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'ticket': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM ticket_soporte WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Ticket no encontrado' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        case 'cuenta': {
+          const [rows] = await db.query(
+            'SELECT unidad_id FROM cuenta_cobro_unidad WHERE id = ? LIMIT 1',
+            [id]
+          );
+          if (!rows.length)
+            return res.status(404).json({ error: 'Cuenta no encontrada' });
+          const unidadId = rows[0].unidad_id;
+          const [urows] = await db.query(
+            'SELECT comunidad_id FROM unidad WHERE id = ? LIMIT 1',
+            [unidadId]
+          );
+          comunidadId = urows[0]?.comunidad_id;
+          break;
+        }
+        default:
+          return res
+            .status(400)
+            .json({ error: 'Recurso no soportado para verificación' });
+      }
+
+      if (!comunidadId)
+        return res.status(404).json({ error: 'Comunidad no encontrada' });
+
+      if (!requireAdmin) {
+        const [membership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+          [req.user.persona_id, comunidadId]
+        );
+        if (!membership.length)
+          return res
+            .status(403)
+            .json({ error: 'No tienes acceso a esta comunidad' });
+        return next();
+      }
+
+      const [adminMembership] = await db.query(
+        'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin","admin_comunidad")',
+        [req.user.persona_id, comunidadId]
+      );
+      if (!adminMembership.length)
+        return res.status(403).json({
+          error: 'Se requieren permisos de administrador en esta comunidad',
+        });
+
+      next();
+    } catch (err) {
+      console.error('Error en ensureRelatedResourceCommunity:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  };
+}
+
 /**
  * @swagger
  * tags:
@@ -135,18 +363,24 @@ router.post(
 );
 
 // GET /unidades/:id etc (kept)
-router.get('/:id', authenticate, async (req, res) => {
-  const id = req.params.id;
-  const [rows] = await db.query('SELECT * FROM unidad WHERE id = ? LIMIT 1', [
-    id,
-  ]);
-  if (!rows.length) return res.status(404).json({ error: 'not found' });
-  res.json(rows[0]);
-});
+router.get(
+  '/:id',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    const id = req.params.id;
+    const [rows] = await db.query('SELECT * FROM unidad WHERE id = ? LIMIT 1', [
+      id,
+    ]);
+    if (!rows.length) return res.status(404).json({ error: 'not found' });
+    res.json(rows[0]);
+  }
+);
 
 router.patch(
   '/:id',
   authenticate,
+  ensureUnidadCommunity(true),
   authorize('admin', 'superadmin'),
   async (req, res) => {
     const id = req.params.id;
@@ -203,6 +437,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticate,
+  ensureUnidadCommunity(true),
   authorize('admin', 'superadmin'),
   async (req, res) => {
     const id = req.params.id;
@@ -217,29 +452,35 @@ router.delete(
 );
 
 /* titulares / residentes endpoints - actualizado para usar titulares_unidad */
-router.get('/:id/tenencias', authenticate, async (req, res) => {
-  const unidadId = req.params.id;
-  const { activo } = req.query;
-  try {
-    let sql =
-      'SELECT t.id, t.persona_id, t.tipo, t.desde, t.hasta, t.porcentaje, p.nombres, p.apellidos, p.email FROM titulares_unidad t LEFT JOIN persona p ON p.id = t.persona_id WHERE t.unidad_id = ? ORDER BY t.desde DESC';
-    const params = [unidadId];
-    const [rows] = await db.query(sql, params);
-    const today = new Date().toISOString().slice(0, 10);
-    if (activo === '1') {
-      return res.json(rows.filter((r) => !r.hasta || r.hasta >= today));
+router.get(
+  '/:id/tenencias',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    const unidadId = req.params.id;
+    const { activo } = req.query;
+    try {
+      let sql =
+        'SELECT t.id, t.persona_id, t.tipo, t.desde, t.hasta, t.porcentaje, p.nombres, p.apellidos, p.email FROM titulares_unidad t LEFT JOIN persona p ON p.id = t.persona_id WHERE t.unidad_id = ? ORDER BY t.desde DESC';
+      const params = [unidadId];
+      const [rows] = await db.query(sql, params);
+      const today = new Date().toISOString().slice(0, 10);
+      if (activo === '1') {
+        return res.json(rows.filter((r) => !r.hasta || r.hasta >= today));
+      }
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
     }
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
   }
-});
+);
 
 router.post(
   '/:id/tenencias',
   [
     authenticate,
+    ensureUnidadCommunity(true),
     authorize('admin', 'superadmin'),
     body('persona_id').isInt(),
     body('tipo').notEmpty(),
@@ -555,10 +796,14 @@ router.get('/', authenticate, async (req, res) => {
  */
 
 // Detailed summary (richer than simple SELECT *)
-router.get('/:id/summary', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const sql = `
+router.get(
+  '/:id/summary',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const sql = `
       SELECT
         u.id,
         u.codigo AS numero,
@@ -584,14 +829,15 @@ router.get('/:id/summary', authenticate, async (req, res) => {
       LEFT JOIN torre t ON t.id = u.torre_id
       WHERE u.id = ?
     `;
-    const [rows] = await db.query(sql, [id]);
-    if (!rows.length) return res.status(404).json({ error: 'not found' });
-    res.json(rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+      const [rows] = await db.query(sql, [id]);
+      if (!rows.length) return res.status(404).json({ error: 'not found' });
+      res.json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -613,19 +859,24 @@ router.get('/:id/summary', authenticate, async (req, res) => {
  */
 
 // Cuentas de cobro por unidad
-router.get('/:id/cuentas', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const [rows] = await db.query(
-      `SELECT ccu.id, ccu.emision_id, ccu.comunidad_id, ccu.monto_total, ccu.saldo, ccu.estado, ccu.interes_acumulado, ccu.created_at, ccu.updated_at, eg.periodo AS emision_periodo, eg.fecha_vencimiento AS emision_vencimiento FROM cuenta_cobro_unidad ccu LEFT JOIN emision_gastos_comunes eg ON eg.id = ccu.emision_id WHERE ccu.unidad_id = ? ORDER BY ccu.created_at DESC`,
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/cuentas',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const [rows] = await db.query(
+        `SELECT ccu.id, ccu.emision_id, ccu.comunidad_id, ccu.monto_total, ccu.saldo, ccu.estado, ccu.interes_acumulado, ccu.created_at, ccu.updated_at, eg.periodo AS emision_periodo, eg.fecha_vencimiento AS emision_vencimiento FROM cuenta_cobro_unidad ccu LEFT JOIN emision_gastos_comunes eg ON eg.id = ccu.emision_id WHERE ccu.unidad_id = ? ORDER BY ccu.created_at DESC`,
+        [id]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -681,32 +932,42 @@ router.get('/cuentas/:cuentaId/detalle', authenticate, async (req, res) => {
  */
 
 // Cuentas + detalle (todo junto) por unidad
-router.get('/:id/cuentas_full', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const sql = `SELECT ccu.id AS cuenta_id, ccu.emision_id, ccu.monto_total, ccu.saldo, ccu.estado, ccu.interes_acumulado, ccu.created_at AS cuenta_created, dcu.id AS detalle_id, dcu.categoria_id, cat.nombre AS categoria_nombre, dcu.glosa, dcu.monto AS detalle_monto, dcu.origen, dcu.origen_id FROM cuenta_cobro_unidad ccu LEFT JOIN detalle_cuenta_unidad dcu ON dcu.cuenta_cobro_unidad_id = ccu.id LEFT JOIN categoria_gasto cat ON cat.id = dcu.categoria_id WHERE ccu.unidad_id = ? ORDER BY ccu.created_at DESC, dcu.id`;
-    const [rows] = await db.query(sql, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/cuentas_full',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const sql = `SELECT ccu.id AS cuenta_id, ccu.emision_id, ccu.monto_total, ccu.saldo, ccu.estado, ccu.interes_acumulado, ccu.created_at AS cuenta_created, dcu.id AS detalle_id, dcu.categoria_id, cat.nombre AS categoria_nombre, dcu.glosa, dcu.monto AS detalle_monto, dcu.origen, dcu.origen_id FROM cuenta_cobro_unidad ccu LEFT JOIN detalle_cuenta_unidad dcu ON dcu.cuenta_cobro_unidad_id = ccu.id LEFT JOIN categoria_gasto cat ON cat.id = dcu.categoria_id WHERE ccu.unidad_id = ? ORDER BY ccu.created_at DESC, dcu.id`;
+      const [rows] = await db.query(sql, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Pagos de la unidad
-router.get('/:id/pagos', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const [rows] = await db.query(
-      `SELECT p.id, p.fecha, p.monto, p.medio, p.referencia, p.estado, p.comprobante_num, pa.cuenta_cobro_unidad_id, pa.monto AS aplicado_monto, pa.prioridad FROM pago p LEFT JOIN pago_aplicacion pa ON pa.pago_id = p.id WHERE p.unidad_id = ? ORDER BY p.fecha DESC, p.id DESC`,
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/pagos',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const [rows] = await db.query(
+        `SELECT p.id, p.fecha, p.monto, p.medio, p.referencia, p.estado, p.comprobante_num, pa.cuenta_cobro_unidad_id, pa.monto AS aplicado_monto, pa.prioridad FROM pago p LEFT JOIN pago_aplicacion pa ON pa.pago_id = p.id WHERE p.unidad_id = ? ORDER BY p.fecha DESC, p.id DESC`,
+        [id]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -762,17 +1023,22 @@ router.get('/:id/financiero', authenticate, async (req, res) => {
 });
 
 // Medidores y última lectura
-router.get('/:id/medidores', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const sql = `SELECT m.id AS medidor_id, m.tipo, m.codigo, m.es_compartido, lm.ultima_lectura, lm.fecha_lectura, lm.periodo FROM medidor m LEFT JOIN ( SELECT l.medidor_id, l.lectura AS ultima_lectura, l.fecha AS fecha_lectura, l.periodo FROM lectura_medidor l JOIN ( SELECT medidor_id, MAX(fecha) AS max_fecha FROM lectura_medidor GROUP BY medidor_id ) lm2 ON lm2.medidor_id = l.medidor_id AND lm2.max_fecha = l.fecha ) lm ON lm.medidor_id = m.id WHERE m.unidad_id = ? ORDER BY m.tipo, m.codigo`;
-    const [rows] = await db.query(sql, [id]);
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/medidores',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const sql = `SELECT m.id AS medidor_id, m.tipo, m.codigo, m.es_compartido, lm.ultima_lectura, lm.fecha_lectura, lm.periodo FROM medidor m LEFT JOIN ( SELECT l.medidor_id, l.lectura AS ultima_lectura, l.fecha AS fecha_lectura, l.periodo FROM lectura_medidor l JOIN ( SELECT medidor_id, MAX(fecha) AS max_fecha FROM lectura_medidor GROUP BY medidor_id ) lm2 ON lm2.medidor_id = l.medidor_id AND lm2.max_fecha = l.fecha ) lm ON lm.medidor_id = m.id WHERE m.unidad_id = ? ORDER BY m.tipo, m.codigo`;
+      const [rows] = await db.query(sql, [id]);
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -808,49 +1074,64 @@ router.get('/medidores/:medidorId/lecturas', authenticate, async (req, res) => {
 });
 
 // Tickets de soporte por unidad
-router.get('/:id/tickets', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const [rows] = await db.query(
-      'SELECT ts.id, ts.categoria, ts.titulo, ts.estado, ts.prioridad, ts.asignado_a, ts.created_at FROM ticket_soporte ts WHERE ts.unidad_id = ? ORDER BY ts.created_at DESC',
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/tickets',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const [rows] = await db.query(
+        'SELECT ts.id, ts.categoria, ts.titulo, ts.estado, ts.prioridad, ts.asignado_a, ts.created_at FROM ticket_soporte ts WHERE ts.unidad_id = ? ORDER BY ts.created_at DESC',
+        [id]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Multas por unidad
-router.get('/:id/multas', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const [rows] = await db.query(
-      'SELECT id, motivo, descripcion, monto, persona_id, created_at, updated_at FROM multa WHERE unidad_id = ? ORDER BY created_at DESC',
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/multas',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const [rows] = await db.query(
+        'SELECT id, motivo, descripcion, monto, persona_id, created_at, updated_at FROM multa WHERE unidad_id = ? ORDER BY created_at DESC',
+        [id]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Reservas por unidad
-router.get('/:id/reservas', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
-    const [rows] = await db.query(
-      'SELECT id, amenidad_id, inicio, fin, estado, created_at FROM reserva_amenidad WHERE unidad_id = ? ORDER BY inicio DESC',
-      [id]
-    );
-    res.json(rows);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'server error' });
+router.get(
+  '/:id/reservas',
+  authenticate,
+  ensureUnidadCommunity(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
+      const [rows] = await db.query(
+        'SELECT id, amenidad_id, inicio, fin, estado, created_at FROM reserva_amenidad WHERE unidad_id = ? ORDER BY inicio DESC',
+        [id]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'server error' });
+    }
   }
-});
+);
 
 // Dropdowns / selects
 router.get('/dropdowns/comunidades', authenticate, async (req, res) => {
@@ -867,6 +1148,18 @@ router.get('/dropdowns/comunidades', authenticate, async (req, res) => {
 router.get('/dropdowns/edificios', authenticate, async (req, res) => {
   try {
     const { comunidad_id } = req.query;
+    // Si el usuario no es superadmin, solo retornar comunidades donde tiene membresía
+    if (!req.user.is_superadmin && comunidad_id) {
+      const [membership] = await db.query(
+        'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+        [req.user.persona_id, comunidad_id]
+      );
+      if (!membership.length)
+        return res
+          .status(403)
+          .json({ error: 'No tienes acceso a esta comunidad' });
+    }
+
     const [rows] = await db.query(
       'SELECT id, nombre, direccion FROM edificio WHERE comunidad_id = ? ORDER BY nombre',
       [comunidad_id]
@@ -1629,7 +1922,11 @@ module.exports = router;
 // Update titulares_unidad
 router.patch(
   '/tenencias/:tenenciaId',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('tenencia', 'tenenciaId', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.tenenciaId;
@@ -1664,7 +1961,11 @@ router.patch(
 // Delete tenencia
 router.delete(
   '/tenencias/:tenenciaId',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('tenencia', 'tenenciaId', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.tenenciaId;
@@ -1680,7 +1981,11 @@ router.delete(
 // Create pago for unit
 router.post(
   '/:id/pagos',
-  [authenticate, body('monto').isFloat({ gt: 0 })],
+  [
+    authenticate,
+    ensureUnidadCommunity(false),
+    body('monto').isFloat({ gt: 0 }),
+  ],
   async (req, res) => {
     const unidadId = req.params.id;
     const errors = validationResult(req);
@@ -1721,7 +2026,11 @@ router.post(
 // Update pago
 router.patch(
   '/pagos/:pagoId',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('pago', 'pagoId', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.pagoId;
@@ -1761,7 +2070,11 @@ router.patch(
 // Delete pago
 router.delete(
   '/pagos/:pagoId',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('pago', 'pagoId', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.pagoId;
@@ -1779,6 +2092,7 @@ router.post(
   '/pagos/:pagoId/aplicaciones',
   [
     authenticate,
+    ensureRelatedResourceCommunity('pago', 'pagoId', true),
     authorize('admin', 'superadmin'),
     body('cuenta_cobro_unidad_id').isInt(),
     body('monto').isFloat({ gt: 0 }),
@@ -1809,7 +2123,11 @@ router.post(
 // Delete pago_aplicacion
 router.delete(
   '/pago_aplicaciones/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('pago_aplicacion', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -1825,7 +2143,12 @@ router.delete(
 // Medidor CRUD
 router.post(
   '/:id/medidores',
-  [authenticate, authorize('admin', 'superadmin'), body('tipo').notEmpty()],
+  [
+    authenticate,
+    ensureUnidadCommunity(true),
+    authorize('admin', 'superadmin'),
+    body('tipo').notEmpty(),
+  ],
   async (req, res) => {
     try {
       const unidadId = req.params.id;
@@ -1848,7 +2171,11 @@ router.post(
 
 router.patch(
   '/medidores/:medidorId',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('medidor', 'medidorId', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.medidorId;
@@ -1881,7 +2208,11 @@ router.patch(
 
 router.delete(
   '/medidores/:medidorId',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('medidor', 'medidorId', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.medidorId;
@@ -1899,6 +2230,7 @@ router.post(
   '/medidores/:medidorId/lecturas',
   [
     authenticate,
+    ensureRelatedResourceCommunity('medidor', 'medidorId', true),
     authorize('admin', 'superadmin'),
     body('lectura').isNumeric(),
     body('periodo').notEmpty(),
@@ -1931,6 +2263,7 @@ router.post(
   '/:id/multas',
   [
     authenticate,
+    ensureUnidadCommunity(true),
     authorize('admin', 'superadmin'),
     body('motivo').notEmpty(),
     body('monto').isFloat({ gt: 0 }),
@@ -1959,7 +2292,11 @@ router.post(
 
 router.patch(
   '/multas/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('multa', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -1992,7 +2329,11 @@ router.patch(
 
 router.delete(
   '/multas/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('multa', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -2010,6 +2351,7 @@ router.post(
   '/:id/reservas',
   [
     authenticate,
+    ensureUnidadCommunity(false),
     body('amenidad_id').isInt(),
     body('inicio').notEmpty(),
     body('fin').notEmpty(),
@@ -2039,7 +2381,11 @@ router.post(
 
 router.patch(
   '/reservas/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('reserva', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -2072,7 +2418,11 @@ router.patch(
 
 router.delete(
   '/reservas/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('reserva', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -2088,7 +2438,12 @@ router.delete(
 // Ticket CRUD
 router.post(
   '/:id/tickets',
-  [authenticate, body('categoria').notEmpty(), body('titulo').notEmpty()],
+  [
+    authenticate,
+    ensureUnidadCommunity(false),
+    body('categoria').notEmpty(),
+    body('titulo').notEmpty(),
+  ],
   async (req, res) => {
     const unidadId = req.params.id;
     const errors = validationResult(req);
@@ -2114,7 +2469,11 @@ router.post(
 
 router.patch(
   '/tickets/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('ticket', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -2154,7 +2513,11 @@ router.patch(
 
 router.delete(
   '/tickets/:id',
-  [authenticate, authorize('admin', 'superadmin')],
+  [
+    authenticate,
+    ensureRelatedResourceCommunity('ticket', 'id', true),
+    authorize('admin', 'superadmin'),
+  ],
   async (req, res) => {
     try {
       const id = req.params.id;
@@ -2172,6 +2535,7 @@ router.post(
   '/:id/cuentas',
   [
     authenticate,
+    ensureUnidadCommunity(true),
     authorize('admin', 'superadmin'),
     body('monto_total').isFloat({ gt: 0 }),
   ],
@@ -2202,6 +2566,7 @@ router.post(
   '/cuentas/:cuentaId/detalle',
   [
     authenticate,
+    ensureRelatedResourceCommunity('cuenta', 'cuentaId', true),
     authorize('admin', 'superadmin'),
     body('categoria_id').isInt(),
     body('monto').isFloat({ gt: 0 }),
