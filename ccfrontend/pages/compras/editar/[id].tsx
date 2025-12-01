@@ -178,7 +178,6 @@ export default function EditarCompra() {
   const [showBudgetAlert, setShowBudgetAlert] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalData, setOriginalData] = useState<any>(null);
-  const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -266,26 +265,11 @@ export default function EditarCompra() {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
-      const status = (error as any)?.response?.status;
-      if (status === 403) {
-        setAccessDenied(true);
-        return;
-      }
       setPurchase(null);
     } finally {
       setLoading(false);
     }
   };
-
-  // Después de cargar, verificar permiso para editar en la comunidad
-  useEffect(() => {
-    if (purchase) {
-      const comunidadId = comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : null;
-      if (!hasPermission(Permission.EDIT_COMPRA, comunidadId)) {
-        setAccessDenied(true);
-      }
-    }
-  }, [purchase, comunidadSeleccionada, hasPermission]);
 
   const loadInitialData = async () => {
     try {
@@ -671,28 +655,6 @@ export default function EditarCompra() {
             <Button variant='primary' onClick={() => router.push('/compras')}>
               Volver a Compras
             </Button>
-          </div>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
-
-  if (accessDenied) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <div className='text-center py-5'>
-            <span className='material-icons text-warning mb-3' style={{ fontSize: '4rem' }}>lock</span>
-            <h4>Acceso Denegado</h4>
-            <p className='text-muted'>No tienes permiso para editar esta compra en la comunidad seleccionada.</p>
-            <div className='d-flex gap-2 justify-content-center'>
-              <Button variant='outline-secondary' onClick={() => router.back()}>
-                Volver
-              </Button>
-              <Button variant='primary' onClick={() => router.push(`/compras/${id}`)}>
-                Ver Detalles
-              </Button>
-            </div>
           </div>
         </Layout>
       </ProtectedRoute>

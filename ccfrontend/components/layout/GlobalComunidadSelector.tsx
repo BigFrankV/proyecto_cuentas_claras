@@ -48,7 +48,7 @@ export default function GlobalComunidadSelector() {
 
   return (
     <>
-      <div className="global-comunidad-selector mb-3">
+      <div className="global-comunidad-selector mb-2">
         <div className="selector-container">
           <span className="material-icons selector-icon">location_on</span>
           <select
@@ -57,7 +57,7 @@ export default function GlobalComunidadSelector() {
             onChange={handleChange}
             aria-label="Seleccionar comunidad"
           >
-            <option value="todas">📍 Todas mis comunidades</option>
+            <option value="todas">📍 Todas las comunidades</option>
             {comunidades.map(comunidad => (
               <option key={comunidad.id} value={comunidad.id}>
                 {comunidad.nombre}
@@ -66,49 +66,36 @@ export default function GlobalComunidadSelector() {
             ))}
           </select>
         </div>
-
-        {/* Indicador visual de comunidad activa */}
-        {comunidadSeleccionada && (
-          <div className="comunidad-badge mt-2">
-            <span className="badge bg-light text-dark w-100 text-start">
-              <span className="material-icons" style={{ fontSize: '14px', verticalAlign: 'middle' }}>
-                check_circle
-              </span>
-              {' '}
-              <small>{comunidadSeleccionada.nombre}</small>
-            </span>
-          </div>
-        )}
       </div>
 
       <style jsx>{`
         .global-comunidad-selector {
-          padding: 0.5rem;
+          padding: 0.4rem;
           background: rgba(255, 255, 255, 0.05);
-          border-radius: 8px;
+          border-radius: 6px;
           border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .selector-container {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
+          gap: 0.4rem;
         }
 
         .selector-icon {
           color: var(--color-accent, #fd5d14);
-          font-size: 20px;
+          font-size: 18px;
           flex-shrink: 0;
         }
 
         .selector-input {
           flex: 1;
-          font-size: 0.875rem;
+          font-size: 0.8rem;
           background: rgba(255, 255, 255, 0.1);
           border: 1px solid rgba(255, 255, 255, 0.2);
           color: #fff;
-          padding: 0.375rem 0.75rem;
-          border-radius: 6px;
+          padding: 0.3rem 0.6rem;
+          border-radius: 4px;
           cursor: pointer;
           transition: all 0.2s ease;
         }
@@ -136,21 +123,7 @@ export default function GlobalComunidadSelector() {
           flex: 1;
           display: flex;
           justify-content: center;
-          padding: 0.375rem;
-        }
-
-        .comunidad-badge {
-          padding-left: 26px; /* Alinear con el texto del select */
-        }
-
-        .comunidad-badge .badge {
-          font-weight: 500;
-          padding: 0.25rem 0.5rem;
-          border-radius: 4px;
-        }
-
-        .comunidad-badge .material-icons {
-          color: var(--color-success, #28a745);
+          padding: 0.3rem;
         }
 
         /* Responsive */

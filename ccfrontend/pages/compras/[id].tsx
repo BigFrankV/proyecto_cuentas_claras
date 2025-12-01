@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Button,
   Card,
@@ -17,7 +17,7 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { comprasApi } from '@/lib/api/compras';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions, Permission } from '@/lib/usePermissions';
 import { CompraBackend } from '@/types/compras';
@@ -131,6 +131,9 @@ interface Document {
 export default function DetallePurchase() {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useAuth();
+  const { isSuperUser, hasPermission, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -142,9 +145,44 @@ export default function DetallePurchase() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [newNote, setNewNote] = useState('');
   const [activeTab, setActiveTab] = useState('details');
-  const { comunidadSeleccionada } = useComunidad();
-  const { hasPermission } = usePermissions();
-  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Resolver comunidad
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   useEffect(() => {
     if (id) {
@@ -199,16 +237,9 @@ export default function DetallePurchase() {
 
       setPurchase(mappedPurchase);
       setDocuments([]); // por ahora vacío
-      setAccessDenied(false);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error loading purchase data:', error);
-      const status = (error as any)?.response?.status;
-      if (status === 403) {
-        setAccessDenied(true);
-        setDocuments([]);
-        return;
-      }
       setPurchase(null);
       setDocuments([]);
     } finally {
@@ -400,6 +431,36 @@ export default function DetallePurchase() {
     return purchase?.status === 'draft' || purchase?.status === 'pending';
   };
 
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para ver esta Compra.</p>
+                    <Button variant='primary' onClick={() => router.push('/compras')}>
+                      Volver a Compras
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
   if (loading) {
     return (
       <ProtectedRoute>
@@ -436,20 +497,6 @@ export default function DetallePurchase() {
             <Button variant='primary' onClick={() => router.push('/compras')}>
               Volver a Compras
             </Button>
-          </div>
-        </Layout>
-      </ProtectedRoute>
-    );
-  }
-
-  if (accessDenied) {
-    return (
-      <ProtectedRoute>
-        <Layout>
-          <div className='text-center py-5'>
-            <span className='material-icons text-danger mb-3' style={{ fontSize: '4rem' }}>block</span>
-            <h4>Acceso Denegado</h4>
-            <p className='text-muted'>No tienes permisos para ver esta compra en la comunidad seleccionada.</p>
           </div>
         </Layout>
       </ProtectedRoute>

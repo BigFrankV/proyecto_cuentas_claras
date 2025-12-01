@@ -181,25 +181,25 @@ export default function Sidebar() {
         {/* Logo y título */}
         <Link
           href='/dashboard'
-          className='d-flex align-items-center text-white text-decoration-none mb-4'
+          className='d-flex align-items-center text-white text-decoration-none mb-2'
         >
-          <span className='material-icons me-2' style={{ fontSize: '32px' }}>
+          <span className='material-icons me-2' style={{ fontSize: '24px' }}>
             apartment
           </span>
-          <span className='fs-4'>Cuentas Claras</span>
+          <span style={{ fontSize: '1.1rem', fontWeight: 600 }}>Cuentas Claras</span>
         </Link>
 
         {/* Información del usuario */}
-        <div className='d-flex align-items-center mb-3 px-2'>
+        <div className='d-flex align-items-center mb-2 px-2'>
           {profilePhoto ? (
             <Image
               src={profilePhoto}
               alt="Foto de perfil"
               className='avatar me-2'
-              width={36}
-              height={36}
+              width={32}
+              height={32}
               style={{
-                borderRadius: '8px',
+                borderRadius: '6px',
                 objectFit: 'cover',
                 border: '2px solid rgba(255, 255, 255, 0.2)',
               }}
@@ -208,15 +208,16 @@ export default function Sidebar() {
             <div
               className='avatar me-2'
               style={{
-                width: '36px',
-                height: '36px',
+                width: '32px',
+                height: '32px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 backgroundColor: 'var(--color-accent)',
                 color: '#fff',
                 fontWeight: 'bold',
-                borderRadius: '8px',
+                borderRadius: '6px',
+                fontSize: '0.85rem',
               }}
             >
               {user?.persona?.nombres && user?.persona?.apellidos
@@ -226,19 +227,19 @@ export default function Sidebar() {
                   : 'U'}
             </div>
           )}
-          <div>
-            <span className='d-block text-white'>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span className='d-block text-white' style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {user?.persona?.nombres && user?.persona?.apellidos
                 ? `${user.persona.nombres} ${user.persona.apellidos}`
                 : user?.username || 'Usuario'}
               <span
                 className={`badge ms-1 ${user?.is_superadmin ? 'bg-warning text-dark' : 'bg-primary text-white'}`}
-                style={{ fontSize: '0.6rem' }}
+                style={{ fontSize: '0.55rem', padding: '0.15rem 0.4rem' }}
               >
                 {getUserRoleName().toUpperCase()}
               </span>
             </span>
-            <span className='d-block text-white-50' style={{ fontSize: '0.85rem' }}>
+            <span className='d-block text-white-50' style={{ fontSize: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {user?.email}
             </span>
           </div>
@@ -274,17 +275,17 @@ export default function Sidebar() {
                     className='nav-section-header'
                     style={{
                       color: 'rgba(255,255,255,0.6)',
-                      fontSize: '0.875rem',
+                      fontSize: '0.75rem',
                       fontWeight: 600,
                       textTransform: 'uppercase',
                       letterSpacing: '0.05em',
                       padding:
                         sectionIndex === 0
-                          ? '1rem 1rem 0.5rem'
-                          : '1.5rem 1rem 0.5rem',
-                      marginBottom: '0.5rem',
+                          ? '0.5rem 1rem 0.25rem'
+                          : '0.75rem 1rem 0.25rem',
+                      marginBottom: '0.25rem',
                       ...(sectionIndex > 0 && {
-                        marginTop: '1rem',
+                        marginTop: '0.5rem',
                         borderTop: '1px solid rgba(255,255,255,0.1)',
                       }),
                     }}
@@ -397,6 +398,22 @@ export default function Sidebar() {
       <style jsx>{`
         .nav-sections::-webkit-scrollbar {
           display: none;
+        }
+
+        .nav-sidebar .nav-item {
+          margin-bottom: 0.15rem;
+        }
+
+        .nav-sidebar .nav-item .nav-link {
+          padding: 0.45rem 0.75rem;
+          font-size: 0.875rem;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+        }
+
+        .nav-sidebar .nav-item .nav-link .material-icons {
+          font-size: 18px;
+          margin-right: 0.5rem;
         }
 
         .nav-sidebar .nav-item .nav-link:hover {

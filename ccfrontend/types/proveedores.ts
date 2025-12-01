@@ -2,6 +2,8 @@
 // TIPOS PARA PROVEEDORES
 // =========================================
 
+import { ReactNode } from 'react';
+
 export type EstadoProveedor = 0 | 1;
 
 export const ESTADOS_PROVEEDOR = {
@@ -15,7 +17,8 @@ export interface Proveedor {
   comunidad_nombre?: string;
   rut: string;
   dv: string;
-  razon_social: string; // razon_social
+  rut_completo?: string; // campo combinado rut-dv
+  razon_social: string;
   giro?: string;
   email?: string | null;
   telefono?: string | null;

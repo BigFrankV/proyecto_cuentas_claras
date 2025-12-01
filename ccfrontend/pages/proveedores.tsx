@@ -156,7 +156,7 @@ export default function ProveedoresListado() {
   }
 
   const handleView = (id: number) => router.push(`/proveedores/${id}`);
-  const handleEdit = (id: number) => router.push(`/proveedores/editar/${id}`);
+  const handleEdit = (id: number) => router.push(`/proveedores/${id}/editar`);
   const handleDelete = (p: Proveedor) => {
     setSelectedProvider(p);
     setShowDeleteModal(true);
