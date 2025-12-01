@@ -2,10 +2,13 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+
 import Layout from '@/components/layout/Layout';
 import comunidadesService from '@/lib/comunidadesService';
 import emisionesService from '@/lib/emisionesService';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 
 interface Concept {
   id: string;
@@ -28,6 +31,11 @@ interface ExpenseItem {
 
 export default function EmisionNueva() {
   const router = useRouter();
+
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
+  const [comunidadId, setComunidadId] = useState<number | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -154,6 +162,70 @@ export default function EmisionNueva() {
 
     loadComunidades();
   }, []);
+
+  // Si el selector global cambia, actualizar el select del formulario
+  const { comunidadSeleccionada } = useComunidad();
+
+  useEffect(() => {
+    if (comunidadSeleccionada && comunidadSeleccionada.id && comunidadSeleccionada.id !== 'todas') {
+      setFormData(prev => ({ ...prev, community: String(comunidadSeleccionada.id) }));
+    } else if (comunidadSeleccionada === null) {
+      // seleccionar 'todas' -> limpiar selección (si aplica)
+      setFormData(prev => ({ ...prev, community: '' }));
+    }
+  }, [comunidadSeleccionada]);
+
+  // Determinar comunidadId efectivo (selector > usuario)
+  useEffect(() => {
+    if (comunidadSeleccionada && comunidadSeleccionada.id && comunidadSeleccionada.id !== 'todas') {
+      setComunidadId(Number(comunidadSeleccionada.id));
+      return;
+    }
+
+    if (user) {
+      if (user.is_superadmin) {
+        setComunidadId(user.comunidad_id || (user.memberships?.[0]?.comunidadId) || null);
+      } else {
+        setComunidadId(user.comunidad_id || (user.memberships?.[0]?.comunidadId) || null);
+      }
+    }
+  }, [comunidadSeleccionada, user]);
+
+  // Verificar permiso de creación por comunidad
+  useEffect(() => {
+    const allowed = hasPermission(Permission.CREATE_EMISION, comunidadId ?? null);
+    setAccessDenied(!allowed);
+  }, [hasPermission, comunidadId]);
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <Head>
+          <title>Acceso denegado — Nueva Emisión</title>
+        </Head>
+        <Layout title='Nueva Emisión'>
+          <div className='container-fluid py-5'>
+            <div className='row justify-content-center'>
+              <div className='col-md-8 col-lg-6'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center py-5'>
+                    <div className='mb-4'>
+                      <i className='material-icons text-warning' style={{ fontSize: '64px' }}>lock</i>
+                    </div>
+                    <h3 className='mb-3'>Acceso Restringido</h3>
+                    <p className='text-muted mb-4'>No tienes permiso para crear emisiones en la comunidad seleccionada.</p>
+                    <div className='d-flex gap-3 justify-content-center'>
+                      <button className='btn btn-primary' onClick={() => router.push('/emisiones')}>Volver a Emisiones</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({

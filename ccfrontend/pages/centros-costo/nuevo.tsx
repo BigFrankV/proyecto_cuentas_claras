@@ -1,13 +1,14 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Form, Button, Card, Badge, Alert } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
 
 import Layout from '@/components/layout/Layout';
 import { createCentro } from '@/lib/centrosCostoService';
 import comunidadesService from '@/lib/comunidadesService';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions';
 
 interface Comunidad {
@@ -30,13 +31,53 @@ interface CostCenterForm {
 
 export default function CentroCostoNuevo() {
   const router = useRouter();
-  const { isSuperUser, getUserCommunities } = usePermissions();
+  const { user } = useAuth();
+  const { isSuperUser, getUserCommunities, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const loadedComunidadesRef = useRef(false);
   const [newResponsibility, setNewResponsibility] = useState(''); // Agregado
+
+  // Resolver comunidad
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return selectedComunidadId ?? undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id, selectedComunidadId]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   const [formData, setFormData] = useState<CostCenterForm>({
     name: '',
@@ -177,6 +218,36 @@ export default function CentroCostoNuevo() {
   const selectedDepartment = departmentOptions.find(
     d => d.value === formData.department,
   );
+
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para crear Centros de Costo. Solo usuarios con roles administrativos pueden acceder a esta sección.</p>
+                    <Button variant='primary' onClick={() => router.push('/centros-costo')}>
+                      Volver a Centros de Costo
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

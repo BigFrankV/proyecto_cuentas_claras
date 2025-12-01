@@ -76,14 +76,7 @@ export default function PersonaFilters({
                 <option value='inactivos'>Inactivos</option>
               </select>
             </div>
-            <div className='col-12 col-md-2 col-lg-2'>
-              <Link href='/personas/nueva' className='btn btn-primary w-100'>
-                <i className='material-icons me-1' style={{ fontSize: '16px' }}>
-                  person_add
-                </i>
-                Nueva Persona
-              </Link>
-            </div>
+            {/* Botón de 'Nueva Persona' movido al header; se elimina aquí para evitar duplicado */}
           </div>
         </div>
       </div>

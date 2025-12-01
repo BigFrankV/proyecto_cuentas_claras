@@ -28,7 +28,7 @@ const MembresiasListado = () => {
   const [roles, setRoles] = useState<any[]>([]);
   const [accessDenied, setAccessDenied] = useState(false);
 
-  const { listarMembresias, listarRoles, listarComunidades, loading, error } =
+  const { listarMembresias, listarRoles, listarComunidades, loading, error, clearError } =
     useMembresias();
 
   const itemsPerPage = 20;
@@ -57,17 +57,19 @@ const MembresiasListado = () => {
       const communityId = Number(comunidadSeleccionada.id);
       const membership = user?.memberships?.find(m => m.comunidadId === communityId);
       const isAdmin = membership && ['admin', 'admin_comunidad'].includes(membership.rol);
-      
+
       if (!isAdmin && !user?.is_superadmin) {
+        // No es admin: mostrar acceso denegado y limpiar errores previos
         setAccessDenied(true);
         setMembresias([]);
         setTotal(0);
+        clearError();
         return;
       }
     }
-    
+
     setAccessDenied(false);
-    
+
     try {
       const filters: MembresiaFilters = {
         limit: itemsPerPage,
@@ -86,11 +88,20 @@ const MembresiasListado = () => {
       const response = await listarMembresias(filters);
       setMembresias(response.data);
       setTotal(response.meta.total);
-    } catch (err) {
+    } catch (err: any) {
       // eslint-disable-next-line no-console
       console.error('Error al cargar membresías:', err);
+      // Si el backend responde 403 (no autorizado), limpiar el error del hook
+      if (err.response?.status === 403) {
+        setMembresias([]);
+        setTotal(0);
+        clearError();
+        return;
+      }
     }
   };
+
+  const userAdminCommunities = user?.memberships?.filter(m => ['admin', 'admin_comunidad'].includes(m.rol)).map(m => m.comunidadId) || [];
 
   // Filtrado de membresías (ya filtrado por API)
   const filteredMembresias = membresias;
@@ -106,7 +117,7 @@ const MembresiasListado = () => {
         m.hasta &&
         new Date(m.hasta) > now &&
         (new Date(m.hasta).getTime() - now.getTime()) / (1000 * 60 * 60 * 24) <=
-          30,
+        30,
     ).length;
     const vencidas = membresias.filter(
       m => m.hasta && new Date(m.hasta) < now,
@@ -154,6 +165,18 @@ const MembresiasListado = () => {
     return 'bg-success';
   };
 
+  const getInitials = (m: any) => {
+    // Preferir campos separados si están disponibles
+    const firstFromNames = m?.nombres?.[0] || '';
+    const firstFromLast = m?.apellidos?.[0] || '';
+    if (firstFromNames || firstFromLast) {
+      return (firstFromNames + firstFromLast).toUpperCase().slice(0, 2);
+    }
+    // Fallback: extraer iniciales de nombre_completo (primera letra de cada palabra)
+    const matches = (m?.nombre_completo || '').match(/\b\w/g) || [];
+    return (matches.slice(0, 2).join('') || (m?.nombre_completo || '').substring(0, 2)).toUpperCase();
+  };
+
   const getAvatarColor = (rolCodigo: string) => {
     const colors = {
       residente: 'var(--color-info)',
@@ -177,340 +200,92 @@ const MembresiasListado = () => {
         </Head>
 
         <Layout title='Membresías'>
-        {/* Header Profesional */}
-        <div className='container-fluid p-0'>
-          <div
-            className='text-white'
-            style={{
-              background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            <div className='p-4'>
+          {/* Header Profesional */}
+          <div className='container-fluid p-0'>
             <div
+              className='text-white'
               style={{
-                position: 'absolute',
-                top: '-50%',
-                right: '-10%',
-                width: '200px',
-                height: '200px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-10%',
-                left: '-5%',
-                width: '150px',
-                height: '150px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                borderRadius: '50%',
-              }}
-            />
-            <div className='d-flex align-items-center justify-content-between'>
-              <div className='d-flex align-items-center'>
+            >
+              <div className='p-4'>
                 <div
-                  className='me-4'
                   style={{
-                    width: '64px',
-                    height: '64px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    position: 'absolute',
+                    top: '-50%',
+                    right: '-10%',
+                    width: '200px',
+                    height: '200px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '50%',
                   }}
-                >
-                  <i
-                    className='material-icons'
-                    style={{ fontSize: '32px', color: 'white' }}
-                  >
-                    card_membership
-                  </i>
-                </div>
-                <div>
-                  <h1 className='h2 mb-1 text-white'>Membresías</h1>
-                  <p className='mb-0 opacity-75'>
-                    Gestión de membresías y roles de usuarios
-                  </p>
-                </div>
-              </div>
-              {hasPermission(Permission.CREATE_MEMBRESIA) && (
-                <div className='text-end'>
-                  <Link
-                    href='/membresias/nueva'
-                    className='btn btn-light btn-lg'
-                  >
-                    <i className='material-icons me-2'>person_add</i>
-                    Nueva Membresía
-                  </Link>
-                </div>
-              )}
-            </div>
-
-            {/* Estadísticas */}
-            <div className='row mt-4'>
-              <div className='col-md-3 mb-3'>
+                />
                 <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
+                  style={{
+                    position: 'absolute',
+                    bottom: '-10%',
+                    left: '-5%',
+                    width: '150px',
+                    height: '150px',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    borderRadius: '50%',
+                  }}
+                />
+                <div className='d-flex align-items-center justify-content-between'>
                   <div className='d-flex align-items-center'>
                     <div
-                      className='me-3'
+                      className='me-4'
                       style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-primary)',
-                        color: 'white',
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '12px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
-                    >
-                      <i className='material-icons'>card_membership</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{total}</div>
-                      <div className='text-white-50'>Total Membresías</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-success)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>check_circle</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.activas}</div>
-                      <div className='text-white-50'>Membresías Activas</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-warning)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>schedule</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.vencenEsteMes}</div>
-                      <div className='text-white-50'>Vencen Este Mes</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className='col-md-3 mb-3'>
-                <div
-                  className='p-3 rounded-3 text-white'
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                >
-                  <div className='d-flex align-items-center'>
-                    <div
-                      className='me-3'
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        backgroundColor: 'var(--color-danger)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <i className='material-icons'>error</i>
-                    </div>
-                    <div>
-                      <div className='h3 mb-0'>{stats.vencidas}</div>
-                      <div className='text-white-50'>Membresías Vencidas</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Alerta informativa del filtro global */}
-        {comunidadSeleccionada && comunidadSeleccionada.id !== 'todas' && (
-          <div className='container-fluid mt-3'>
-            <div className='alert alert-info d-flex align-items-center' role='alert'>
-              <i className='material-icons me-2'>info</i>
-              <div>
-                Mostrando membresías de: <strong>{comunidadSeleccionada.nombre}</strong>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contenido principal */}
-        <div className='container-fluid pt-4 pb-4'>
-          {/* Mensaje de acceso denegado */}
-          {accessDenied && (
-            <div className='alert alert-warning d-flex align-items-center' role='alert'>
-              <i className='material-icons me-3' style={{ fontSize: '48px' }}>lock</i>
-              <div>
-                <h5 className='alert-heading mb-2'>Acceso Denegado</h5>
-                <p className='mb-0'>
-                  No tienes permisos de administrador en la comunidad <strong>{comunidadSeleccionada?.nombre}</strong>.
-                  Solo los administradores pueden gestionar membresías.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Filtros */}
-          {!accessDenied && (
-          <>
-          <div className='row mb-4'>
-            <div className='col-12'>
-              <div
-                className='filter-container'
-                style={{
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: 'var(--radius)',
-                  padding: '1rem',
-                }}
-              >
-                <div className='row g-2'>
-                  <div className='col-12 col-md-3 col-lg-2'>
-                    <div
-                      className='search-icon-container'
-                      style={{ position: 'relative' }}
                     >
                       <i
-                        className='material-icons search-icon'
-                        style={{
-                          position: 'absolute',
-                          top: '50%',
-                          left: '10px',
-                          transform: 'translateY(-50%)',
-                          color: 'var(--color-muted)',
-                          fontSize: '18px',
-                        }}
+                        className='material-icons'
+                        style={{ fontSize: '32px', color: 'white' }}
                       >
-                        search
+                        card_membership
                       </i>
-                      <input
-                        type='text'
-                        className='form-control search-input'
-                        placeholder='Buscar membresía...'
-                        style={{ paddingLeft: '35px' }}
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                      />
+                    </div>
+                    <div>
+                      <h1 className='h2 mb-1 text-white'>Membresías</h1>
+                      <p className='mb-0 opacity-75'>
+                        Gestión de membresías y roles de usuarios
+                      </p>
                     </div>
                   </div>
-                  <div className='col-12 col-md-2 col-lg-2'>
-                    <select
-                      className='form-select'
-                      value={nivelFilter}
-                      onChange={e =>
-                        setNivelFilter(
-                          e.target.value === 'todos'
-                            ? 'todos'
-                            : parseInt(e.target.value),
-                        )
-                      }
-                    >
-                      <option value='todos'>Todos los niveles</option>
-                      {roles.map(rol => (
-                        <option key={rol.id} value={rol.id}>
-                          {rol.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className='col-12 col-md-2 col-lg-2'>
-                    <select
-                      className='form-select'
-                      value={estadoFilter}
-                      onChange={e =>
-                        setEstadoFilter(
-                          e.target.value as 'todos' | 'activo' | 'inactivo',
-                        )
-                      }
-                    >
-                      <option value='todos'>Todos los estados</option>
-                      <option value='activo'>Activo</option>
-                      <option value='inactivo'>Inactivo</option>
-                    </select>
-                  </div>
-                  <div className='col-12 col-md-3 col-lg-2 d-flex gap-2'>
-                    <button className='btn btn-outline-primary flex-fill'>
-                      <i
-                        className='material-icons me-2'
-                        style={{ fontSize: '16px' }}
-                      >
-                        filter_list
-                      </i>
-                      Filtrar
-                    </button>
-                    <Link href='/membresias/nueva' className='btn btn-primary'>
-                      <i
-                        className='material-icons me-1'
-                        style={{ fontSize: '16px' }}
-                      >
-                        add
-                      </i>
-                      Nueva
-                    </Link>
-                  </div>
+                  {hasPermission(
+                    Permission.CREATE_MEMBRESIA,
+                    comunidadSeleccionada && comunidadSeleccionada.id !== 'todas'
+                      ? Number(comunidadSeleccionada.id)
+                      : undefined,
+                  ) && (
+                      <div className='text-end'>
+                        <Link href='/membresias/nueva' className='btn btn-light btn-lg'>
+                          <i className='material-icons me-2'>person_add</i>
+                          Nueva Membresía
+                        </Link>
+                      </div>
+                    )}
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Vista Principal */}
-          <div className='row'>
-            <div className='col-12'>
-              {/* Card de Estadísticas */}
-              <div className='card shadow-sm mb-4'>
-                <div className='card-body'>
-                  <div className='row g-3'>
-                    <div className='col-sm-6 col-md-3'>
+                {/* Estadísticas */}
+                <div className='row mt-4'>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
                       <div className='d-flex align-items-center'>
                         <div
-                          className='membresia-icon me-3'
+                          className='me-3'
                           style={{
                             width: '48px',
                             height: '48px',
@@ -525,17 +300,20 @@ const MembresiasListado = () => {
                           <i className='material-icons'>card_membership</i>
                         </div>
                         <div>
-                          <div className='text-muted small'>
-                            Total Membresías
-                          </div>
-                          <h4 className='mb-0'>{stats.total}</h4>
+                          <div className='h3 mb-0'>{total}</div>
+                          <div className='text-white-50'>Total Membresías</div>
                         </div>
                       </div>
                     </div>
-                    <div className='col-sm-6 col-md-3'>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
                       <div className='d-flex align-items-center'>
                         <div
-                          className='membresia-icon me-3'
+                          className='me-3'
                           style={{
                             width: '48px',
                             height: '48px',
@@ -550,15 +328,20 @@ const MembresiasListado = () => {
                           <i className='material-icons'>check_circle</i>
                         </div>
                         <div>
-                          <div className='text-muted small'>Activas</div>
-                          <h4 className='mb-0'>{stats.activas}</h4>
+                          <div className='h3 mb-0'>{stats.activas}</div>
+                          <div className='text-white-50'>Membresías Activas</div>
                         </div>
                       </div>
                     </div>
-                    <div className='col-sm-6 col-md-3'>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
                       <div className='d-flex align-items-center'>
                         <div
-                          className='membresia-icon me-3'
+                          className='me-3'
                           style={{
                             width: '48px',
                             height: '48px',
@@ -570,20 +353,23 @@ const MembresiasListado = () => {
                             justifyContent: 'center',
                           }}
                         >
-                          <i className='material-icons'>access_time</i>
+                          <i className='material-icons'>schedule</i>
                         </div>
                         <div>
-                          <div className='text-muted small'>
-                            Vencen este mes
-                          </div>
-                          <h4 className='mb-0'>{stats.vencenEsteMes}</h4>
+                          <div className='h3 mb-0'>{stats.vencenEsteMes}</div>
+                          <div className='text-white-50'>Vencen Este Mes</div>
                         </div>
                       </div>
                     </div>
-                    <div className='col-sm-6 col-md-3'>
+                  </div>
+                  <div className='col-md-3 mb-3'>
+                    <div
+                      className='p-3 rounded-3 text-white'
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    >
                       <div className='d-flex align-items-center'>
                         <div
-                          className='membresia-icon me-3'
+                          className='me-3'
                           style={{
                             width: '48px',
                             height: '48px',
@@ -595,532 +381,761 @@ const MembresiasListado = () => {
                             justifyContent: 'center',
                           }}
                         >
-                          <i className='material-icons'>highlight_off</i>
+                          <i className='material-icons'>error</i>
                         </div>
                         <div>
-                          <div className='text-muted small'>Vencidas</div>
-                          <h4 className='mb-0'>{stats.vencidas}</h4>
+                          <div className='h3 mb-0'>{stats.vencidas}</div>
+                          <div className='text-white-50'>Membresías Vencidas</div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Tabs de vista */}
-              <ul className='nav nav-tabs mb-3'>
-                <li className='nav-item'>
-                  <button
-                    className={`nav-link ${viewMode === 'table' ? 'active' : ''}`}
-                    onClick={() => setViewMode('table')}
-                  >
-                    <i
-                      className='material-icons me-1'
-                      style={{ fontSize: '16px' }}
-                    >
-                      view_list
-                    </i>
-                    Lista
-                  </button>
-                </li>
-                <li className='nav-item'>
-                  <button
-                    className={`nav-link ${viewMode === 'cards' ? 'active' : ''}`}
-                    onClick={() => setViewMode('cards')}
-                  >
-                    <i
-                      className='material-icons me-1'
-                      style={{ fontSize: '16px' }}
-                    >
-                      view_module
-                    </i>
-                    Tarjetas
-                  </button>
-                </li>
-              </ul>
+          {/* Alerta informativa del filtro global */}
+          {comunidadSeleccionada && comunidadSeleccionada.id !== 'todas' && (
+            <div className='container-fluid mt-3'>
+              <div className='alert alert-info d-flex align-items-center' role='alert'>
+                <i className='material-icons me-2'>info</i>
+                <div>
+                  Mostrando membresías de: <strong>{comunidadSeleccionada.nombre}</strong>
+                </div>
+              </div>
+            </div>
+          )}
 
-              {/* Vista de tabla */}
-              {viewMode === 'table' && (
-                <div className='card shadow-sm'>
-                  <div className='table-responsive'>
-                    <table className='table table-hover mb-0'>
-                      <thead className='table-light'>
-                        <tr>
-                          <th scope='col' style={{ width: '50px' }}>
-                            #
-                          </th>
-                          <th scope='col'>Miembro</th>
-                          <th scope='col'>Nivel</th>
-                          <th scope='col'>Comunidad</th>
-                          <th scope='col'>Fecha Inicio</th>
-                          <th scope='col'>Fecha Vencimiento</th>
-                          <th scope='col'>Estado</th>
-                          <th
-                            scope='col'
-                            className='actions-cell'
-                            style={{ width: '120px' }}
+          {/* Contenido principal */}
+          <div className='container-fluid pt-4 pb-4'>
+            {/* Mensaje de acceso denegado */}
+            {accessDenied && (
+              <div className='alert alert-warning d-flex align-items-center' role='alert'>
+                <i className='material-icons me-3' style={{ fontSize: '48px' }}>lock</i>
+                <div>
+                  <h5 className='alert-heading mb-2'>Acceso Denegado</h5>
+                  <p className='mb-0'>
+                    No tienes permisos de administrador en la comunidad <strong>{comunidadSeleccionada?.nombre}</strong>.
+                    Solo los administradores pueden gestionar membresías.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Filtros */}
+            {!accessDenied && (
+              <>
+                <div className='row mb-4'>
+                  <div className='col-12'>
+                    <div
+                      className='filter-container'
+                      style={{
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: 'var(--radius)',
+                        padding: '1rem',
+                      }}
+                    >
+                      <div className='row g-2'>
+                        <div className='col-12 col-md-3 col-lg-2'>
+                          <div
+                            className='search-icon-container'
+                            style={{ position: 'relative' }}
                           >
-                            Acciones
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredMembresias.map((membresia, index) => (
-                          <tr key={membresia.id}>
-                            <td>{index + 1}</td>
-                            <td>
-                              <div className='d-flex align-items-center'>
-                                <div
-                                  className='avatar me-2'
-                                  style={{
-                                    width: '36px',
-                                    height: '36px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    backgroundColor: getAvatarColor(
-                                      membresia.rol_codigo,
-                                    ),
-                                    color: '#fff',
-                                    fontWeight: 'bold',
-                                    borderRadius: '50%',
-                                  }}
-                                >
-                                  {membresia.nombre_completo
-                                    .split(' ')
-                                    .map(n => n[0])
-                                    .join('')
-                                    .toUpperCase()
-                                    .slice(0, 2)}
-                                </div>
-                                <div>
-                                  <div className='fw-semibold'>
-                                    {membresia.nombre_completo}
-                                  </div>
-                                  <div className='small text-muted'>
-                                    {membresia.rol_nombre}
-                                  </div>
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              <span
-                                className={getTierBadgeClass(
-                                  membresia.rol_codigo,
-                                )}
-                              >
-                                {membresia.rol_nombre}
-                              </span>
-                            </td>
-                            <td>{membresia.comunidad_nombre}</td>
-                            <td>
-                              {new Date(membresia.desde).toLocaleDateString()}
-                            </td>
-                            <td>
-                              {membresia.hasta
-                                ? new Date(membresia.hasta).toLocaleDateString()
-                                : 'Indefinido'}
-                            </td>
-                            <td>
-                              <span className='d-flex align-items-center'>
-                                <span
-                                  className={`status-icon ${getEstadoIcon(membresia.activo)}`}
-                                  style={{
-                                    width: '10px',
-                                    height: '10px',
-                                    display: 'inline-block',
-                                    borderRadius: '50%',
-                                    marginRight: '5px',
-                                    backgroundColor: membresia.activo
-                                      ? 'var(--color-success)'
-                                      : 'var(--color-muted)',
-                                  }}
-                                />
-                                {membresia.activo ? 'Activo' : 'Inactivo'}
-                              </span>
-                              <div
-                                className='progress mt-1'
-                                style={{ height: '5px' }}
-                              >
-                                <div
-                                  className={`progress-bar ${getProgressColor(membresia.activo, membresia.hasta)}`}
-                                  role='progressbar'
-                                  style={{
-                                    width: membresia.hasta
-                                      ? `${Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100))}%`
-                                      : '100%',
-                                  }}
-                                  aria-valuenow={
-                                    membresia.hasta
-                                      ? Math.max(
-                                          0,
-                                          Math.min(
-                                            100,
-                                            ((new Date(
-                                              membresia.hasta,
-                                            ).getTime() -
-                                              new Date().getTime()) /
-                                              (1000 * 60 * 60 * 24 * 365)) *
-                                              100,
-                                          ),
-                                        )
-                                      : 100
-                                  }
-                                  aria-valuemin={0}
-                                  aria-valuemax={100}
-                                />
-                              </div>
-                              <span className='small'>
-                                {membresia.hasta
-                                  ? (() => {
-                                      const diasRestantes = Math.ceil(
-                                        (new Date(membresia.hasta).getTime() -
-                                          new Date().getTime()) /
-                                          (1000 * 60 * 60 * 24),
-                                      );
-                                      return diasRestantes > 0
-                                        ? `Vence en ${diasRestantes} días`
-                                        : `Vencida hace ${Math.abs(diasRestantes)} días`;
-                                    })()
-                                  : 'Sin vencimiento'}
-                              </span>
-                            </td>
-                            <td>
-                              <div className='btn-group'>
-                                <Link
-                                  href={`/membresias/${membresia.id}/editar`}
-                                  className='btn btn-sm btn-outline-primary'
-                                >
-                                  <i
-                                    className='material-icons'
-                                    style={{ fontSize: '16px' }}
-                                  >
-                                    visibility
-                                  </i>
-                                </Link>
-                                <button
-                                  type='button'
-                                  className='btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split'
-                                  data-bs-toggle='dropdown'
-                                  aria-expanded='false'
-                                >
-                                  <span className='visually-hidden'>
-                                    Toggle Dropdown
-                                  </span>
-                                </button>
-                                <ul className='dropdown-menu dropdown-menu-end'>
-                                  <li>
-                                    <Link
-                                      className='dropdown-item'
-                                      href={`/membresias/${membresia.id}/editar`}
-                                    >
-                                      <i
-                                        className='material-icons me-2'
-                                        style={{ fontSize: '16px' }}
-                                      >
-                                        edit
-                                      </i>
-                                      Editar
-                                    </Link>
-                                  </li>
-                                  <li>
-                                    <button
-                                      type='button'
-                                      className='dropdown-item'
-                                    >
-                                      <i
-                                        className='material-icons me-2'
-                                        style={{ fontSize: '16px' }}
-                                      >
-                                        sync
-                                      </i>
-                                      Renovar
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <hr className='dropdown-divider' />
-                                  </li>
-                                  <li>
-                                    <button
-                                      type='button'
-                                      className='dropdown-item text-danger'
-                                    >
-                                      <i
-                                        className='material-icons me-2'
-                                        style={{ fontSize: '16px' }}
-                                      >
-                                        cancel
-                                      </i>
-                                      Cancelar
-                                    </button>
-                                  </li>
-                                </ul>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                            <i
+                              className='material-icons search-icon'
+                              style={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '10px',
+                                transform: 'translateY(-50%)',
+                                color: 'var(--color-muted)',
+                                fontSize: '18px',
+                              }}
+                            >
+                              search
+                            </i>
+                            <input
+                              type='text'
+                              className='form-control search-input'
+                              placeholder='Buscar membresía...'
+                              style={{ paddingLeft: '35px' }}
+                              value={searchTerm}
+                              onChange={e => setSearchTerm(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className='col-12 col-md-2 col-lg-2'>
+                          <select
+                            className='form-select'
+                            value={nivelFilter}
+                            onChange={e =>
+                              setNivelFilter(
+                                e.target.value === 'todos'
+                                  ? 'todos'
+                                  : parseInt(e.target.value),
+                              )
+                            }
+                          >
+                            <option value='todos'>Todos los niveles</option>
+                            {roles.map(rol => (
+                              <option key={rol.id} value={rol.id}>
+                                {rol.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className='col-12 col-md-2 col-lg-2'>
+                          <select
+                            className='form-select'
+                            value={estadoFilter}
+                            onChange={e =>
+                              setEstadoFilter(
+                                e.target.value as 'todos' | 'activo' | 'inactivo',
+                              )
+                            }
+                          >
+                            <option value='todos'>Todos los estados</option>
+                            <option value='activo'>Activo</option>
+                            <option value='inactivo'>Inactivo</option>
+                          </select>
+                        </div>
+                        <div className='col-12 col-md-3 col-lg-2 d-flex gap-2'>
+                          <button className='btn btn-outline-primary flex-fill'>
+                            <i
+                              className='material-icons me-2'
+                              style={{ fontSize: '16px' }}
+                            >
+                              filter_list
+                            </i>
+                            Filtrar
+                          </button>
+
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              {/* Vista de tarjetas */}
-              {viewMode === 'cards' && (
+                {/* Vista Principal */}
                 <div className='row'>
-                  {filteredMembresias.map(membresia => (
-                    <div
-                      key={membresia.id}
-                      className='col-xl-4 col-lg-6 col-md-6 mb-4'
-                    >
-                      <div
-                        className='card h-100 membresia-card'
-                        style={{
-                          position: 'relative',
-                          overflow: 'hidden',
-                          borderRadius: 'var(--radius)',
-                          transition:
-                            'transform 0.15s ease, box-shadow 0.15s ease',
-                        }}
-                      >
-                        <div
-                          className='card-body'
-                          style={{ padding: '1.25rem' }}
-                        >
-                          <div className='d-flex justify-content-between align-items-start mb-3'>
+                  <div className='col-12'>
+                    {/* Card de Estadísticas */}
+                    <div className='card shadow-sm mb-4'>
+                      <div className='card-body'>
+                        <div className='row g-3'>
+                          <div className='col-sm-6 col-md-3'>
                             <div className='d-flex align-items-center'>
                               <div
-                                className='me-3 d-flex align-items-center justify-content-center text-white'
+                                className='membresia-icon me-3'
                                 style={{
                                   width: '48px',
                                   height: '48px',
-                                  borderRadius: '50%',
-                                  backgroundColor: getAvatarColor(
-                                    membresia.rol_codigo,
-                                  ),
-                                  fontSize: '20px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--color-primary)',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 }}
                               >
-                                {membresia.nombre_completo
-                                  .split(' ')
-                                  .map(n => n[0])
-                                  .join('')
-                                  .toUpperCase()
-                                  .slice(0, 2)}
+                                <i className='material-icons'>card_membership</i>
                               </div>
                               <div>
-                                <h6 className='mb-1'>
-                                  {membresia.nombre_completo}
-                                </h6>
-                                <div className='small text-muted'>
-                                  {membresia.rol_nombre}
+                                <div className='text-muted small'>
+                                  Total Membresías
                                 </div>
+                                <h4 className='mb-0'>{stats.total}</h4>
                               </div>
                             </div>
-                            <span
-                              className={getTierBadgeClass(
-                                membresia.rol_codigo,
-                              )}
-                            >
-                              {membresia.rol_nombre}
-                            </span>
                           </div>
-
-                          <div className='mb-3'>
-                            <div className='small text-muted mb-1'>
-                              Comunidad
-                            </div>
-                            <div>{membresia.comunidad_nombre}</div>
-                          </div>
-
-                          <div className='mb-3'>
-                            <div className='small text-muted mb-1'>
-                              Vigencia
-                            </div>
-                            <div>
-                              {new Date(membresia.desde).toLocaleDateString()} -{' '}
-                              {membresia.hasta
-                                ? new Date(membresia.hasta).toLocaleDateString()
-                                : 'Indefinido'}
-                            </div>
-                          </div>
-
-                          <div className='mb-3'>
-                            <div className='d-flex justify-content-between align-items-center mb-1'>
-                              <span className='small text-muted'>Estado</span>
-                              <span className='small'>
-                                {membresia.hasta
-                                  ? (() => {
-                                      const diasRestantes = Math.ceil(
-                                        (new Date(membresia.hasta).getTime() -
-                                          new Date().getTime()) /
-                                          (1000 * 60 * 60 * 24),
-                                      );
-                                      return diasRestantes > 0
-                                        ? `${diasRestantes} días restantes`
-                                        : `Vencida hace ${Math.abs(diasRestantes)} días`;
-                                    })()
-                                  : 'Sin vencimiento'}
-                              </span>
-                            </div>
-                            <div
-                              className='progress'
-                              style={{ height: '8px', borderRadius: '4px' }}
-                            >
-                              <div
-                                className={`progress-bar ${getProgressColor(membresia.activo, membresia.hasta)}`}
-                                role='progressbar'
-                                style={{
-                                  width: membresia.hasta
-                                    ? `${Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100))}%`
-                                    : '100%',
-                                }}
-                                aria-valuenow={
-                                  membresia.hasta
-                                    ? Math.max(
-                                        0,
-                                        Math.min(
-                                          100,
-                                          ((new Date(
-                                            membresia.hasta,
-                                          ).getTime() -
-                                            new Date().getTime()) /
-                                            (1000 * 60 * 60 * 24 * 365)) *
-                                            100,
-                                        ),
-                                      )
-                                    : 100
-                                }
-                                aria-valuemin={0}
-                                aria-valuemax={100}
-                              />
-                            </div>
-                          </div>
-
-                          <div className='d-flex justify-content-between align-items-center'>
+                          <div className='col-sm-6 col-md-3'>
                             <div className='d-flex align-items-center'>
-                              <span
-                                className='me-2'
+                              <div
+                                className='membresia-icon me-3'
                                 style={{
-                                  width: '10px',
-                                  height: '10px',
-                                  borderRadius: '50%',
-                                  backgroundColor: membresia.activo
-                                    ? 'var(--color-success)'
-                                    : 'var(--color-muted)',
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--color-success)',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
                                 }}
-                              />
-                              <span className='small'>
-                                {membresia.activo ? 'Activo' : 'Inactivo'}
-                              </span>
+                              >
+                                <i className='material-icons'>check_circle</i>
+                              </div>
+                              <div>
+                                <div className='text-muted small'>Activas</div>
+                                <h4 className='mb-0'>{stats.activas}</h4>
+                              </div>
                             </div>
                           </div>
-
-                          <div className='d-flex gap-2 mt-3'>
-                            <Link
-                              href={`/membresias/${membresia.id}/editar`}
-                              className='btn btn-outline-primary btn-sm flex-fill'
-                            >
-                              <i
-                                className='material-icons me-1'
-                                style={{ fontSize: '16px' }}
+                          <div className='col-sm-6 col-md-3'>
+                            <div className='d-flex align-items-center'>
+                              <div
+                                className='membresia-icon me-3'
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--color-warning)',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
                               >
-                                visibility
-                              </i>
-                              Ver Detalle
-                            </Link>
-                            <button className='btn btn-outline-secondary btn-sm'>
-                              <i
-                                className='material-icons'
-                                style={{ fontSize: '16px' }}
+                                <i className='material-icons'>access_time</i>
+                              </div>
+                              <div>
+                                <div className='text-muted small'>
+                                  Vencen este mes
+                                </div>
+                                <h4 className='mb-0'>{stats.vencenEsteMes}</h4>
+                              </div>
+                            </div>
+                          </div>
+                          <div className='col-sm-6 col-md-3'>
+                            <div className='d-flex align-items-center'>
+                              <div
+                                className='membresia-icon me-3'
+                                style={{
+                                  width: '48px',
+                                  height: '48px',
+                                  borderRadius: '8px',
+                                  backgroundColor: 'var(--color-danger)',
+                                  color: 'white',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
                               >
-                                more_vert
-                              </i>
-                            </button>
+                                <i className='material-icons'>highlight_off</i>
+                              </div>
+                              <div>
+                                <div className='text-muted small'>Vencidas</div>
+                                <h4 className='mb-0'>{stats.vencidas}</h4>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
 
-              {/* Paginación */}
-              {total > itemsPerPage && (
-                <nav className='mt-4'>
-                  <ul className='pagination justify-content-center'>
-                    <li
-                      className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
-                    >
-                      <button
-                        type='button'
-                        className='page-link'
-                        onClick={() =>
-                          setCurrentPage(prev => Math.max(prev - 1, 1))
-                        }
-                        disabled={currentPage === 1}
-                      >
-                        <i
-                          className='material-icons'
-                          style={{ fontSize: '16px' }}
-                        >
-                          chevron_left
-                        </i>
-                      </button>
-                    </li>
-                    {Array.from(
-                      { length: Math.ceil(total / itemsPerPage) },
-                      (_, i) => i + 1,
-                    ).map(page => (
-                      <li
-                        key={page}
-                        className={`page-item ${currentPage === page ? 'active' : ''}`}
-                      >
+                    {/* Tabs de vista */}
+                    <ul className='nav nav-tabs mb-3'>
+                      <li className='nav-item'>
                         <button
-                          type='button'
-                          className='page-link'
-                          onClick={() => setCurrentPage(page)}
+                          className={`nav-link ${viewMode === 'table' ? 'active' : ''}`}
+                          onClick={() => setViewMode('table')}
                         >
-                          {page}
+                          <i
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            view_list
+                          </i>
+                          Lista
                         </button>
                       </li>
-                    ))}
-                    <li
-                      className={`page-item ${currentPage === Math.ceil(total / itemsPerPage) ? 'disabled' : ''}`}
-                    >
-                      <button
-                        type='button'
-                        className='page-link'
-                        onClick={() =>
-                          setCurrentPage(prev =>
-                            Math.min(
-                              prev + 1,
-                              Math.ceil(total / itemsPerPage),
-                            ),
-                          )
-                        }
-                        disabled={
-                          currentPage === Math.ceil(total / itemsPerPage)
-                        }
-                      >
-                        <i
-                          className='material-icons'
-                          style={{ fontSize: '16px' }}
+                      <li className='nav-item'>
+                        <button
+                          className={`nav-link ${viewMode === 'cards' ? 'active' : ''}`}
+                          onClick={() => setViewMode('cards')}
                         >
-                          chevron_right
-                        </i>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
-              )}
-            </div>
-          </div>
-          </>
-          )}
-        </div>
+                          <i
+                            className='material-icons me-1'
+                            style={{ fontSize: '16px' }}
+                          >
+                            view_module
+                          </i>
+                          Tarjetas
+                        </button>
+                      </li>
+                    </ul>
 
-        <style jsx>{`
+                    {/* Vista de tabla */}
+                    {viewMode === 'table' && (
+                      <div className='card shadow-sm'>
+                        <div className='table-responsive'>
+                          <table className='table table-hover mb-0'>
+                            <thead className='table-light'>
+                              <tr>
+                                <th scope='col' style={{ width: '50px' }}>
+                                  #
+                                </th>
+                                <th scope='col'>Miembro</th>
+                                <th scope='col'>Nivel</th>
+                                <th scope='col'>Comunidad</th>
+                                <th scope='col'>Fecha Inicio</th>
+                                <th scope='col'>Fecha Vencimiento</th>
+                                <th scope='col'>Estado</th>
+                                <th
+                                  scope='col'
+                                  className='actions-cell'
+                                  style={{ width: '120px' }}
+                                >
+                                  Acciones
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {filteredMembresias.map((membresia, index) => (
+                                <tr key={membresia.id}>
+                                  <td>{index + 1}</td>
+                                  <td>
+                                    <div className='d-flex align-items-center'>
+                                      <div
+                                        className='avatar me-2'
+                                        style={{
+                                          width: '36px',
+                                          height: '36px',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          backgroundColor: getAvatarColor(
+                                            membresia.rol_codigo,
+                                          ),
+                                          color: '#fff',
+                                          fontWeight: 'bold',
+                                          borderRadius: '50%',
+                                        }}
+                                      >
+                                        {getInitials(membresia)}
+                                      </div>
+                                      <div>
+                                        <div className='fw-semibold'>
+                                          {membresia.nombre_completo}
+                                        </div>
+                                        <div className='small text-muted'>
+                                          {membresia.rol_nombre}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <span
+                                      className={getTierBadgeClass(
+                                        membresia.rol_codigo,
+                                      )}
+                                    >
+                                      {membresia.rol_nombre}
+                                    </span>
+                                  </td>
+                                  <td>{membresia.comunidad_nombre}</td>
+                                  <td>
+                                    {new Date(membresia.desde).toLocaleDateString()}
+                                  </td>
+                                  <td>
+                                    {membresia.hasta
+                                      ? new Date(membresia.hasta).toLocaleDateString()
+                                      : 'Indefinido'}
+                                  </td>
+                                  <td>
+                                    <span className='d-flex align-items-center'>
+                                      <span
+                                        className={`status-icon ${getEstadoIcon(membresia.activo)}`}
+                                        style={{
+                                          width: '10px',
+                                          height: '10px',
+                                          display: 'inline-block',
+                                          borderRadius: '50%',
+                                          marginRight: '5px',
+                                          backgroundColor: membresia.activo
+                                            ? 'var(--color-success)'
+                                            : 'var(--color-muted)',
+                                        }}
+                                      />
+                                      {membresia.activo ? 'Activo' : 'Inactivo'}
+                                    </span>
+                                    <div
+                                      className='progress mt-1'
+                                      style={{ height: '5px' }}
+                                    >
+                                      <div
+                                        className={`progress-bar ${getProgressColor(membresia.activo, membresia.hasta)}`}
+                                        role='progressbar'
+                                        style={{
+                                          width: membresia.hasta
+                                            ? `${Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100))}%`
+                                            : '100%',
+                                        }}
+                                        aria-valuenow={
+                                          membresia.hasta
+                                            ? Math.max(
+                                              0,
+                                              Math.min(
+                                                100,
+                                                ((new Date(
+                                                  membresia.hasta,
+                                                ).getTime() -
+                                                  new Date().getTime()) /
+                                                  (1000 * 60 * 60 * 24 * 365)) *
+                                                100,
+                                              ),
+                                            )
+                                            : 100
+                                        }
+                                        aria-valuemin={0}
+                                        aria-valuemax={100}
+                                      />
+                                    </div>
+                                    <span className='small'>
+                                      {membresia.hasta
+                                        ? (() => {
+                                          const diasRestantes = Math.ceil(
+                                            (new Date(membresia.hasta).getTime() -
+                                              new Date().getTime()) /
+                                            (1000 * 60 * 60 * 24),
+                                          );
+                                          return diasRestantes > 0
+                                            ? `Vence en ${diasRestantes} días`
+                                            : `Vencida hace ${Math.abs(diasRestantes)} días`;
+                                        })()
+                                        : 'Sin vencimiento'}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <div className='btn-group'>
+                                      <Link
+                                        href={`/membresias/${membresia.id}/editar`}
+                                        className='btn btn-sm btn-outline-primary'
+                                      >
+                                        <i
+                                          className='material-icons'
+                                          style={{ fontSize: '16px' }}
+                                        >
+                                          visibility
+                                        </i>
+                                      </Link>
+                                      <button
+                                        type='button'
+                                        className='btn btn-sm btn-outline-secondary dropdown-toggle dropdown-toggle-split'
+                                        data-bs-toggle='dropdown'
+                                        aria-expanded='false'
+                                      >
+                                        <span className='visually-hidden'>
+                                          Toggle Dropdown
+                                        </span>
+                                      </button>
+                                      <ul className='dropdown-menu dropdown-menu-end'>
+                                        {userAdminCommunities.includes(membresia.comunidad_id) || user?.is_superadmin ? (
+                                          <>
+                                            <li>
+                                              <Link
+                                                className='dropdown-item'
+                                                href={`/membresias/${membresia.id}/editar`}
+                                              >
+                                                <i
+                                                  className='material-icons me-2'
+                                                  style={{ fontSize: '16px' }}
+                                                >
+                                                  edit
+                                                </i>
+                                                Editar
+                                              </Link>
+                                            </li>
+                                            <li>
+                                              <button
+                                                type='button'
+                                                className='dropdown-item'
+                                              >
+                                                <i
+                                                  className='material-icons me-2'
+                                                  style={{ fontSize: '16px' }}
+                                                >
+                                                  sync
+                                                </i>
+                                                Renovar
+                                              </button>
+                                            </li>
+                                            <li>
+                                              <hr className='dropdown-divider' />
+                                            </li>
+                                            <li>
+                                              <button
+                                                type='button'
+                                                className='dropdown-item text-danger'
+                                              >
+                                                <i
+                                                  className='material-icons me-2'
+                                                  style={{ fontSize: '16px' }}
+                                                >
+                                                  cancel
+                                                </i>
+                                                Cancelar
+                                              </button>
+                                            </li>
+                                          </>
+                                        ) : (
+                                          <li>
+                                            <div className='dropdown-item text-muted'>No tienes permisos</div>
+                                          </li>
+                                        )}
+                                      </ul>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Vista de tarjetas */}
+                    {viewMode === 'cards' && (
+                      <div className='row'>
+                        {filteredMembresias.map(membresia => (
+                          <div
+                            key={membresia.id}
+                            className='col-xl-4 col-lg-6 col-md-6 mb-4'
+                          >
+                            <div
+                              className='card h-100 membresia-card'
+                              style={{
+                                position: 'relative',
+                                overflow: 'hidden',
+                                borderRadius: 'var(--radius)',
+                                transition:
+                                  'transform 0.15s ease, box-shadow 0.15s ease',
+                              }}
+                            >
+                              <div
+                                className='card-body'
+                                style={{ padding: '1.25rem' }}
+                              >
+                                <div className='d-flex justify-content-between align-items-start mb-3'>
+                                  <div className='d-flex align-items-center'>
+                                    <div
+                                      className='me-3 d-flex align-items-center justify-content-center text-white'
+                                      style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        borderRadius: '50%',
+                                        backgroundColor: getAvatarColor(
+                                          membresia.rol_codigo,
+                                        ),
+                                        fontSize: '20px',
+                                      }}
+                                    >
+                                      {getInitials(membresia)}
+                                    </div>
+                                    <div>
+                                      <h6 className='mb-1'>
+                                        {membresia.nombre_completo}
+                                      </h6>
+                                      <div className='small text-muted'>
+                                        {membresia.rol_nombre}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={getTierBadgeClass(
+                                      membresia.rol_codigo,
+                                    )}
+                                  >
+                                    {membresia.rol_nombre}
+                                  </span>
+                                </div>
+
+                                <div className='mb-3'>
+                                  <div className='small text-muted mb-1'>
+                                    Comunidad
+                                  </div>
+                                  <div>{membresia.comunidad_nombre}</div>
+                                </div>
+
+                                <div className='mb-3'>
+                                  <div className='small text-muted mb-1'>
+                                    Vigencia
+                                  </div>
+                                  <div>
+                                    {new Date(membresia.desde).toLocaleDateString()} -{' '}
+                                    {membresia.hasta
+                                      ? new Date(membresia.hasta).toLocaleDateString()
+                                      : 'Indefinido'}
+                                  </div>
+                                </div>
+
+                                <div className='mb-3'>
+                                  <div className='d-flex justify-content-between align-items-center mb-1'>
+                                    <span className='small text-muted'>Estado</span>
+                                    <span className='small'>
+                                      {membresia.hasta
+                                        ? (() => {
+                                          const diasRestantes = Math.ceil(
+                                            (new Date(membresia.hasta).getTime() -
+                                              new Date().getTime()) /
+                                            (1000 * 60 * 60 * 24),
+                                          );
+                                          return diasRestantes > 0
+                                            ? `${diasRestantes} días restantes`
+                                            : `Vencida hace ${Math.abs(diasRestantes)} días`;
+                                        })()
+                                        : 'Sin vencimiento'}
+                                    </span>
+                                  </div>
+                                  <div
+                                    className='progress'
+                                    style={{ height: '8px', borderRadius: '4px' }}
+                                  >
+                                    <div
+                                      className={`progress-bar ${getProgressColor(membresia.activo, membresia.hasta)}`}
+                                      role='progressbar'
+                                      style={{
+                                        width: membresia.hasta
+                                          ? `${Math.max(0, Math.min(100, ((new Date(membresia.hasta).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 365)) * 100))}%`
+                                          : '100%',
+                                      }}
+                                      aria-valuenow={
+                                        membresia.hasta
+                                          ? Math.max(
+                                            0,
+                                            Math.min(
+                                              100,
+                                              ((new Date(
+                                                membresia.hasta,
+                                              ).getTime() -
+                                                new Date().getTime()) /
+                                                (1000 * 60 * 60 * 24 * 365)) *
+                                              100,
+                                            ),
+                                          )
+                                          : 100
+                                      }
+                                      aria-valuemin={0}
+                                      aria-valuemax={100}
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className='d-flex justify-content-between align-items-center'>
+                                  <div className='d-flex align-items-center'>
+                                    <span
+                                      className='me-2'
+                                      style={{
+                                        width: '10px',
+                                        height: '10px',
+                                        borderRadius: '50%',
+                                        backgroundColor: membresia.activo
+                                          ? 'var(--color-success)'
+                                          : 'var(--color-muted)',
+                                      }}
+                                    />
+                                    <span className='small'>
+                                      {membresia.activo ? 'Activo' : 'Inactivo'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className='d-flex gap-2 mt-3'>
+                                  <Link
+                                    href={`/membresias/${membresia.id}/editar`}
+                                    className='btn btn-outline-primary btn-sm flex-fill'
+                                  >
+                                    <i
+                                      className='material-icons me-1'
+                                      style={{ fontSize: '16px' }}
+                                    >
+                                      visibility
+                                    </i>
+                                    Ver Detalle
+                                  </Link>
+                                  <button className='btn btn-outline-secondary btn-sm'>
+                                    <i
+                                      className='material-icons'
+                                      style={{ fontSize: '16px' }}
+                                    >
+                                      more_vert
+                                    </i>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Paginación */}
+                    {total > itemsPerPage && (
+                      <nav className='mt-4'>
+                        <ul className='pagination justify-content-center'>
+                          <li
+                            className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
+                          >
+                            <button
+                              type='button'
+                              className='page-link'
+                              onClick={() =>
+                                setCurrentPage(prev => Math.max(prev - 1, 1))
+                              }
+                              disabled={currentPage === 1}
+                            >
+                              <i
+                                className='material-icons'
+                                style={{ fontSize: '16px' }}
+                              >
+                                chevron_left
+                              </i>
+                            </button>
+                          </li>
+                          {Array.from(
+                            { length: Math.ceil(total / itemsPerPage) },
+                            (_, i) => i + 1,
+                          ).map(page => (
+                            <li
+                              key={page}
+                              className={`page-item ${currentPage === page ? 'active' : ''}`}
+                            >
+                              <button
+                                type='button'
+                                className='page-link'
+                                onClick={() => setCurrentPage(page)}
+                              >
+                                {page}
+                              </button>
+                            </li>
+                          ))}
+                          <li
+                            className={`page-item ${currentPage === Math.ceil(total / itemsPerPage) ? 'disabled' : ''}`}
+                          >
+                            <button
+                              type='button'
+                              className='page-link'
+                              onClick={() =>
+                                setCurrentPage(prev =>
+                                  Math.min(
+                                    prev + 1,
+                                    Math.ceil(total / itemsPerPage),
+                                  ),
+                                )
+                              }
+                              disabled={
+                                currentPage === Math.ceil(total / itemsPerPage)
+                              }
+                            >
+                              <i
+                                className='material-icons'
+                                style={{ fontSize: '16px' }}
+                              >
+                                chevron_right
+                              </i>
+                            </button>
+                          </li>
+                        </ul>
+                      </nav>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <style jsx>{`
           .tier-badge {
             display: inline-block;
             padding: 0.25rem 0.5rem;
@@ -1154,7 +1169,7 @@ const MembresiasListado = () => {
             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1) !important;
           }
         `}</style>
-      </Layout>
+        </Layout>
       </ProtectedPage>
     </ProtectedRoute>
   );

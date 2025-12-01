@@ -20,7 +20,8 @@ import {
   getProveedores,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import { usePermissions, Permission } from '@/lib/usePermissions';
+import { useComunidad } from '@/lib/useComunidad';
 
 interface ExpenseFormData {
   id: number;
@@ -57,9 +58,11 @@ export default function EditarGasto() {
   const { id } = router.query;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
-  const currentComunidadId = user?.comunidad_id;
-  const { isSuperUser, currentRole } = usePermissions();
-  const comunidadId = currentComunidadId;
+  const { comunidadSeleccionada } = useComunidad();
+  const { hasPermission } = usePermissions();
+  const comunidadId = comunidadSeleccionada?.id
+    ? Number(comunidadSeleccionada.id)
+    : user?.comunidad_id ?? null;
 
   const [formData, setFormData] = useState<ExpenseFormData>({
     id: 0,
@@ -126,8 +129,8 @@ export default function EditarGasto() {
     { value: 'otro', label: 'Otro' },
   ];
 
-  // Verificar permisos: Solo superadmin o admin puede editar
-  const canEdit = isSuperUser || currentRole === 'admin';
+  // Verificar permisos: usar permiso por comunidad
+  const canEdit = hasPermission(Permission.EDIT_GASTO, comunidadId);
   if (!canEdit) {
     return (
       <ProtectedRoute>

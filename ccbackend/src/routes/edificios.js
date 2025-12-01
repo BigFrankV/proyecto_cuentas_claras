@@ -6,6 +6,57 @@ const { authenticate } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
+// Middleware local: verificar pertenencia del usuario a la comunidad del edificio
+function ensureEdificioCommunityMembership(requireAdmin = false) {
+  return async (req, res, next) => {
+    try {
+      if (req.user && req.user.is_superadmin) return next();
+
+      const edificioId = req.params.id || req.params.edificioId;
+      if (!edificioId)
+        return res.status(400).json({ error: 'ID de edificio requerido' });
+
+      const [edificioRows] = await db.query(
+        'SELECT comunidad_id FROM edificio WHERE id = ?',
+        [edificioId]
+      );
+      if (!edificioRows.length)
+        return res.status(404).json({ error: 'Edificio no encontrado' });
+
+      const comunidadId = edificioRows[0].comunidad_id;
+
+      if (!requireAdmin) {
+        const [membership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ?',
+          [req.user.persona_id, comunidadId]
+        );
+        if (!membership.length) {
+          return res
+            .status(403)
+            .json({ error: 'No tienes acceso a esta comunidad' });
+        }
+        return next();
+      }
+
+      // requireAdmin === true
+      const [adminMembership] = await db.query(
+        'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin","admin_comunidad")',
+        [req.user.persona_id, comunidadId]
+      );
+      if (!adminMembership.length) {
+        return res.status(403).json({
+          error: 'Se requieren permisos de administrador en esta comunidad',
+        });
+      }
+
+      next();
+    } catch (err) {
+      console.error('Error en ensureEdificioCommunityMembership:', err);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  };
+}
+
 /**
  * @swagger
  * tags:
@@ -499,12 +550,16 @@ router.get(
  *         description: Edificio no encontrado
  */
 // GET /edificios/:id - Obtener edificio específico con información completa
-router.get('/:id', authenticate, async (req, res) => {
-  try {
-    const id = req.params.id;
+router.get(
+  '/:id',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const id = req.params.id;
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         e.id,
         e.nombre,
@@ -534,22 +589,23 @@ router.get('/:id', authenticate, async (req, res) => {
                e.created_at, e.updated_at,
                c.id, c.razon_social, c.direccion
     `,
-      [id]
-    );
+        [id]
+      );
 
-    if (!rows.length) {
-      return res.status(404).json({ error: 'Edificio no encontrado' });
+      if (!rows.length) {
+        return res.status(404).json({ error: 'Edificio no encontrado' });
+      }
+
+      // Procesar los datos del edificio
+      const edificio = rows[0];
+
+      res.json(edificio);
+    } catch (error) {
+      console.error('Error al obtener edificio:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-
-    // Procesar los datos del edificio
-    const edificio = rows[0];
-
-    res.json(edificio);
-  } catch (error) {
-    console.error('Error al obtener edificio:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -569,12 +625,16 @@ router.get('/:id', authenticate, async (req, res) => {
  *         description: Lista de torres del edificio
  */
 // GET /edificios/:id/torres - Obtener torres del edificio
-router.get('/:id/torres', authenticate, async (req, res) => {
-  try {
-    const edificioId = req.params.id;
+router.get(
+  '/:id/torres',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const edificioId = req.params.id;
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         t.id,
         t.edificio_id,
@@ -602,15 +662,16 @@ router.get('/:id/torres', authenticate, async (req, res) => {
       GROUP BY t.id, t.edificio_id, t.nombre, t.codigo, t.created_at
       ORDER BY t.nombre
     `,
-      [edificioId]
-    );
+        [edificioId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener torres:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener torres:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -635,12 +696,16 @@ router.get('/:id/torres', authenticate, async (req, res) => {
  *         description: Lista de unidades del edificio
  */
 // GET /edificios/:id/unidades - Obtener unidades del edificio
-router.get('/:id/unidades', authenticate, async (req, res) => {
-  try {
-    const edificioId = req.params.id;
-    const { torreId } = req.query;
+router.get(
+  '/:id/unidades',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const edificioId = req.params.id;
+      const { torreId } = req.query;
 
-    let query = `
+      let query = `
       SELECT 
         u.id,
         u.edificio_id,
@@ -667,22 +732,23 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
       WHERE u.edificio_id = ?
     `;
 
-    const params = [edificioId];
+      const params = [edificioId];
 
-    if (torreId) {
-      query += ` AND u.torre_id = ?`;
-      params.push(torreId);
+      if (torreId) {
+        query += ` AND u.torre_id = ?`;
+        params.push(torreId);
+      }
+
+      query += ` ORDER BY u.codigo`;
+
+      const [rows] = await db.query(query, params);
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener unidades:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-
-    query += ` ORDER BY u.codigo`;
-
-    const [rows] = await db.query(query, params);
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener unidades:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -702,12 +768,16 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
  *         description: Lista de amenidades disponibles
  */
 // GET /edificios/:id/amenidades - Obtener amenidades del edificio
-router.get('/:id/amenidades', authenticate, async (req, res) => {
-  try {
-    const edificioId = req.params.id;
+router.get(
+  '/:id/amenidades',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const edificioId = req.params.id;
 
-    const [rows] = await db.query(
-      `
+      const [rows] = await db.query(
+        `
       SELECT 
         a.id,
         a.nombre,
@@ -720,15 +790,16 @@ router.get('/:id/amenidades', authenticate, async (req, res) => {
       WHERE e.id = ?
       ORDER BY a.nombre
     `,
-      [edificioId]
-    );
+        [edificioId]
+      );
 
-    res.json(rows);
-  } catch (error) {
-    console.error('Error al obtener amenidades:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      res.json(rows);
+    } catch (error) {
+      console.error('Error al obtener amenidades:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1239,58 +1310,63 @@ router.put(
  *         description: Información sobre dependencias
  */
 // GET /edificios/:id/check-dependencies - Verificar dependencias
-router.get('/:id/check-dependencies', authenticate, async (req, res) => {
-  try {
-    const edificioId = req.params.id;
+router.get(
+  '/:id/check-dependencies',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const edificioId = req.params.id;
 
-    // Verificar que el edificio existe
-    const [edificio] = await db.query(
-      'SELECT id, nombre FROM edificio WHERE id = ?',
-      [edificioId]
-    );
-    if (!edificio.length) {
-      return res.status(404).json({ error: 'Edificio no encontrado' });
+      // Verificar que el edificio existe
+      const [edificio] = await db.query(
+        'SELECT id, nombre FROM edificio WHERE id = ?',
+        [edificioId]
+      );
+      if (!edificio.length) {
+        return res.status(404).json({ error: 'Edificio no encontrado' });
+      }
+
+      // Contar torres
+      const [torres] = await db.query(
+        'SELECT COUNT(*) as count FROM torre WHERE edificio_id = ?',
+        [edificioId]
+      );
+
+      // Contar unidades
+      const [unidades] = await db.query(
+        'SELECT COUNT(*) as count FROM unidad WHERE edificio_id = ?',
+        [edificioId]
+      );
+
+      // Contar unidades activas
+      const [unidadesActivas] = await db.query(
+        'SELECT COUNT(*) as count FROM unidad WHERE edificio_id = ? AND activa = 1',
+        [edificioId]
+      );
+
+      const hasDependencies = torres[0].count > 0 || unidades[0].count > 0;
+      const canDelete = !hasDependencies;
+
+      res.json({
+        edificio: edificio[0],
+        dependencies: {
+          torres: torres[0].count,
+          unidades: unidades[0].count,
+          unidades_activas: unidadesActivas[0].count,
+        },
+        hasDependencies,
+        canDelete,
+        message: hasDependencies
+          ? `No se puede eliminar el edificio. Primero debe eliminar ${torres[0].count} torres y ${unidades[0].count} unidades.`
+          : 'El edificio puede ser eliminado sin problemas.',
+      });
+    } catch (error) {
+      console.error('Error al verificar dependencias:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
     }
-
-    // Contar torres
-    const [torres] = await db.query(
-      'SELECT COUNT(*) as count FROM torre WHERE edificio_id = ?',
-      [edificioId]
-    );
-
-    // Contar unidades
-    const [unidades] = await db.query(
-      'SELECT COUNT(*) as count FROM unidad WHERE edificio_id = ?',
-      [edificioId]
-    );
-
-    // Contar unidades activas
-    const [unidadesActivas] = await db.query(
-      'SELECT COUNT(*) as count FROM unidad WHERE edificio_id = ? AND activa = 1',
-      [edificioId]
-    );
-
-    const hasDependencies = torres[0].count > 0 || unidades[0].count > 0;
-    const canDelete = !hasDependencies;
-
-    res.json({
-      edificio: edificio[0],
-      dependencies: {
-        torres: torres[0].count,
-        unidades: unidades[0].count,
-        unidades_activas: unidadesActivas[0].count,
-      },
-      hasDependencies,
-      canDelete,
-      message: hasDependencies
-        ? `No se puede eliminar el edificio. Primero debe eliminar ${torres[0].count} torres y ${unidades[0].count} unidades.`
-        : 'El edificio puede ser eliminado sin problemas.',
-    });
-  } catch (error) {
-    console.error('Error al verificar dependencias:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
   }
-});
+);
 
 /**
  * @swagger
@@ -1319,6 +1395,27 @@ router.delete(
   async (req, res) => {
     try {
       const id = req.params.id;
+
+      // Si no es superadmin, verificar que sea admin de la comunidad del edificio
+      if (!req.user.is_superadmin) {
+        const [edificioRows] = await db.query(
+          'SELECT comunidad_id FROM edificio WHERE id = ?',
+          [id]
+        );
+        if (!edificioRows.length) {
+          return res.status(404).json({ error: 'Edificio no encontrado' });
+        }
+        const comunidadId = edificioRows[0].comunidad_id;
+        const [adminMembership] = await db.query(
+          'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND rol IN ("admin","admin_comunidad")',
+          [req.user.persona_id, comunidadId]
+        );
+        if (!adminMembership.length) {
+          return res.status(403).json({
+            error: 'Se requieren permisos de administrador en esta comunidad',
+          });
+        }
+      }
 
       // Verificar que el edificio existe
       const [existeEdificio] = await db.query(
@@ -1404,6 +1501,7 @@ router.post(
   '/:id/torres',
   [
     authenticate,
+    ensureEdificioCommunityMembership(true),
     authorize('admin', 'superadmin'),
     body('nombre').notEmpty().withMessage('El nombre es requerido'),
     body('pisos')
@@ -1524,6 +1622,7 @@ router.post(
   '/:id/unidades',
   [
     authenticate,
+    ensureEdificioCommunityMembership(true),
     authorize('admin', 'superadmin'),
     body('codigo').notEmpty().withMessage('El código es requerido'),
     body('m2_utiles')
@@ -1650,47 +1749,52 @@ router.post(
  *         description: Opciones de filtros disponibles
  */
 // GET /edificios/:id/filtros-opciones - Obtener opciones para filtros
-router.get('/:id/filtros-opciones', authenticate, async (req, res) => {
-  try {
-    const edificioId = req.params.id;
+router.get(
+  '/:id/filtros-opciones',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const edificioId = req.params.id;
 
-    // Obtener torres del edificio
-    const [torres] = await db.query(
-      `
+      // Obtener torres del edificio
+      const [torres] = await db.query(
+        `
       SELECT id AS value, nombre AS label 
       FROM torre 
       WHERE edificio_id = ? 
       ORDER BY nombre
     `,
-      [edificioId]
-    );
+        [edificioId]
+      );
 
-    // Opciones fijas
-    const estados = [
-      { value: 'ocupada', label: 'Ocupada' },
-      { value: 'vacia', label: 'Vacía' },
-      { value: 'mantenimiento', label: 'Mantenimiento' },
-    ];
+      // Opciones fijas
+      const estados = [
+        { value: 'ocupada', label: 'Ocupada' },
+        { value: 'vacia', label: 'Vacía' },
+        { value: 'mantenimiento', label: 'Mantenimiento' },
+      ];
 
-    const tipos = [
-      { value: 'apartamento', label: 'Apartamento' },
-      { value: 'casa', label: 'Casa' },
-      { value: 'local', label: 'Local' },
-      { value: 'oficina', label: 'Oficina' },
-      { value: 'deposito', label: 'Depósito' },
-      { value: 'parqueadero', label: 'Parqueadero' },
-    ];
+      const tipos = [
+        { value: 'apartamento', label: 'Apartamento' },
+        { value: 'casa', label: 'Casa' },
+        { value: 'local', label: 'Local' },
+        { value: 'oficina', label: 'Oficina' },
+        { value: 'deposito', label: 'Depósito' },
+        { value: 'parqueadero', label: 'Parqueadero' },
+      ];
 
-    res.json({
-      torres,
-      estados,
-      tipos,
-    });
-  } catch (error) {
-    console.error('Error al obtener opciones de filtro:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      res.json({
+        torres,
+        estados,
+        tipos,
+      });
+    } catch (error) {
+      console.error('Error al obtener opciones de filtro:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1710,13 +1814,17 @@ router.get('/:id/filtros-opciones', authenticate, async (req, res) => {
  *         description: Resumen completo del edificio
  */
 // GET /edificios/:id/resumen - Obtener resumen completo
-router.get('/:id/resumen', authenticate, async (req, res) => {
-  try {
-    const edificioId = req.params.id;
+router.get(
+  '/:id/resumen',
+  authenticate,
+  ensureEdificioCommunityMembership(false),
+  async (req, res) => {
+    try {
+      const edificioId = req.params.id;
 
-    // Información básica del edificio
-    const [edificio] = await db.query(
-      `
+      // Información básica del edificio
+      const [edificio] = await db.query(
+        `
       SELECT 
         e.*,
         c.razon_social AS comunidad_nombre,
@@ -1725,16 +1833,16 @@ router.get('/:id/resumen', authenticate, async (req, res) => {
       INNER JOIN comunidad c ON e.comunidad_id = c.id
       WHERE e.id = ?
     `,
-      [edificioId]
-    );
+        [edificioId]
+      );
 
-    if (!edificio.length) {
-      return res.status(404).json({ error: 'Edificio no encontrado' });
-    }
+      if (!edificio.length) {
+        return res.status(404).json({ error: 'Edificio no encontrado' });
+      }
 
-    // Estadísticas de torres
-    const [torresStats] = await db.query(
-      `
+      // Estadísticas de torres
+      const [torresStats] = await db.query(
+        `
       SELECT 
         COUNT(*) AS total_torres,
         COUNT(CASE WHEN (
@@ -1743,12 +1851,12 @@ router.get('/:id/resumen', authenticate, async (req, res) => {
       FROM torre t
       WHERE t.edificio_id = ?
     `,
-      [edificioId]
-    );
+        [edificioId]
+      );
 
-    // Estadísticas de unidades
-    const [unidadesStats] = await db.query(
-      `
+      // Estadísticas de unidades
+      const [unidadesStats] = await db.query(
+        `
       SELECT 
         COUNT(*) AS total_unidades,
         COUNT(CASE WHEN activa = 1 THEN 1 END) AS unidades_ocupadas,
@@ -1759,31 +1867,32 @@ router.get('/:id/resumen', authenticate, async (req, res) => {
       FROM unidad
       WHERE edificio_id = ?
     `,
-      [edificioId]
-    );
+        [edificioId]
+      );
 
-    const resumen = {
-      edificio: edificio[0],
-      estadisticas: {
-        torres: torresStats[0],
-        unidades: unidadesStats[0],
-        ocupacion:
-          unidadesStats[0].total_unidades > 0
-            ? (
-                (unidadesStats[0].unidades_ocupadas /
-                  unidadesStats[0].total_unidades) *
-                100
-              ).toFixed(1)
-            : 0,
-      },
-    };
+      const resumen = {
+        edificio: edificio[0],
+        estadisticas: {
+          torres: torresStats[0],
+          unidades: unidadesStats[0],
+          ocupacion:
+            unidadesStats[0].total_unidades > 0
+              ? (
+                  (unidadesStats[0].unidades_ocupadas /
+                    unidadesStats[0].total_unidades) *
+                  100
+                ).toFixed(1)
+              : 0,
+        },
+      };
 
-    res.json(resumen);
-  } catch (error) {
-    console.error('Error al obtener resumen:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
+      res.json(resumen);
+    } catch (error) {
+      console.error('Error al obtener resumen:', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
   }
-});
+);
 
 /**
  * @swagger
@@ -1820,6 +1929,7 @@ router.get(
   '/:id/validar-codigo',
   [
     authenticate,
+    ensureEdificioCommunityMembership(false),
     query('codigo').notEmpty().withMessage('El código es requerido'),
     query('tipo')
       .isIn(['edificio', 'torre', 'unidad'])

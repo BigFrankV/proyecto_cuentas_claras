@@ -14,12 +14,14 @@ import {
 import Layout from '@/components/layout/Layout';
 import emisionesService from '@/lib/emisionesService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 
 export default function EmisionesListado() {
   const router = useRouter();
   const { user } = useAuth();
   const { hasPermission } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
   const [emissions, setEmissions] = useState<Emission[]>([]);
   const [filteredEmissions, setFilteredEmissions] = useState<Emission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,40 +36,36 @@ export default function EmisionesListado() {
   // Estado para comunidad (obtenido del usuario autenticado)
   const [comunidadId, setComunidadId] = useState<number | null>(null);
 
-  // Verificar permisos de acceso
+  // Determinar comunidad (desde usuario) — permiso se evalúa después cuando tengamos comunidadId
   useEffect(() => {
-    if (user) {
-      // Verificar si el usuario tiene permisos para ver emisiones
-      const canViewEmissions = hasPermission(Permission.VIEW_EMISION) || 
-                               hasPermission(Permission.CREATE_EMISION) ||
-                               hasPermission(Permission.EDIT_EMISION);
-      
-      if (!canViewEmissions) {
-        setAccessDenied(true);
-        return;
-      }
+    if (!user) {return;}
 
-      // Obtener comunidad ID del usuario
-      // Superadmin puede no tener comunidad_id (ve todas)
-      if (user.is_superadmin) {
-        // Superadmin: obtener primera comunidad disponible o usar selección
-        // Por ahora, usar comunidad_id si existe, si no usar 1 por defecto
-        const defaultComunidadId = user.comunidad_id || 
-                                    (user.memberships?.[0]?.comunidadId) || 
-                                    1; // Comunidad por defecto para testing
-        setComunidadId(defaultComunidadId);
+    // Obtener comunidad ID del usuario (si aplica)
+    if (user.is_superadmin) {
+      const defaultComunidadId = user.comunidad_id || (user.memberships?.[0]?.comunidadId) || 1;
+      setComunidadId(defaultComunidadId);
+    } else {
+      const userComunidadId = user.comunidad_id || (user.memberships?.[0]?.comunidadId);
+      if (userComunidadId) {
+        setComunidadId(userComunidadId);
       } else {
-        const userComunidadId = user.comunidad_id || 
-                                 (user.memberships?.[0]?.comunidadId);
-        
-        if (userComunidadId) {
-          setComunidadId(userComunidadId);
-        } else {
-          setAccessDenied(true);
-        }
+        setComunidadId(null);
       }
     }
-  }, [user, hasPermission]);
+  }, [user]);
+
+  // Verificar permisos de acceso por comunidad (cuando tengamos comunidadId o selector global)
+  useEffect(() => {
+    if (!user) {return;}
+
+    const comunidadIdNum = comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : comunidadId ?? null;
+    const canViewEmissions =
+      hasPermission(Permission.VIEW_EMISION, comunidadIdNum) ||
+      hasPermission(Permission.CREATE_EMISION, comunidadIdNum) ||
+      hasPermission(Permission.EDIT_EMISION, comunidadIdNum);
+
+    setAccessDenied(!canViewEmissions);
+  }, [user, comunidadId, comunidadSeleccionada, hasPermission]);
 
   // Cargar datos reales de la API
   const loadEmissions = async () => {
@@ -84,42 +82,72 @@ export default function EmisionesListado() {
 
     try {
       setLoading(true);
-      
-      let result;
-      // Si es superadmin, obtener TODAS las emisiones
+
+      const comunidadIdNum = comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : comunidadId ?? null;
+
+      let apiResultEmisiones: any = [];
+
       if (user?.is_superadmin) {
-        result = await emisionesService.getTodasEmisionesResumen();
-        // Convertir el formato de respuesta
-        result = { emisiones: result };
+        // Superadmin: resumen global
+        try {
+          const resumen = await emisionesService.getTodasEmisionesResumen();
+          apiResultEmisiones = resumen || [];
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('Error fetching resumen global de emisiones:', err);
+          apiResultEmisiones = [];
+        }
       } else {
-        // Si no es superadmin, obtener resumen de su comunidad
-        const emisiones = await emisionesService.getEmisionesComunidadResumen(comunidadId!);
-        result = { emisiones };
+        // Usuario normal: usar endpoint por-comunidad (no admin-only)
+        if (!comunidadIdNum) {
+          apiResultEmisiones = [];
+        } else {
+          try {
+            const resp = await emisionesService.getEmisionesComunidad(comunidadIdNum, 1, 1000);
+            apiResultEmisiones = resp?.emisiones || resp || [];
+          } catch (err: any) {
+            // eslint-disable-next-line no-console
+            console.error('Error fetching emisiones por comunidad:', err);
+            if (err?.response?.status === 403) {
+              setAccessDenied(true);
+              setLoading(false);
+              return;
+            }
+            apiResultEmisiones = [];
+          }
+        }
+      }
+
+      // Asegurarnos que apiResultEmisiones es un array (normalizar paginación/resumen)
+      if (!Array.isArray(apiResultEmisiones)) {
+        apiResultEmisiones = apiResultEmisiones?.emisiones ?? apiResultEmisiones?.data ?? apiResultEmisiones?.items ?? [];
       }
 
       // Mapear los datos de la API al formato del frontend
-      const mappedEmissions: Emission[] = result.emisiones.map(
-        (emision: any) => ({
-          id: emision.id?.toString() || emision.emision_id?.toString(),
-          period: emision.periodo,
-          type: 'gastos_comunes',
-          status: mapEstadoToStatus(emision.estado),
-          issueDate: emision.created_at || emision.fecha_emision,
-          dueDate: emision.fecha_vencimiento,
-          totalAmount: Number(emision.monto_total || emision.monto_total_liquidado) || 0,
-          paidAmount: Number(emision.monto_pagado || emision.monto_pagado_aplicado) || 0,
-          unitCount: Number(emision.total_unidades || emision.total_unidades_impactadas) || 0,
-          description: emision.observaciones || '',
-          communityName: emision.nombre_comunidad || 'Comunidad Actual',
-        }),
-      );
+      const mappedEmissions: Emission[] = apiResultEmisiones.map((emision: any) => ({
+        id: emision.id?.toString() || emision.emision_id?.toString(),
+        period: emision.periodo,
+        type: 'gastos_comunes',
+        status: mapEstadoToStatus(emision.estado),
+        issueDate: emision.created_at || emision.fecha_emision,
+        dueDate: emision.fecha_vencimiento,
+        totalAmount: Number(emision.monto_total || emision.monto_total_liquidado) || 0,
+        paidAmount: Number(emision.monto_pagado || emision.monto_pagado_aplicado) || 0,
+        unitCount: Number(emision.total_unidades || emision.total_unidades_impactadas) || 0,
+        description: emision.observaciones || '',
+        communityName: emision.nombre_comunidad || 'Comunidad Actual',
+      }));
 
       setEmissions(mappedEmissions);
       setFilteredEmissions(mappedEmissions);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error loading emissions:', error);
-      // Mostrar estado vacío si falla la API
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e: any = error;
+      if (e?.response?.status === 403) {
+        setAccessDenied(true);
+      }
       setEmissions([]);
       setFilteredEmissions([]);
     } finally {
@@ -517,7 +545,7 @@ export default function EmisionesListado() {
                 </div>
               </div>
               <div className='text-end'>
-                {hasPermission(Permission.CREATE_EMISION) && (
+                {hasPermission(Permission.CREATE_EMISION, comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : comunidadId ?? null) && (
                   <Link
                     href='/emisiones/nueva'
                     className='btn btn-light btn-lg'
@@ -740,7 +768,7 @@ export default function EmisionesListado() {
               <p className='text-muted'>
                 No hay emisiones que coincidan con los filtros aplicados
               </p>
-              {hasPermission(Permission.CREATE_EMISION) && (
+              {hasPermission(Permission.CREATE_EMISION, comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : comunidadId ?? null) && (
                 <Link href='/emisiones/nueva' className='btn btn-primary'>
                   <i className='material-icons me-2'>add</i>
                   Crear Primera Emisión

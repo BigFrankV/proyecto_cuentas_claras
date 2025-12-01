@@ -21,7 +21,8 @@ import {
 } from '@/lib/gastosService';
 import { getCommunityIdForRequest } from '@/lib/superadminAccessHelper';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
 interface ExpenseFormData {
   description: string;
@@ -48,16 +49,21 @@ export default function GastoNuevo() {
   const { user } = useAuth();
   const { isSuperUser, currentRole } = usePermissions();
 
-  // Obtener currentComunidadId usando el helper
-  // Para superadmin: null (carga TODO globalmente)
-  // Para usuario regular: su primera membresía
-  const currentComunidadId = getCommunityIdForRequest(user);
+  const { comunidadSeleccionada } = useComunidad();
+  const { hasPermission } = usePermissions();
 
-  // para superadmin
+  // Obtener communityId contextual para permisos y llamadas a servicios
+  const comunidadIdFromSelector = comunidadSeleccionada?.id
+    ? Number(comunidadSeleccionada.id)
+    : null;
+
+  // para superadmin (mantener compatibilidad con helper existente)
   const isSuper = Boolean(user?.is_superadmin);
 
-  // Normalizar isSuper (puede ser función o boolean)
-  const comunidadParaEnviar = user?.is_superadmin ? null : currentComunidadId;
+  const currentComunidadId = getCommunityIdForRequest(user);
+  const comunidadParaEnviar = isSuper
+    ? null
+    : comunidadIdFromSelector ?? currentComunidadId;
 
   const [formData, setFormData] = useState<ExpenseFormData>({
     description: '',
@@ -181,24 +187,22 @@ export default function GastoNuevo() {
     );
   }
 
-  // Verificar permisos: Solo superadmin, admin, contador, admin_comunidad pueden crear
-  const canCreate =
-    user?.is_superadmin ||
-    user?.roles?.includes('admin') ||
-    user?.roles?.includes('contador') ||
-    user?.roles?.includes('admin_comunidad');
-  {
-    if (!canCreate) {
-      return (
-        <ProtectedRoute>
-          <Layout>
-            <Alert variant='danger'>
-              No tienes permisos para crear gastos.
-            </Alert>
-          </Layout>
-        </ProtectedRoute>
-      );
-    }
+  // Verificar permisos: usar el sistema de permisos por comunidad
+  const comunidadIdForPermission = comunidadSeleccionada?.id
+    ? Number(comunidadSeleccionada.id)
+    : user?.is_superadmin
+    ? null
+    : user?.comunidad_id ?? null;
+
+  const canCreate = hasPermission(Permission.CREATE_GASTO, comunidadIdForPermission);
+  if (!canCreate) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <Alert variant='danger'>No tienes permisos para crear gastos.</Alert>
+        </Layout>
+      </ProtectedRoute>
+    );
   }
 
   const documentTypes = [
@@ -391,7 +395,12 @@ export default function GastoNuevo() {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error creando gasto:', err);
-      setErrors({ general: 'Error al crear gasto' });
+      const status = (err as any)?.response?.status;
+      if (status === 403) {
+        setErrors({ general: 'No tienes permiso para crear gastos en la comunidad seleccionada.' });
+      } else {
+        setErrors({ general: 'Error al crear gasto' });
+      }
     } finally {
       setLoading(false);
     }

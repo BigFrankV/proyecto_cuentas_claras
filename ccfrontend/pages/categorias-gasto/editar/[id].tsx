@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Button, Card, Form, Alert, Spinner } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
 
@@ -8,6 +8,7 @@ import Layout from '@/components/layout/Layout';
 import { categoriasGastoApi } from '@/lib/api/categoriasGasto';
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions';
 import {
   CategoriaGasto,
@@ -39,7 +40,8 @@ export default function EditarCategoriaGasto() {
   const router = useRouter();
   const { id } = router.query;
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, currentRole } = usePermissions();
+  const { isSuperUser, currentRole, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [categoria, setCategoria] = useState<CategoriaGasto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,44 @@ export default function EditarCategoriaGasto() {
   });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [originalData, setOriginalData] = useState<FormData | null>(null);
+
+  // Resolver comunidad
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return categoria?.comunidad_id ?? undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return categoria?.comunidad_id ?? user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, categoria?.comunidad_id, user?.comunidad_id]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   // Cargar datos de la categoría
   useEffect(() => {
@@ -183,6 +223,39 @@ export default function EditarCategoriaGasto() {
       router.push('/categorias-gasto');
     }
   };
+
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para editar Categorías de Gasto en la comunidad seleccionada. Solo usuarios con roles administrativos pueden realizar esta acción.</p>
+                    <button
+                      className='btn btn-primary mt-3'
+                      onClick={() => router.push('/categorias-gasto')}
+                    >
+                      Volver al Listado
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   if (loading) {
     return (

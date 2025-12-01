@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+
 import { EmissionStatusBadge, EmissionTypeBadge } from '@/components/emisiones';
 import Layout from '@/components/layout/Layout';
 import emisionesService from '@/lib/emisionesService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 
 interface EmissionDetail {
   id: string;
@@ -93,12 +95,23 @@ export default function EmisionDetalle() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('detalles');
+  const [accessDenied, setAccessDenied] = useState(false);
+  const { comunidadSeleccionada } = useComunidad();
 
   useEffect(() => {
     if (id) {
       loadEmissionData();
     }
   }, [id]);
+
+  // Volver a cargar si cambia la comunidad global
+  useEffect(() => {
+    if (id) {
+      setAccessDenied(false);
+      loadEmissionData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comunidadSeleccionada]);
 
   const loadEmissionData = async () => {
     try {
@@ -238,6 +251,12 @@ export default function EmisionDetalle() {
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error('Error loading emission data:', error);
+      const message = String(error || '');
+      if (/403|forbidden/i.test(message)) {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
       // Fallback a datos mock si falla la API
       loadMockData();
     } finally {
@@ -483,15 +502,27 @@ export default function EmisionDetalle() {
     return (
       <ProtectedRoute>
         <Layout title='Emisión no encontrada'>
-          <div className='text-center py-5'>
-            <h3>Emisión no encontrada</h3>
-            <p className='text-muted'>
-              La emisión solicitada no existe o no tienes permisos para verla.
-            </p>
-            <Link href='/emisiones' className='btn btn-primary'>
-              Volver a Emisiones
-            </Link>
-          </div>
+          {accessDenied ? (
+            <div className='text-center py-5'>
+              <div className='alert alert-warning'>
+                <i className='material-icons me-2'>warning</i>
+                No tienes permiso para ver esta emisión en la comunidad seleccionada.
+              </div>
+              <div>
+                <Link href='/emisiones' className='btn btn-primary'>Volver a Emisiones</Link>
+              </div>
+            </div>
+          ) : (
+            <div className='text-center py-5'>
+              <h3>Emisión no encontrada</h3>
+              <p className='text-muted'>
+                La emisión solicitada no existe o no tienes permisos para verla.
+              </p>
+              <Link href='/emisiones' className='btn btn-primary'>
+                Volver a Emisiones
+              </Link>
+            </div>
+          )}
         </Layout>
       </ProtectedRoute>
     );

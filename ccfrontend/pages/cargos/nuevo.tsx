@@ -1,10 +1,13 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
 
 import Layout from '@/components/layout/Layout';
 import { cargosApi } from '@/lib/api/cargos';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { Permission, usePermissions } from '@/lib/usePermissions';
 import { CargoFormData } from '@/types/cargos';
 
 // Interfaces
@@ -23,8 +26,14 @@ export default function NuevoCargoPage() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState<string | null>(null);
+  const { comunidadSeleccionada } = useComunidad();
 
-  // Form data
+  const { user } = useAuth();
+  const { hasPermission } = usePermissions();
+  const [comunidadId, setComunidadId] = useState<number | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  // Form data (declarado antes de cualquier return para evitar hooks condicionales)
   const [formData, setFormData] = useState<CargoFormData>({
     concepto: '',
     tipo: 'administration',
@@ -33,6 +42,61 @@ export default function NuevoCargoPage() {
     unidad: '',
     descripcion: '',
   });
+
+  // Limpiar errores de API si cambia la comunidad seleccionada
+  useEffect(() => {
+    if (apiError) {setApiError(null);}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comunidadSeleccionada]);
+
+  // Determinar comunidadId efectivo
+  useEffect(() => {
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      setComunidadId(Number(comunidadSeleccionada.id));
+      return;
+    }
+    if (user) {
+      setComunidadId(user.comunidad_id || (user.memberships?.[0]?.comunidadId) || null);
+    }
+  }, [comunidadSeleccionada, user]);
+
+  // Verificar permiso de creación
+  useEffect(() => {
+    const allowed = hasPermission(Permission.CREATE_CARGO, comunidadId ?? null);
+    setAccessDenied(!allowed);
+  }, [hasPermission, comunidadId]);
+
+  if (accessDenied) {
+    return (
+      <ProtectedRoute>
+        <Head>
+          <title>Acceso denegado — Nuevo Cargo</title>
+        </Head>
+        <Layout title='Nuevo Cargo'>
+          <div className='container-fluid py-5'>
+            <div className='row justify-content-center'>
+              <div className='col-md-8 col-lg-6'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center py-5'>
+                    <div className='mb-4'>
+                      <i className='material-icons text-warning' style={{ fontSize: '64px' }}>lock</i>
+                    </div>
+                    <h3 className='mb-3'>Acceso Restringido</h3>
+                    <p className='text-muted mb-4'>No tienes permiso para crear cargos en la comunidad seleccionada.</p>
+                    <div className='d-flex gap-3 justify-content-center'>
+                      <button className='btn btn-primary' onClick={() => router.push('/cargos')}>Volver a Cargos</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
+  
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({

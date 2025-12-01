@@ -333,11 +333,11 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', [
-      'superadmin',
-      'contador',
-      'admin_comunidad',
-    ]),
+    requireCommunity(
+      'comunidadId',
+      ['superadmin', 'contador', 'admin_comunidad'],
+      true
+    ),
     body('categoria_id').isInt(),
     body('fecha').notEmpty(),
     body('monto').isNumeric(),
@@ -1814,6 +1814,7 @@ router.get(
  * GET /gastos
  * Lista gastos en modo global (superadmin) o filtrado por comunidades asignadas (otros roles).
  * Acepta mismos filtros que /comunidad/:comunidadId
+ * BLOQUEADO para residente, propietario, inquilino
  */
 router.get(
   '/',
@@ -1824,9 +1825,6 @@ router.get(
     'conserje',
     'contador',
     'proveedor_servicio',
-    'residente',
-    'propietario',
-    'inquilino',
     'tesorero',
     'presidente_comite'
   ),
@@ -1872,13 +1870,16 @@ router.get(
           params.push(Number(comunidad_id));
         }
       } else {
-        // Filtrar por comunidades asignadas
+        // Filtrar por comunidades asignadas EXCLUYENDO roles básicos
         whereComunidad = `AND g.comunidad_id IN (
-        SELECT umc.comunidad_id
-        FROM usuario_miembro_comunidad umc
-        WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
+        SELECT ucr.comunidad_id
+        FROM usuario_rol_comunidad ucr
+        JOIN rol_sistema r ON r.id = ucr.rol_id
+        WHERE ucr.usuario_id = ? 
+          AND ucr.activo = 1
+          AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
       )`;
-        params.push(req.user.persona_id);
+        params.push(req.user.sub || req.user.id);
       }
 
       params.push(

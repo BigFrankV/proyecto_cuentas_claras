@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { useCargos } from '@/hooks/useCargos';
 import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { Permission, usePermissions } from '@/lib/usePermissions';
 import { Cargo } from '@/types/cargos';
 
@@ -13,36 +14,49 @@ const CargosListadoSimple: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('todos');
   const { hasPermission } = usePermissions();
 
-  const { listarCargos, loading, error } = useCargos();
+  const { listarCargos, loading, error, clearError, obtenerCargosPorComunidad } = useCargos();
+  const { comunidadSeleccionada } = useComunidad();
 
   // Determinar si el usuario es admin
   const isAdmin = useMemo(() => {
     if (user?.is_superadmin) {
       return true;
     }
-    return hasPermission(Permission.VIEW_CARGO);
-  }, [user, hasPermission]);
+    const comunidadIdNum = comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : null;
+    return hasPermission(Permission.VIEW_CARGO, comunidadIdNum);
+  }, [user, hasPermission, comunidadSeleccionada]);
 
-  // Cargar cargos al montar el componente
+  // Cargar cargos al montar el componente y cuando cambie la comunidad global
   useEffect(() => {
     cargarCargos();
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, comunidadSeleccionada]);
 
-  // Cargar cargos con filtro de estado
+  // Re-cargar cuando cambia el filtro de estado
   useEffect(() => {
     if (user) {
       cargarCargos();
     }
-  }, [selectedStatus, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStatus]);
 
   const cargarCargos = async () => {
     try {
+      clearError && clearError();
       const filters: any = {};
 
       if (selectedStatus !== 'todos') {
         filters.estado = selectedStatus;
       }
 
+      // Si hay una comunidad seleccionada explícita, usar el endpoint por comunidad
+      if (comunidadSeleccionada && comunidadSeleccionada.id) {
+        const data = await obtenerCargosPorComunidad(Number(comunidadSeleccionada.id), filters);
+        setCargos(data);
+        return;
+      }
+
+      // Fallback al comportamiento por defecto (superadmin o detección por usuario)
       const data = await listarCargos(filters);
       setCargos(data);
     } catch {
@@ -212,14 +226,17 @@ const CargosListadoSimple: React.FC = () => {
                   Cargos
                 </h1>
                 <p className='mb-0 opacity-75'>
-                  {hasPermission(Permission.CREATE_CARGO) 
+                  {hasPermission(Permission.CREATE_CARGO, comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : null) 
                     ? 'Gestión y seguimiento de cargos de la comunidad'
                     : 'Consulta tus cargos pendientes y pagados'}
                 </p>
               </div>
             </div>
             <div className='text-end'>
-              {hasPermission(Permission.CREATE_CARGO) && (
+              {hasPermission(
+                Permission.CREATE_CARGO,
+                comunidadSeleccionada && comunidadSeleccionada.id ? Number(comunidadSeleccionada.id) : null,
+              ) && (
                 <Link
                   href='/cargos/nuevo'
                   className='btn btn-light btn-lg'

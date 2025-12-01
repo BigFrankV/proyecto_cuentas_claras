@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 
+
 import {
   CargoDetalle,
   Cargo,
@@ -12,6 +13,7 @@ import {
 import Layout from '@/components/layout/Layout';
 import { cargosApi } from '@/lib/api/cargos';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { CargoDetalle as CargoDetalleType } from '@/types/cargos';
 
 export default function CargoDetallePage() {
@@ -20,6 +22,8 @@ export default function CargoDetallePage() {
   const [cargo, setCargo] = useState<Cargo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const { comunidadSeleccionada } = useComunidad();
 
   useEffect(() => {
     const fetchCargo = async () => {
@@ -81,11 +85,13 @@ export default function CargoDetallePage() {
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('❌ Error al cargar cargo:', err);
-        setError(
-          err instanceof Error
-            ? err.message
-            : 'Error desconocido al cargar el cargo',
-        );
+        const m = String(err || '');
+        if (/403|forbidden/i.test(m)) {
+          setAccessDenied(true);
+          setLoading(false);
+          return;
+        }
+        setError(err instanceof Error ? err.message : 'Error desconocido al cargar el cargo');
       } finally {
         setLoading(false);
       }
@@ -93,6 +99,67 @@ export default function CargoDetallePage() {
 
     fetchCargo();
   }, [id]);
+
+  // Re-cargar si cambia la comunidad global
+  useEffect(() => {
+    if (id) {
+      setAccessDenied(false);
+      // re-run fetch by changing id dependency indirectly
+      // call fetch again
+      const fetchAgain = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const cargoData = await cargosApi.getById(parseInt(String(id)));
+          const estadoMapping: Record<string, 'pending' | 'approved' | 'rejected' | 'paid' | 'partial'> = {
+            pendiente: 'pending',
+            pagado: 'paid',
+            vencido: 'pending',
+            parcial: 'partial',
+          };
+          const mappedCargo: Cargo = {
+            id: cargoData.id.toString(),
+            concepto: cargoData.concepto,
+            descripcion: cargoData.descripcion || '',
+            tipo: cargoData.tipo?.toLowerCase().includes('administración')
+              ? 'administration'
+              : cargoData.tipo?.toLowerCase().includes('mantenimiento')
+                ? 'maintenance'
+                : cargoData.tipo?.toLowerCase().includes('servicio')
+                  ? 'service'
+                  : cargoData.tipo?.toLowerCase().includes('seguro')
+                    ? 'insurance'
+                    : 'other',
+            estado: estadoMapping[cargoData.estado] || 'pending',
+            monto: cargoData.monto,
+            saldo: cargoData.saldo,
+            montoAplicado: cargoData.monto - cargoData.saldo,
+            unidad: cargoData.unidad,
+            periodo: cargoData.periodo || '',
+            fechaVencimiento: cargoData.fechaVencimiento,
+            fechaCreacion: cargoData.fechaCreacion,
+            cuentaCosto: `CCU-${cargoData.id}`,
+            observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`,
+          };
+          setCargo(mappedCargo);
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('❌ Error al recargar cargo tras cambio de comunidad:', err);
+          const m = String(err || '');
+          if (/403|forbidden/i.test(m)) {
+            setAccessDenied(true);
+            setLoading(false);
+            return;
+          }
+          setError(err instanceof Error ? err.message : 'Error desconocido al cargar el cargo');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchAgain();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comunidadSeleccionada]);
 
   if (loading) {
     return (
@@ -122,30 +189,49 @@ export default function CargoDetallePage() {
             <div className='row justify-content-center'>
               <div className='col-md-6'>
                 <div className='text-center'>
-                  <i className='material-icons display-1 text-muted'>
-                    error_outline
-                  </i>
-                  <h2 className='mt-3'>Cargo no encontrado</h2>
-                  <p className='text-muted mb-4'>
-                    {error ||
-                      'El cargo solicitado no existe o no tienes permisos para verlo.'}
-                  </p>
-                  <div className='d-flex gap-2 justify-content-center'>
-                    <button
-                      className='btn btn-primary'
-                      onClick={() => router.push('/cargos')}
-                    >
-                      <i className='material-icons me-2'>arrow_back</i>
-                      Volver a Cargos
-                    </button>
-                    <button
-                      className='btn btn-outline-secondary'
-                      onClick={() => router.reload()}
-                    >
-                      <i className='material-icons me-2'>refresh</i>
-                      Reintentar
-                    </button>
-                  </div>
+                  {accessDenied ? (
+                    <>
+                      <div className='alert alert-warning'>
+                        <i className='material-icons me-2'>warning</i>
+                        No tienes permiso para ver este cargo en la comunidad seleccionada.
+                      </div>
+                      <div className='d-flex gap-2 justify-content-center'>
+                        <button
+                          className='btn btn-primary'
+                          onClick={() => router.push('/cargos')}
+                        >
+                          <i className='material-icons me-2'>arrow_back</i>
+                          Volver a Cargos
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <i className='material-icons display-1 text-muted'>
+                        error_outline
+                      </i>
+                      <h2 className='mt-3'>Cargo no encontrado</h2>
+                      <p className='text-muted mb-4'>
+                        {error || 'El cargo solicitado no existe o no tienes permisos para verlo.'}
+                      </p>
+                      <div className='d-flex gap-2 justify-content-center'>
+                        <button
+                          className='btn btn-primary'
+                          onClick={() => router.push('/cargos')}
+                        >
+                          <i className='material-icons me-2'>arrow_back</i>
+                          Volver a Cargos
+                        </button>
+                        <button
+                          className='btn btn-outline-secondary'
+                          onClick={() => router.reload()}
+                        >
+                          <i className='material-icons me-2'>refresh</i>
+                          Reintentar
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

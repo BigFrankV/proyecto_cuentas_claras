@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { cargosApi } from '@/lib/api/cargos';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { CargoDetalle as CargoDetalleType } from '@/types/cargos';
 
 // Interfaces
@@ -124,6 +125,44 @@ export default function EditarCargoPage() {
 
     fetchCharge();
   }, [id]);
+
+  // Helper para normalizar campos de fecha que pueden venir como Date o string
+  const normalizeDateToYMD = (d: any): string => {
+    if (!d) {return '';}
+    if (typeof d === 'string') {return d.split('T')?.[0] || '';}
+    if (d instanceof Date) {return d.toISOString().split('T')[0] || '';}
+    try {
+      return new Date(d).toISOString().split('T')[0] || '';
+    } catch (e) {
+      return '';
+    }
+  };
+
+  // Recargar si cambia la comunidad global
+  const { comunidadSeleccionada } = useComunidad();
+  useEffect(() => {
+    if (!id) {return;}
+    // re-run fetch when comunidadSeleccionada changes
+    const fetchAgain = async () => {
+      setLoading(true);
+      try {
+        const cargoData = await cargosApi.getById(parseInt(String(id)));
+        // map minimal fields back into form
+        setFormData(prev => ({
+          ...prev,
+          concept: cargoData.concepto || prev.concept,
+          unit: cargoData.unidad || prev.unit,
+          amount: cargoData.monto || prev.amount,
+          dueDate: normalizeDateToYMD(cargoData.fechaVencimiento) || prev.dueDate,
+          description: cargoData.descripcion || prev.description,
+        }));
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+      }
+    };
+    fetchAgain();
+  }, [comunidadSeleccionada, id]);
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({

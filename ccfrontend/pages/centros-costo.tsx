@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
 import {
@@ -12,6 +12,7 @@ import {
 import Layout from '@/components/layout/Layout';
 import { listCentros, deleteCentro } from '@/lib/centrosCostoService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import {
   usePermissions,
   ProtectedPage,
@@ -23,7 +24,8 @@ import type { CentroCosto } from '@/types/centrosCosto';
 export default function CentrosCostoListado() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, hasPermission } = usePermissions();
+  const { isSuperUser, hasPermission, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [centros, setCentros] = useState<CentroCosto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,31 +50,106 @@ export default function CentrosCostoListado() {
   // Comunidades (vacío por ahora — puedes cargar desde API si quieres)
   const comunidades = useMemo(() => [] as any[], []);
 
-  // Siempre llamar al endpoint global (backend filtra por memberships)
-  const resolvedComunidadId = useMemo(() => undefined, []);
-
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      loadCentros(pagination.page);
+  // Resolver comunidad usando selector global o user.comunidad_id; permitir global para superuser
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return undefined;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, pagination.page]);
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id]);
 
-  const loadCentros = async (page = 1) => {
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
+
+  const loadCentros = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       const response = await listCentros(resolvedComunidadId);
       // eslint-disable-next-line no-console
       console.log('API Response:', response);
-      setCentros(response.data);
-      setPagination(response.pagination);
+      
+      // Si response es un array directo, usarlo directamente
+      const centrosData = Array.isArray(response) ? response : response.data || [];
+      setCentros(centrosData);
+      
+      // Si viene con paginación, usarla; si no, calcular valores por defecto
+      if (!Array.isArray(response) && response.pagination) {
+        setPagination(response.pagination);
+      } else {
+        setPagination({
+          total: centrosData.length,
+          page: 1,
+          limit: centrosData.length,
+          pages: 1,
+        });
+      }
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error loading centros:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedComunidadId]);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      loadCentros();
+    }
+  }, [authLoading, isAuthenticated, loadCentros, resolvedComunidadId]);
+
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para ver Centros de Costo en la comunidad seleccionada. Solo usuarios con roles administrativos pueden acceder a esta sección.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const handleEditCenter = (id: number) => {
     router.push(`/centros-costo/editar/${id}`);
@@ -81,6 +158,24 @@ export default function CentrosCostoListado() {
   const handleDeleteCentro = (centro: CentroCosto) => {
     setSelectedCentro(centro);
     setShowDeleteModal(true);
+  };
+
+  // Wrappers que respetan permisos: evitan error de tipos y muestran alerta si no hay permiso
+  const canEdit = hasPermission(Permission.EDIT_CENTRO_COSTO, resolvedComunidadId);
+  const canDelete = hasPermission(Permission.DELETE_CENTRO_COSTO, resolvedComunidadId);
+  const handleEditWrapper = (id: number) => {
+    if (!canEdit) {
+      alert('No tienes permiso para editar en la comunidad seleccionada');
+      return;
+    }
+    handleEditCenter(id);
+  };
+  const handleDeleteWrapper = (centro: CentroCosto) => {
+    if (!canDelete) {
+      alert('No tienes permiso para eliminar en la comunidad seleccionada');
+      return;
+    }
+    handleDeleteCentro(centro);
   };
 
   const confirmDeleteCentro = async () => {
@@ -111,7 +206,7 @@ export default function CentrosCostoListado() {
     // Para filtrar en backend, pasar params a listCentros; ahora filtro en frontend.
   };
 
-  const filteredCentros = centros.filter(c => {
+  const filteredCentros = (centros || []).filter(c => {
     const matchSearch =
       !search || c.nombre.toLowerCase().includes(search.toLowerCase());
     const matchCom =
@@ -190,7 +285,7 @@ export default function CentrosCostoListado() {
                   </p>
                 </div>
               </div>
-              {hasPermission(Permission.CREATE_CENTRO_COSTO) && (
+              {hasPermission(Permission.CREATE_CENTRO_COSTO, resolvedComunidadId) && (
                 <div className='text-end'>
                   <Button
                     variant='light'
@@ -319,14 +414,14 @@ export default function CentrosCostoListado() {
             <CentroTable
               centros={filteredCentros}
               loading={loading}
-              onEdit={handleEditCenter}
-              onDelete={handleDeleteCentro}
+              onEdit={handleEditWrapper}
+              onDelete={handleDeleteWrapper}
             />
           ) : (
             <CentroCard
               centros={filteredCentros}
-              onEdit={handleEditCenter}
-              onDelete={handleDeleteCentro}
+              onEdit={handleEditWrapper}
+              onDelete={handleDeleteWrapper}
             />
           )}
 

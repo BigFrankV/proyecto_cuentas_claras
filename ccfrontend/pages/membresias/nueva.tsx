@@ -1,9 +1,13 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
 import Layout from '@/components/layout/Layout';
+import { useAuth } from '@/lib/useAuth';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+
 
 interface TierInfo {
   id: string;
@@ -92,13 +96,25 @@ const tiers: TierInfo[] = [
 export default function MembresiaNueva() {
   const [currentStep, setCurrentStep] = useState(2);
   const [selectedTier, setSelectedTier] = useState('estandar');
-  const [selectedCommunity] = useState({
-    id: '1',
-    name: 'Comunidad Parque Real',
-    buildings: 3,
-    units: 120,
-    people: 156,
-  });
+  const { user } = useAuth();
+  const { comunidadSeleccionada, comunidades } = useComunidad();
+
+  // Comunidades donde el usuario tiene rol admin/admin_comunidad
+  const adminComunidades = (comunidades || []).filter((c: any) =>
+    ['admin', 'admin_comunidad'].includes(c.rol),
+  );
+
+  // Selección inicial: si hay comunidad global seleccionada y no es 'todas', usarla
+  const initialCommunity =
+    comunidadSeleccionada && comunidadSeleccionada.id !== 'todas'
+      ? comunidadSeleccionada
+      : adminComunidades.length > 0
+        ? adminComunidades[0]
+        : null;
+
+  const [selectedCommunity, setSelectedCommunity] = useState<any>(
+    initialCommunity,
+  );
 
   const steps = [
     { id: 1, name: 'Comunidad', completed: true },
@@ -111,6 +127,71 @@ export default function MembresiaNueva() {
   const handleTierSelection = (tierId: string) => {
     setSelectedTier(tierId);
   };
+
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleContinue = async () => {
+    setErrorMessage(null);
+    // Validación cliente: debe existir comunidad seleccionada y estar en adminComunidades
+    if (!selectedCommunity || !selectedCommunity.id) {
+      setErrorMessage('Debe seleccionar una comunidad donde sea administrador para crear la membresía.');
+      return;
+    }
+
+    const isAdmin = adminComunidades.some((c: any) => c.id === selectedCommunity.id) || user?.is_superadmin;
+    if (!isAdmin) {
+      setErrorMessage('No tienes permisos para crear una membresía en la comunidad seleccionada.');
+      return;
+    }
+
+    // Ejemplo de payload mínimo — el backend puede requerir campos adicionales
+    const payload = {
+      comunidad_id: selectedCommunity.id,
+      nivel: selectedTier,
+    };
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/membresias', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 403) {
+        setErrorMessage('Operación denegada (403): no tienes autorización en la comunidad seleccionada.');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const txt = await res.text();
+        setErrorMessage(`Error al crear membresía: ${txt || res.statusText}`);
+        setSubmitting(false);
+        return;
+      }
+
+      const data = await res.json();
+      // Redirigir a la página de la nueva membresía o al listado
+      if (data && data.id) {
+        router.push(`/membresias/${data.id}`);
+      } else {
+        router.push('/membresias');
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || 'Error de red al crear membresía');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Limpiar mensajes de error cuando cambia la comunidad seleccionada
+  // evita mostrar un error obsoleto si el usuario cambia el filtro global
+  useEffect(() => {
+    setErrorMessage(null);
+  }, [comunidadSeleccionada]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
@@ -179,13 +260,12 @@ export default function MembresiaNueva() {
                         {steps.map(step => (
                           <div key={step.id} className='text-center'>
                             <div
-                              className={`badge rounded-circle ${
-                                step.completed
+                              className={`badge rounded-circle ${step.completed
                                   ? 'bg-success'
                                   : step.active
                                     ? 'bg-primary'
                                     : 'bg-secondary'
-                              }`}
+                                }`}
                               style={{
                                 width: '24px',
                                 height: '24px',
@@ -230,12 +310,15 @@ export default function MembresiaNueva() {
                   }}
                 >
                   <h6 className='mb-0'>Comunidad</h6>
-                  <button
-                    type='button'
-                    className='btn btn-sm btn-outline-primary'
-                  >
-                    Cambiar
-                  </button>
+                  {/* Si hay comunidad global seleccionada y no es 'todas', no permitir cambiar aquí */}
+                  {!(comunidadSeleccionada && comunidadSeleccionada.id !== 'todas') && (
+                    <button
+                      type='button'
+                      className='btn btn-sm btn-outline-primary'
+                    >
+                      Cambiar
+                    </button>
+                  )}
                 </div>
                 <div
                   className='form-section-body'
@@ -257,13 +340,35 @@ export default function MembresiaNueva() {
                     >
                       <i className='material-icons'>domain</i>
                     </div>
-                    <div>
-                      <h6 className='mb-1'>{selectedCommunity.name}</h6>
-                      <div className='text-muted'>
-                        {selectedCommunity.buildings} Edificios |{' '}
-                        {selectedCommunity.units} Unidades |{' '}
-                        {selectedCommunity.people} Personas
-                      </div>
+                    <div style={{ flex: 1 }}>
+                      {comunidadSeleccionada && comunidadSeleccionada.id !== 'todas' ? (
+                        <>
+                          <h6 className='mb-1'>{comunidadSeleccionada.nombre}</h6>
+                          <div className='text-muted'>Filtro global activo</div>
+                        </>
+                      ) : (
+                        <>
+                          <label className='form-label mb-1'>Selecciona comunidad</label>
+                          <select
+                            className='form-select'
+                            value={selectedCommunity?.id || ''}
+                            onChange={e => {
+                              const id = e.target.value;
+                              const c = (comunidades || []).find((x: any) => x.id === id);
+                              setSelectedCommunity(c || null);
+                            }}
+                          >
+                            {adminComunidades.length === 0 && (
+                              <option value=''>No tienes comunidades donde eres admin</option>
+                            )}
+                            {adminComunidades.map((c: any) => (
+                              <option key={c.id} value={c.id}>
+                                {c.nombre} {c.rol ? `(${c.rol})` : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -384,11 +489,10 @@ export default function MembresiaNueva() {
                           ))}
 
                           <button
-                            className={`btn w-100 mt-3 ${
-                              selectedTier === tier.id
+                            className={`btn w-100 mt-3 ${selectedTier === tier.id
                                 ? 'btn-primary'
                                 : 'btn-outline-primary'
-                            }`}
+                              }`}
                           >
                             {selectedTier === tier.id
                               ? 'Seleccionado'
@@ -544,15 +648,26 @@ export default function MembresiaNueva() {
                 <button type='button' className='btn btn-outline-secondary'>
                   Cancelar
                 </button>
-                <div>
+                <div style={{ minWidth: '320px' }}>
+                  {errorMessage && (
+                    <div className='alert alert-danger mb-2' role='alert'>
+                      {errorMessage}
+                    </div>
+                  )}
                   <button
                     type='button'
                     className='btn btn-outline-primary me-2'
+                    disabled={submitting}
                   >
                     Guardar como Borrador
                   </button>
-                  <button type='button' className='btn btn-primary'>
-                    Continuar
+                  <button
+                    type='button'
+                    className='btn btn-primary'
+                    onClick={handleContinue}
+                    disabled={submitting}
+                  >
+                    {submitting ? 'Creando...' : 'Continuar'}
                   </button>
                 </div>
               </div>

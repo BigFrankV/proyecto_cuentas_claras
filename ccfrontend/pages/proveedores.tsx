@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 
 import Layout from '@/components/layout/Layout';
@@ -14,13 +14,15 @@ import {
 } from '@/components/proveedores';
 import { listProveedores, deleteProveedor } from '@/lib/proveedoresService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions, Permission } from '@/lib/usePermissions';
 import type { Proveedor } from '@/types/proveedores';
 
 export default function ProveedoresListado() {
   const router = useRouter();
-  const { isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, hasPermission } = usePermissions();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { isSuperUser, hasPermission, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [providers, setProviders] = useState<Proveedor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,19 +45,44 @@ export default function ProveedoresListado() {
 
   const comunidades = useMemo(() => [] as any[], []);
 
-  const resolvedComunidadId = useMemo(
-    () => (isSuperUser ? undefined : undefined),
-    [isSuperUser],
-  );
-
-  useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      loadProviders(pagination.page);
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return undefined;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, pagination.page]);
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id]);
 
-  const loadProviders = async (page = 1) => {
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
+
+  const loadProviders = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       const params: any = { limit: pagination.limit };
@@ -73,29 +100,84 @@ export default function ProveedoresListado() {
         comunidadId ?? resolvedComunidadId,
         params,
       );
-      setProviders(resp.data);
-      if (resp.pagination) {
+      
+      // Si response es un array directo, usarlo directamente
+      const providersData = Array.isArray(resp) ? resp : resp.data || [];
+      setProviders(providersData);
+      
+      // Si viene con paginación, usarla; si no, calcular valores por defecto
+      if (!Array.isArray(resp) && resp.pagination) {
         setPagination(resp.pagination);
       } else {
         setPagination(prev => ({
           ...prev,
-          total: resp.data.length,
-          pages: Math.ceil(resp.data.length / prev.limit),
+          total: providersData.length,
+          pages: Math.ceil(providersData.length / prev.limit),
         }));
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Error loading providers:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedComunidadId, comunidadId, search, status, pagination.limit]);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      loadProviders();
+    }
+  }, [authLoading, isAuthenticated, loadProviders, resolvedComunidadId]);
+
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para ver Proveedores en la comunidad seleccionada. Solo usuarios con roles administrativos pueden acceder a esta sección.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const handleView = (id: number) => router.push(`/proveedores/${id}`);
-  const handleEdit = (id: number) => router.push(`/proveedores/editar/${id}`);
+  const handleEdit = (id: number) => router.push(`/proveedores/${id}/editar`);
   const handleDelete = (p: Proveedor) => {
     setSelectedProvider(p);
     setShowDeleteModal(true);
+  };
+
+  const canEdit = hasPermission(Permission.EDIT_PROVEEDOR, resolvedComunidadId);
+  const canDelete = hasPermission(Permission.DELETE_PROVEEDOR, resolvedComunidadId);
+  const handleEditWrapper = (id: number) => {
+    if (!canEdit) {
+      alert('No tienes permiso para editar en la comunidad seleccionada');
+      return false;
+    }
+    handleEdit(id);
+    return true;
+  };
+  const handleDeleteWrapper = (p: Proveedor) => {
+    if (!canDelete) {
+      alert('No tienes permiso para eliminar en la comunidad seleccionada');
+      return;
+    }
+    handleDelete(p);
   };
 
   const confirmDelete = async () => {
@@ -106,7 +188,7 @@ export default function ProveedoresListado() {
       await deleteProveedor(selectedProvider.id);
       setShowDeleteModal(false);
       setSelectedProvider(null);
-      loadProviders(pagination.page);
+      loadProviders();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error deleting provider:', err);
@@ -125,14 +207,14 @@ export default function ProveedoresListado() {
       setComunidadId(payload.comunidadId);
     }
     setPagination(prev => ({ ...prev, page: 1 }));
-    loadProviders(1);
+    loadProviders();
   };
 
   const stats = {
-    total: providers.length,
-    active: providers.filter(p => p.activo === 1).length,
-    totalGastos: providers.reduce((s, p) => s + (p.total_gastos ?? 0), 0),
-    montoTotal: providers.reduce((s, p) => s + (p.monto_total_gastado ?? 0), 0),
+    total: (providers || []).length,
+    active: (providers || []).filter(p => p.activo === 1).length,
+    totalGastos: (providers || []).reduce((s, p) => s + (p.total_gastos ?? 0), 0),
+    montoTotal: (providers || []).reduce((s, p) => s + (p.monto_total_gastado ?? 0), 0),
   };
 
   return (
@@ -202,7 +284,7 @@ export default function ProveedoresListado() {
                   </p>
                 </div>
               </div>
-              {hasPermission(Permission.CREATE_PROVEEDOR) && (
+              {hasPermission(Permission.CREATE_PROVEEDOR, resolvedComunidadId) && (
                 <div className='text-end'>
                   <Button
                     variant='light'
@@ -362,15 +444,15 @@ export default function ProveedoresListado() {
               providers={providers}
               loading={loading}
               onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onEdit={handleEditWrapper}
+              onDelete={handleDeleteWrapper}
             />
           ) : (
             <ProviderCard
               providers={providers}
               onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onEdit={handleEditWrapper}
+              onDelete={handleDeleteWrapper}
             />
           )}
 

@@ -5,11 +5,13 @@ import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 import Layout from '@/components/layout/Layout';
 import { usePersonas } from '@/hooks/usePersonas';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
 interface FormData {
   tipo: 'Propietario' | 'Inquilino' | 'Administrador';
@@ -79,7 +81,9 @@ const mockUnidades = [
 
 export default function PersonaNueva() {
   const router = useRouter();
-  const { crearPersona, validarCampo, loading, error } = usePersonas();
+  const { crearPersona, validarCampo, loading, error, clearError } = usePersonas();
+  const { comunidadSeleccionada } = useComunidad();
+  const { hasPermission } = usePermissions();
   const [formData, setFormData] = useState<FormData>({
     tipo: 'Propietario',
     nombre: '',
@@ -301,6 +305,11 @@ export default function PersonaNueva() {
     }
   };
 
+  // Limpiar errores cuando cambia la comunidad seleccionada
+  useEffect(() => {
+    clearError();
+  }, [comunidadSeleccionada, clearError]);
+
   const getInitials = (nombre: string, apellido: string) => {
     return `${nombre.charAt(0)}${apellido.charAt(0)}`.toUpperCase();
   };
@@ -313,6 +322,13 @@ export default function PersonaNueva() {
 
       <Layout title='Nueva Persona'>
         <div className='container-fluid py-4'>
+          {/* Aviso cuando no hay comunidad seleccionada o no hay permiso */}
+          {(!comunidadSeleccionada || comunidadSeleccionada.id === 'todas' || !hasPermission(Permission.CREATE_PERSONA, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined)) && (
+            <div className='alert alert-warning' role='alert'>
+              <i className='material-icons me-2'>warning</i>
+              Para crear una persona debes seleccionar una comunidad donde tengas permiso de creación. Si ves "Todas las comunidades", selecciona una comunidad específica.
+            </div>
+          )}
           {/* Mostrar error general */}
           {error && (
             <div
@@ -370,6 +386,7 @@ export default function PersonaNueva() {
                     type='button'
                     className='btn btn-primary'
                     onClick={handleSubmit}
+                    disabled={loading || !comunidadSeleccionada || comunidadSeleccionada.id === 'todas' || !hasPermission(Permission.CREATE_PERSONA, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined)}
                   >
                     Guardar
                   </button>
@@ -878,14 +895,14 @@ export default function PersonaNueva() {
                     <button
                       type='button'
                       className='btn btn-outline-primary me-2'
-                      disabled={loading}
+                      disabled={loading || !comunidadSeleccionada || comunidadSeleccionada.id === 'todas' || !hasPermission(Permission.CREATE_PERSONA, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined)}
                     >
                       Guardar como Borrador
                     </button>
                     <button
                       type='submit'
                       className='btn btn-primary'
-                      disabled={loading}
+                      disabled={loading || !comunidadSeleccionada || comunidadSeleccionada.id === 'todas' || !hasPermission(Permission.CREATE_PERSONA, comunidadSeleccionada?.id !== 'todas' ? Number(comunidadSeleccionada?.id) : undefined)}
                     >
                       {loading ? (
                         <>

@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Button,
   Card,
@@ -14,11 +14,13 @@ import {
 } from 'react-bootstrap';
 import { toast } from 'react-hot-toast';
 
+
 import Layout from '@/components/layout/Layout';
 import { createCompra } from '@/lib/comprasService';
 import comunidadesService from '@/lib/comunidadesService';
-import { ProtectedRoute } from '@/lib/useAuth';
-import { usePermissions } from '@/lib/usePermissions';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions, Permission } from '@/lib/usePermissions';
 
 interface Comunidad {
   id: number;
@@ -60,12 +62,54 @@ interface PurchaseItem {
 
 export default function NuevaCompra() {
   const router = useRouter();
-  const { isSuperUser, getUserCommunities } = usePermissions();
+  const { user } = useAuth();
+  const { isSuperUser, getUserCommunities, hasPermission, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
-  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
+  const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(
+    comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const loadedComunidadesRef = useRef(false);
+
+  // Resolver comunidad
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return selectedComunidadId ?? undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id, selectedComunidadId]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   const [formData, setFormData] = useState({
     type: 'factura',  // Default a 'factura'
@@ -108,7 +152,9 @@ export default function NuevaCompra() {
         .catch(() => toast.error('Error cargando comunidades'));
     } else if (!isSuperUser) {
       const userCommunities = getUserCommunities();
-      setSelectedComunidadId(userCommunities[0]?.comunidadId || null);
+      const rawId = userCommunities[0]?.comunidadId ?? comunidadSeleccionada?.id ?? null;
+      // eslint-disable-next-line eqeqeq
+      setSelectedComunidadId(rawId != null ? Number(rawId) : null);
     }
   }, [isSuperUser, getUserCommunities]);
 
@@ -340,6 +386,12 @@ export default function NuevaCompra() {
       return;
     }
 
+    // Verificar permiso por comunidad antes de enviar
+    if (!hasPermission(Permission.CREATE_COMPRA, selectedComunidadId)) {
+      setError('No tienes permiso para crear compras en la comunidad seleccionada');
+      return;
+    }
+
     if (!validateForm()) {
       return;
     }
@@ -362,7 +414,12 @@ export default function NuevaCompra() {
       toast.success('Compra creada exitosamente');
       router.push('/compras');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Error al crear la compra');
+      const status = error?.response?.status;
+      if (status === 403) {
+        toast.error('No tienes permiso para crear compras en la comunidad seleccionada');
+      } else {
+        toast.error(error.response?.data?.error || 'Error al crear la compra');
+      }
     } finally {
       setLoading(false);
     }
@@ -383,6 +440,36 @@ export default function NuevaCompra() {
   const formatCurrency = (amount: number, currency: string) => {
     return `${currency.toUpperCase()} ${amount.toLocaleString()}`;
   };
+
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para crear Compras. Solo usuarios con roles administrativos pueden acceder a esta sección.</p>
+                    <Button variant='primary' onClick={() => router.push('/compras')}>
+                      Volver a Compras
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import cargosService from '@/lib/cargosService';
 import { ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 
 interface CargoData {
   id: number;
@@ -29,11 +30,13 @@ const PagarCargoPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [payerEmail, setPayerEmail] = useState('');
 
+  const { comunidadSeleccionada } = useComunidad();
+
   useEffect(() => {
     if (!id) {
       return;
     }
-    
+
     const loadCargo = async () => {
       try {
         setLoading(true);
@@ -53,8 +56,10 @@ const PagarCargoPage: React.FC = () => {
       }
     };
 
+    // limpiar errores y recargar cuando cambia la comunidad seleccionada
+    setError(null);
     loadCargo();
-  }, [id]);
+  }, [id, comunidadSeleccionada]);
 
   const handlePagarConWebpay = async () => {
     if (!cargo || processing) {
