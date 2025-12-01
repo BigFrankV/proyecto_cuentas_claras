@@ -14,6 +14,53 @@ const { requireCommunity } = require('../middleware/tenancy');
  */
 
 // =========================================
+// 0. LISTADO GLOBAL DE PROVEEDORES (TODAS LAS COMUNIDADES DEL USUARIO)
+// =========================================
+
+/**
+ * @swagger
+ * /api/proveedores:
+ *   get:
+ *     tags: [Proveedores]
+ *     summary: Listado global de proveedores de todas las comunidades del usuario
+ *     description: Devuelve proveedores de todas las comunidades donde el usuario tiene roles NO básicos
+ */
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        p.id,
+        p.comunidad_id,
+        c.razon_social AS comunidad_nombre,
+        p.rut,
+        p.dv,
+        CONCAT(p.rut, '-', p.dv) AS rut_completo,
+        p.razon_social AS nombre,
+        p.giro AS categoria_principal,
+        p.email,
+        p.telefono,
+        p.direccion,
+        p.activo,
+        p.created_at,
+        p.updated_at
+      FROM proveedor p
+      INNER JOIN comunidad c ON p.comunidad_id = c.id
+      INNER JOIN usuario_rol_comunidad urc ON p.comunidad_id = urc.comunidad_id
+      INNER JOIN rol_sistema r ON urc.rol_id = r.id
+      WHERE urc.usuario_id = ?
+        AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+      ORDER BY p.razon_social
+      `;
+
+    const [rows] = await db.query(query, [req.user.id]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error al obtener proveedores:', error);
+    res.status(500).json({ error: 'Error al obtener proveedores' });
+  }
+});
+
+// =========================================
 // 1. LISTADOS CON ESTADÍSTICAS
 // =========================================
 
@@ -78,36 +125,73 @@ router.get(
         offset = 0,
       } = req.query;
 
-      let query = `
-      SELECT
-        p.id,
-        p.comunidad_id,
-        c.razon_social AS comunidad_nombre,
-        p.rut,
-        p.dv,
-        CONCAT(p.rut, '-', p.dv) AS rut_completo,
-        p.razon_social AS nombre,
-        p.giro AS categoria_principal,
-        p.email,
-        p.telefono,
-        p.direccion,
-        p.activo,
-        COUNT(DISTINCT dc.id) AS total_documentos,
-        COUNT(DISTINCT g.id) AS total_gastos,
-        COALESCE(SUM(g.monto), 0) AS monto_total_gastado,
-        COALESCE(AVG(g.monto), 0) AS promedio_gasto,
-        MAX(g.fecha) AS ultimo_gasto_fecha,
-        DATEDIFF(CURDATE(), MAX(g.fecha)) AS dias_sin_gasto,
-        p.created_at,
-        p.updated_at
-      FROM proveedor p
-      INNER JOIN comunidad c ON p.comunidad_id = c.id
-      LEFT JOIN documento_compra dc ON p.id = dc.proveedor_id
-      LEFT JOIN gasto g ON dc.id = g.documento_compra_id
-      WHERE p.comunidad_id = ?
-    `;
+      let query, params;
 
-      const params = [comunidadId];
+      // Si comunidadId es null/undefined, devolver proveedores donde el usuario NO tenga rol básico
+      if (!comunidadId) {
+        query = `
+        SELECT
+          p.id,
+          p.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          p.rut,
+          p.dv,
+          CONCAT(p.rut, '-', p.dv) AS rut_completo,
+          p.razon_social AS nombre,
+          p.giro AS categoria_principal,
+          p.email,
+          p.telefono,
+          p.direccion,
+          p.activo,
+          COUNT(DISTINCT dc.id) AS total_documentos,
+          COUNT(DISTINCT g.id) AS total_gastos,
+          COALESCE(SUM(g.monto), 0) AS monto_total_gastado,
+          COALESCE(AVG(g.monto), 0) AS promedio_gasto,
+          MAX(g.fecha) AS ultimo_gasto_fecha,
+          DATEDIFF(CURDATE(), MAX(g.fecha)) AS dias_sin_gasto,
+          p.created_at,
+          p.updated_at
+        FROM proveedor p
+        INNER JOIN comunidad c ON p.comunidad_id = c.id
+        INNER JOIN usuario_rol_comunidad urc ON p.comunidad_id = urc.comunidad_id
+        INNER JOIN rol_sistema r ON urc.rol_id = r.id
+        LEFT JOIN documento_compra dc ON p.id = dc.proveedor_id
+        LEFT JOIN gasto g ON dc.id = g.documento_compra_id
+        WHERE urc.usuario_id = ?
+          AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+        `;
+        params = [req.user.id];
+      } else {
+        query = `
+        SELECT
+          p.id,
+          p.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          p.rut,
+          p.dv,
+          CONCAT(p.rut, '-', p.dv) AS rut_completo,
+          p.razon_social AS nombre,
+          p.giro AS categoria_principal,
+          p.email,
+          p.telefono,
+          p.direccion,
+          p.activo,
+          COUNT(DISTINCT dc.id) AS total_documentos,
+          COUNT(DISTINCT g.id) AS total_gastos,
+          COALESCE(SUM(g.monto), 0) AS monto_total_gastado,
+          COALESCE(AVG(g.monto), 0) AS promedio_gasto,
+          MAX(g.fecha) AS ultimo_gasto_fecha,
+          DATEDIFF(CURDATE(), MAX(g.fecha)) AS dias_sin_gasto,
+          p.created_at,
+          p.updated_at
+        FROM proveedor p
+        INNER JOIN comunidad c ON p.comunidad_id = c.id
+        LEFT JOIN documento_compra dc ON p.id = dc.proveedor_id
+        LEFT JOIN gasto g ON dc.id = g.documento_compra_id
+        WHERE p.comunidad_id = ?
+        `;
+        params = [comunidadId];
+      }
 
       if (activo !== undefined) {
         query += ` AND p.activo = ?`;
@@ -1043,7 +1127,11 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin', 'superadmin', 'admin_comunidad']),
+    requireCommunity(
+      'comunidadId',
+      ['admin', 'superadmin', 'admin_comunidad'],
+      true
+    ),
     body('rut').notEmpty(),
     body('dv').notEmpty(),
     body('razon_social').notEmpty(),

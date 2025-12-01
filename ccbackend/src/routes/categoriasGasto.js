@@ -16,6 +16,56 @@ const TIPOS_CATEGORIA = [
 ];
 
 // =========================================
+// 0. LISTADO GLOBAL DE CATEGORÍAS (TODAS LAS COMUNIDADES DEL USUARIO)
+// =========================================
+
+/**
+ * @swagger
+ * /categorias-gasto:
+ *   get:
+ *     tags: [Categorías de Gasto]
+ *     summary: Listado global de categorías de todas las comunidades del usuario
+ *     description: Devuelve categorías de gasto de todas las comunidades donde el usuario tiene roles NO básicos
+ *     responses:
+ *       200:
+ *         description: Lista de categorías
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const query = `
+        SELECT
+          cg.id,
+          cg.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          cg.nombre,
+          cg.tipo,
+          cg.cta_contable,
+          cg.activa,
+          CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
+          cg.created_at,
+          cg.updated_at
+        FROM categoria_gasto cg
+        INNER JOIN comunidad c ON cg.comunidad_id = c.id
+        INNER JOIN usuario_rol_comunidad urc ON cg.comunidad_id = urc.comunidad_id
+        INNER JOIN rol_sistema r ON urc.rol_id = r.id
+        WHERE urc.usuario_id = ?
+          AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+        ORDER BY cg.nombre
+      `;
+
+    const [rows] = await db.query(query, [req.user.id]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener categorías de gasto' });
+  }
+});
+
+// =========================================
 // 1. LISTADO DE CATEGORÍAS CON FILTROS Y PAGINACIÓN
 // =========================================
 
@@ -85,25 +135,53 @@ router.get(
     try {
       const comunidadId = Number(req.params.comunidadId);
 
-      const query = `
-      SELECT
-        cg.id,
-        cg.comunidad_id,
-        c.razon_social AS comunidad_nombre,
-        cg.nombre,
-        cg.tipo,
-        cg.cta_contable,
-        cg.activa,
-        CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
-        cg.created_at,
-        cg.updated_at
-      FROM categoria_gasto cg
-      INNER JOIN comunidad c ON cg.comunidad_id = c.id
-      WHERE cg.comunidad_id = ?
-      ORDER BY cg.nombre
-    `;
+      // Si comunidadId es null/undefined, devolver comunidades donde el usuario NO tenga rol básico
+      let query, params;
 
-      const [rows] = await db.query(query, [comunidadId]);
+      if (!comunidadId) {
+        query = `
+        SELECT
+          cg.id,
+          cg.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          cg.nombre,
+          cg.tipo,
+          cg.cta_contable,
+          cg.activa,
+          CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
+          cg.created_at,
+          cg.updated_at
+        FROM categoria_gasto cg
+        INNER JOIN comunidad c ON cg.comunidad_id = c.id
+        INNER JOIN usuario_rol_comunidad urc ON cg.comunidad_id = urc.comunidad_id
+        INNER JOIN rol_sistema r ON urc.rol_id = r.id
+        WHERE urc.usuario_id = ?
+          AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+        ORDER BY cg.nombre
+        `;
+        params = [req.user.id];
+      } else {
+        query = `
+        SELECT
+          cg.id,
+          cg.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          cg.nombre,
+          cg.tipo,
+          cg.cta_contable,
+          cg.activa,
+          CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
+          cg.created_at,
+          cg.updated_at
+        FROM categoria_gasto cg
+        INNER JOIN comunidad c ON cg.comunidad_id = c.id
+        WHERE cg.comunidad_id = ?
+        ORDER BY cg.nombre
+        `;
+        params = [comunidadId];
+      }
+
+      const [rows] = await db.query(query, params);
       res.json(rows);
     } catch (err) {
       console.error(err);
@@ -265,22 +343,45 @@ router.get(
         offset = 0,
       } = req.query;
 
-      let query = `
-      SELECT
-        cg.id,
-        cg.nombre,
-        cg.tipo,
-        cg.cta_contable,
-        CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
-        c.razon_social AS comunidad,
-        cg.created_at,
-        cg.updated_at
-      FROM categoria_gasto cg
-      INNER JOIN comunidad c ON cg.comunidad_id = c.id
-      WHERE cg.comunidad_id = ?
-    `;
+      let query, params;
 
-      const params = [comunidadId];
+      // Si comunidadId es null/undefined (todas las comunidades), filtrar por roles no básicos
+      if (!comunidadId) {
+        query = `
+        SELECT
+          cg.id,
+          cg.nombre,
+          cg.tipo,
+          cg.cta_contable,
+          CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
+          c.razon_social AS comunidad,
+          cg.created_at,
+          cg.updated_at
+        FROM categoria_gasto cg
+        INNER JOIN comunidad c ON cg.comunidad_id = c.id
+        INNER JOIN usuario_rol_comunidad urc ON cg.comunidad_id = urc.comunidad_id
+        INNER JOIN rol_sistema r ON urc.rol_id = r.id
+        WHERE urc.usuario_id = ?
+          AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+        `;
+        params = [req.user.id];
+      } else {
+        query = `
+        SELECT
+          cg.id,
+          cg.nombre,
+          cg.tipo,
+          cg.cta_contable,
+          CASE WHEN cg.activa = 1 THEN 'active' ELSE 'inactive' END AS status,
+          c.razon_social AS comunidad,
+          cg.created_at,
+          cg.updated_at
+        FROM categoria_gasto cg
+        INNER JOIN comunidad c ON cg.comunidad_id = c.id
+        WHERE cg.comunidad_id = ?
+        `;
+        params = [comunidadId];
+      }
 
       if (nombre_busqueda) {
         query += ' AND cg.nombre LIKE ?';
@@ -580,7 +681,7 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin', 'admin_comunidad']),
+    requireCommunity('comunidadId', ['admin', 'admin_comunidad'], true),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
     body('tipo').optional().isIn(TIPOS_CATEGORIA).withMessage('Tipo inválido'),
     body('cta_contable').optional(),

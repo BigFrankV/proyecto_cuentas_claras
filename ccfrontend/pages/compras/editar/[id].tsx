@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Button,
   Card,
@@ -15,7 +15,7 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { comprasApi } from '@/lib/api/compras';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions, Permission } from '@/lib/usePermissions';
 import { CompraBackend } from '@/types/compras';
@@ -111,6 +111,47 @@ interface Purchase {
 export default function EditarCompra() {
   const router = useRouter();
   const { id } = router.query;
+  const { user } = useAuth();
+  const { isSuperUser, hasPermission, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
+
+  // Resolver comunidad
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   const [purchase, setPurchase] = useState<Purchase | null>(null);
   const [formData, setFormData] = useState({
@@ -137,8 +178,6 @@ export default function EditarCompra() {
   const [showBudgetAlert, setShowBudgetAlert] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalData, setOriginalData] = useState<any>(null);
-  const { comunidadSeleccionada } = useComunidad();
-  const { hasPermission } = usePermissions();
   const [accessDenied, setAccessDenied] = useState(false);
 
   useEffect(() => {
@@ -565,6 +604,36 @@ export default function EditarCompra() {
   const formatCurrency = (amount: number, currency: string) => {
     return `${currency.toUpperCase()} ${amount.toLocaleString()}`;
   };
+
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para editar Compras. Solo usuarios con roles administrativos pueden acceder a esta sección.</p>
+                    <Button variant='primary' onClick={() => router.push('/compras')}>
+                      Volver a Compras
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   if (loading) {
     return (

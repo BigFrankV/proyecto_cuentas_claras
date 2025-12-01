@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 
 import Layout from '@/components/layout/Layout';
@@ -8,6 +8,7 @@ import { createCategoria } from '@/lib/categoriasGastoService';
 import comunidadesService from '@/lib/comunidadesService'; // Cambia a import default
 import { ProtectedRoute } from '@/lib/useAuth';
 import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions';
 
 interface FormData {
@@ -38,7 +39,8 @@ interface Comunidad {
 export default function CategoriaGastoNueva() {
   const router = useRouter();
   const { user } = useAuth();
-  const { isSuperUser, currentRole, getUserCommunities } = usePermissions();  // Agrega getUserCommunities
+  const { isSuperUser, currentRole, getUserCommunities, hasRoleInCommunity } = usePermissions();  // Agrega hasRoleInCommunity
+  const { comunidadSeleccionada } = useComunidad();
   const [comunidades, setComunidades] = useState<Comunidad[]>([]);
   const [selectedComunidadId, setSelectedComunidadId] = useState<number | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -50,6 +52,47 @@ export default function CategoriaGastoNueva() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const loadedComunidadesRef = useRef(false); // Agrega este ref
+
+  // Resolver comunidad (usar selector global, si no usar user.comunidad_id)
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return selectedComunidadId ?? undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id, selectedComunidadId]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    // Superusuarios siempre tienen acceso
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    // Si hay una comunidad específica seleccionada, verificar solo esa
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    // Si no hay comunidad específica, bloquear si SOLO tiene roles básicos
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   useEffect(() => {
     if (isSuperUser && !loadedComunidadesRef.current) {
@@ -120,6 +163,39 @@ export default function CategoriaGastoNueva() {
       }));
     }
   };
+
+  // Si tiene rol básico en la comunidad seleccionada, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para crear Categorías de Gasto en la comunidad seleccionada. Solo usuarios con roles administrativos pueden realizar esta acción.</p>
+                    <button
+                      className='btn btn-primary mt-3'
+                      onClick={() => router.push('/categorias-gasto')}
+                    >
+                      Volver al Listado
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>

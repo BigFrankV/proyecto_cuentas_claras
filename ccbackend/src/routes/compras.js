@@ -122,9 +122,12 @@ router.get('/', authenticate, async (req, res) => {
 
     if (!req.user?.is_superadmin) {
       const [comRows] = await db.query(
-        `SELECT comunidad_id FROM usuario_miembro_comunidad
-         WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
-        [req.user.persona_id]
+        `SELECT DISTINCT urc.comunidad_id 
+         FROM usuario_rol_comunidad urc
+         INNER JOIN rol_sistema r ON urc.rol_id = r.id
+         WHERE urc.usuario_id = ? 
+         AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')`,
+        [req.user.id]
       );
       const comunidadIds = comRows.map((r) => r.comunidad_id);
       if (!comunidadIds.length) {
@@ -225,11 +228,11 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', [
-      'admin',
-      'admin_comunidad',
-      'administrador',
-    ]),
+    requireCommunity(
+      'comunidadId',
+      ['admin', 'admin_comunidad', 'administrador'],
+      true
+    ),
     body('folio').notEmpty().withMessage('folio requerido').trim(),
     body('fecha_emision')
       .isISO8601()

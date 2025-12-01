@@ -26,6 +26,7 @@ import {
   getProveedores,
 } from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import {
   usePermissions,
   ProtectedPage,
@@ -37,13 +38,18 @@ import { Expense, mapBackendToExpense } from '@/types/gastos';
 export default function GastosListado() {
   const router = useRouter();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { isSuperUser, currentRole, hasPermission } = usePermissions();
+  const { isSuperUser, currentRole, hasPermission, hasRoleInCommunity } = usePermissions();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedExpenses, setSelectedExpenses] = useState<number[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const isFetchingRef = useRef(false); // evita reentradas
+
+  // Nuevos estados para categorías, centros de costo y proveedores
+  const [categories, setCategories] = useState<any[]>([]);
+  const [costCenters, setCostCenters] = useState<any[]>([]);
+  const [providers, setProviders] = useState<any[]>([]);
 
   // Filtros
   const [filters, setFilters] = useState({
@@ -61,15 +67,53 @@ export default function GastosListado() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
 
+  // Usar el selector global de comunidad para que la página reaccione a cambios
+  const { comunidadSeleccionada } = useComunidad();
+
   // Memoizar comunidadId para evitar re-ejecuciones del useEffect
   const resolvedComunidadId = useMemo(() => {
     // Si es superusuario, no filtramos por comunidad (undefined = endpoint global)
-    if (isSuperUser) {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
       return undefined;
     }
-    // Si es usuario normal, usamos su comunidad_id
+    // Preferir la comunidad seleccionada en el selector global; si es null, usar la comunidad del usuario
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
     return user?.comunidad_id ?? undefined;
-  }, [isSuperUser, user?.comunidad_id]);
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id]);
+
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    // Superusuarios siempre tienen acceso
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    // Si hay una comunidad específica seleccionada, verificar solo esa
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    // Si no hay comunidad específica (todas las comunidades), bloquear si SOLO tiene roles básicos
+    // Verificar si el usuario tiene al menos un rol NO básico en alguna comunidad
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false; // Sin membresías, dejar que el backend maneje
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    // Si solo tiene roles básicos, bloquear
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
 
   const loadExpenses = useCallback(async () => {
     if (isFetchingRef.current) {
@@ -110,6 +154,83 @@ export default function GastosListado() {
 
     loadExpenses();
   }, [authLoading, isAuthenticated, loadExpenses]);
+
+  useEffect(() => {
+    // cargar listas siempre (global si resolvedComunidadId undefined)
+    const idToUse = resolvedComunidadId ?? undefined;
+    getCategorias(idToUse)
+      .then(data => {
+        const normalized = (data || []).map((c: any) => ({
+          id: c.id,
+          nombre: c.nombre ?? c.name ?? c.label,
+        }));
+        setCategories(
+          normalized.sort((a: any, b: any) =>
+            String(a.nombre).localeCompare(String(b.nombre)),
+          ),
+        );
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error('Error getCategorias', err);
+        setCategories([]);
+      });
+
+    getCentrosCosto(idToUse)
+      .then(data => {
+        const normalized = (data || []).map((c: any) => ({
+          id: c.id,
+          nombre: c.nombre ?? c.name,
+        }));
+        setCostCenters(normalized);
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error('Error getCentrosCosto', err);
+        setCostCenters([]);
+      });
+
+    getProveedores(idToUse)
+      .then(data => {
+        const normalized = (data || []).map((p: any) => ({
+          id: p.id,
+          nombre: p.nombre ?? p.razon_social ?? p.name,
+        }));
+        setProviders(normalized);
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error('Error getProveedores', err);
+        setProviders([]);
+      });
+  }, [resolvedComunidadId]);
+
+  // Si tiene rol básico en la comunidad seleccionada, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para ver Gastos en la comunidad seleccionada.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
 
   const formatCurrency = (amount: number) => {
     return amount.toLocaleString('es-CL', {
@@ -198,61 +319,6 @@ export default function GastosListado() {
   const getActiveFiltersCount = () =>
     Object.values(filters).filter(value => value !== '').length;
 
-  // Nuevos estados para categorías, centros de costo y proveedores
-  const [categories, setCategories] = useState<any[]>([]);
-  const [costCenters, setCostCenters] = useState<any[]>([]);
-  const [providers, setProviders] = useState<any[]>([]);
-
-  useEffect(() => {
-    // cargar listas siempre (global si resolvedComunidadId undefined)
-    const idToUse = resolvedComunidadId ?? undefined;
-    getCategorias(idToUse)
-      .then(data => {
-        const normalized = (data || []).map((c: any) => ({
-          id: c.id,
-          nombre: c.nombre ?? c.name ?? c.label,
-        }));
-        setCategories(
-          normalized.sort((a: any, b: any) =>
-            String(a.nombre).localeCompare(String(b.nombre)),
-          ),
-        );
-      })
-      .catch(err => {
-        // eslint-disable-next-line no-console
-        console.error('Error getCategorias', err);
-        setCategories([]);
-      });
-
-    getCentrosCosto(idToUse)
-      .then(data => {
-        const normalized = (data || []).map((c: any) => ({
-          id: c.id,
-          nombre: c.nombre ?? c.name,
-        }));
-        setCostCenters(normalized);
-      })
-      .catch(err => {
-        // eslint-disable-next-line no-console
-        console.error('Error getCentrosCosto', err);
-        setCostCenters([]);
-      });
-
-    getProveedores(idToUse)
-      .then(data => {
-        const normalized = (data || []).map((p: any) => ({
-          id: p.id,
-          nombre: p.nombre ?? p.razon_social ?? p.name,
-        }));
-        setProviders(normalized);
-      })
-      .catch(err => {
-        // eslint-disable-next-line no-console
-        console.error('Error getProveedores', err);
-        setProviders([]);
-      });
-  }, [resolvedComunidadId]);
-
   return (
     <ProtectedRoute>
       <ProtectedPage role={UserRole.ADMIN}>
@@ -322,7 +388,7 @@ export default function GastosListado() {
                   </p>
                 </div>
               </div>
-              {hasPermission(Permission.CREATE_GASTO) && (
+              {hasPermission(Permission.CREATE_GASTO, resolvedComunidadId) && (
                 <div className='text-end'>
                   <Button
                     variant='light'
@@ -704,16 +770,18 @@ export default function GastosListado() {
                             >
                               <span className='material-icons'>visibility</span>
                             </Button>
-                            <Button
-                              variant='outline-secondary'
-                              size='sm'
-                              className='action-button'
-                              onClick={() =>
-                                router.push(`/gastos/editar/${expense.id}`)
-                              }
-                            >
-                              <span className='material-icons'>edit</span>
-                            </Button>
+                            {hasPermission(Permission.EDIT_GASTO, resolvedComunidadId) && (
+                              <Button
+                                variant='outline-secondary'
+                                size='sm'
+                                className='action-button'
+                                onClick={() =>
+                                  router.push(`/gastos/editar/${expense.id}`)
+                                }
+                              >
+                                <span className='material-icons'>edit</span>
+                              </Button>
+                            )}
                             <Dropdown>
                               <Dropdown.Toggle
                                 variant='outline-secondary'
@@ -840,16 +908,18 @@ export default function GastosListado() {
                           >
                             <span className='material-icons'>visibility</span>
                           </Button>
-                          <Button
-                            variant='outline-secondary'
-                            size='sm'
-                            onClick={e => {
-                              e.stopPropagation();
-                              router.push(`/gastos/editar/${expense.id}`);
-                            }}
-                          >
-                            <span className='material-icons'>edit</span>
-                          </Button>
+                            {hasPermission(Permission.EDIT_GASTO, resolvedComunidadId) && (
+                              <Button
+                                variant='outline-secondary'
+                                size='sm'
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  router.push(`/gastos/editar/${expense.id}`);
+                                }}
+                              >
+                                <span className='material-icons'>edit</span>
+                              </Button>
+                            )}
                         </div>
                       </div>
                     </div>

@@ -7,6 +7,46 @@ const { authorize } = require('../middleware/authorize');
 const { requireCommunity } = require('../middleware/tenancy');
 
 // =========================================
+// 0. LISTADO GLOBAL DE CENTROS DE COSTO (TODAS LAS COMUNIDADES DEL USUARIO)
+// =========================================
+
+/**
+ * @swagger
+ * /centros-costo:
+ *   get:
+ *     tags: [CentrosCosto]
+ *     summary: Listado global de centros de costo de todas las comunidades del usuario
+ *     description: Devuelve centros de costo de todas las comunidades donde el usuario tiene roles NO básicos
+ */
+router.get('/', authenticate, async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        cc.id,
+        cc.comunidad_id,
+        c.razon_social AS comunidad_nombre,
+        cc.nombre,
+        cc.codigo,
+        cc.created_at,
+        cc.updated_at
+      FROM centro_costo cc
+      INNER JOIN comunidad c ON cc.comunidad_id = c.id
+      INNER JOIN usuario_rol_comunidad urc ON cc.comunidad_id = urc.comunidad_id
+      INNER JOIN rol_sistema r ON urc.rol_id = r.id
+      WHERE urc.usuario_id = ?
+        AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+      ORDER BY cc.nombre
+      `;
+
+    const [rows] = await db.query(query, [req.user.id]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener centros de costo' });
+  }
+});
+
+// =========================================
 // 1. LISTADO DE CENTROS DE COSTO CON FILTROS Y PAGINACIÓN
 // =========================================
 
@@ -25,22 +65,47 @@ router.get(
     try {
       const comunidadId = Number(req.params.comunidadId);
 
-      const query = `
-      SELECT
-        cc.id,
-        cc.comunidad_id,
-        c.razon_social AS comunidad_nombre,
-        cc.nombre,
-        cc.codigo,
-        cc.created_at,
-        cc.updated_at
-      FROM centro_costo cc
-      INNER JOIN comunidad c ON cc.comunidad_id = c.id
-      WHERE cc.comunidad_id = ?
-      ORDER BY cc.nombre
-    `;
+      let query, params;
 
-      const [rows] = await db.query(query, [comunidadId]);
+      // Si comunidadId es null/undefined, devolver centros de costo donde el usuario NO tenga rol básico
+      if (!comunidadId) {
+        query = `
+        SELECT
+          cc.id,
+          cc.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          cc.nombre,
+          cc.codigo,
+          cc.created_at,
+          cc.updated_at
+        FROM centro_costo cc
+        INNER JOIN comunidad c ON cc.comunidad_id = c.id
+        INNER JOIN usuario_rol_comunidad urc ON cc.comunidad_id = urc.comunidad_id
+        INNER JOIN rol_sistema r ON urc.rol_id = r.id
+        WHERE urc.usuario_id = ?
+          AND r.codigo NOT IN ('residente', 'propietario', 'inquilino')
+        ORDER BY cc.nombre
+        `;
+        params = [req.user.id];
+      } else {
+        query = `
+        SELECT
+          cc.id,
+          cc.comunidad_id,
+          c.razon_social AS comunidad_nombre,
+          cc.nombre,
+          cc.codigo,
+          cc.created_at,
+          cc.updated_at
+        FROM centro_costo cc
+        INNER JOIN comunidad c ON cc.comunidad_id = c.id
+        WHERE cc.comunidad_id = ?
+        ORDER BY cc.nombre
+        `;
+        params = [comunidadId];
+      }
+
+      const [rows] = await db.query(query, params);
       res.json(rows);
     } catch (err) {
       console.error(err);
@@ -287,7 +352,11 @@ router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    requireCommunity('comunidadId', ['admin', 'admin_comunidad', 'superadmin']),
+    requireCommunity(
+      'comunidadId',
+      ['admin', 'admin_comunidad', 'superadmin'],
+      true
+    ),
     body('nombre').notEmpty().withMessage('Nombre es requerido'),
     body('codigo').optional(),
   ],

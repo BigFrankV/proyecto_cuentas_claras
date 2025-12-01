@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Button,
   Card,
@@ -15,7 +15,8 @@ import {
 
 import Layout from '@/components/layout/Layout';
 import { comprasApi } from '@/lib/api/compras';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { ProtectedPage, UserRole, Permission, usePermissions } from '@/lib/usePermissions';
 import { CompraBackend } from '@/types/compras';
 
@@ -24,13 +25,13 @@ interface Purchase {
   number: string;
   type: 'order' | 'service' | 'maintenance' | 'supplies';
   status:
-    | 'draft'
-    | 'pending'
-    | 'approved'
-    | 'in-progress'
-    | 'delivered'
-    | 'completed'
-    | 'cancelled';
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'in-progress'
+  | 'delivered'
+  | 'completed'
+  | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   provider: {
     id: number;
@@ -77,7 +78,21 @@ interface PurchaseItem {
 
 export default function ComprasListado() {
   const router = useRouter();
-  const { hasPermission } = usePermissions();
+  const { user } = useAuth();
+  const { hasPermission, isSuperUser, hasRoleInCommunity } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
+
+  const resolvedComunidadId = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return undefined;
+    }
+    if (comunidadSeleccionada && comunidadSeleccionada.id) {
+      return Number(comunidadSeleccionada.id);
+    }
+    return user?.comunidad_id ?? undefined;
+  }, [isSuperUser, comunidadSeleccionada, user?.comunidad_id]);
+
+  // Declarar todos los estados ANTES de cualquier return condicional
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
@@ -107,6 +122,33 @@ export default function ComprasListado() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
 
+  // Bloquear acceso si el usuario tiene rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (typeof isSuperUser === 'function' ? isSuperUser() : isSuperUser) {
+      return false;
+    }
+
+    if (resolvedComunidadId) {
+      return (
+        hasRoleInCommunity(Number(resolvedComunidadId), 'residente') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'propietario') ||
+        hasRoleInCommunity(Number(resolvedComunidadId), 'inquilino')
+      );
+    }
+
+    const memberships = user?.memberships || [];
+    if (memberships.length === 0) {
+      return false;
+    }
+
+    const hasNonBasicRole = memberships.some((m: any) => {
+      const rol = (m.rol || '').toLowerCase();
+      return rol !== 'residente' && rol !== 'propietario' && rol !== 'inquilino';
+    });
+
+    return !hasNonBasicRole;
+  }, [resolvedComunidadId, isSuperUser, hasRoleInCommunity, user?.memberships]);
+
   useEffect(() => {
     loadPurchases(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,7 +156,6 @@ export default function ComprasListado() {
 
   const loadPurchases = async (page = 1) => {
     try {
-      setLoading(true);
       const limit = itemsPerPage;
       const offset = (page - 1) * limit;
 
@@ -367,6 +408,33 @@ export default function ComprasListado() {
     totalAmount: purchases.reduce((sum, p) => sum + p.totalAmount, 0),
   };
 
+  // Si tiene rol básico, mostrar Acceso Denegado
+  if (isBasicRoleInCommunity) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-50'>
+              <div className='col-12 col-md-8'>
+                <div className='card shadow-sm'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p className='text-muted'>No tienes permisos para ver Compras en la comunidad seleccionada. Solo usuarios con roles administrativos pueden acceder a esta sección.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    );
+  }
+
   return (
     <ProtectedRoute>
       <ProtectedPage role={UserRole.ADMIN}>
@@ -375,482 +443,599 @@ export default function ComprasListado() {
         </Head>
 
         <Layout>
-        <div className='purchases-container'>
-          {/* Header */}
-          {/* Hero Section */}
-          <div className='purchases-hero'>
-            <div className='hero-background'>
-              <div className='hero-pattern'></div>
-              <div className='hero-gradient'></div>
-            </div>
+          <div className='purchases-container'>
+            {/* Header */}
+            {/* Hero Section */}
+            <div className='purchases-hero'>
+              <div className='hero-background'>
+                <div className='hero-pattern'></div>
+                <div className='hero-gradient'></div>
+              </div>
 
-            <div className='hero-content'>
-              <Row className='align-items-center'>
-                <Col lg={8}>
-                  <div className='hero-text'>
-                    <div className='hero-badge'>
-                      <span className='material-icons'>inventory</span>
-                      <span>Sistema de Compras</span>
-                    </div>
-
-                    <h1 className='hero-title'>
-                      Gestión Inteligente de
-                      <span className='hero-highlight'> Compras</span>
-                    </h1>
-
-                    <p className='hero-description'>
-                      Centraliza y optimiza todos tus procesos de adquisición.
-                      Desde órdenes de compra hasta servicios especializados,
-                      mantén el control total de tu presupuesto y proveedores.
-                    </p>
-
-                    <div className='hero-features'>
-                      <div className='feature-item'>
-                        <span className='material-icons'>check_circle</span>
-                        <span>Gestión de Proveedores</span>
+              <div className='hero-content'>
+                <Row className='align-items-center'>
+                  <Col lg={8}>
+                    <div className='hero-text'>
+                      <div className='hero-badge'>
+                        <span className='material-icons'>inventory</span>
+                        <span>Sistema de Compras</span>
                       </div>
-                      <div className='feature-item'>
-                        <span className='material-icons'>check_circle</span>
-                        <span>Control de Presupuesto</span>
-                      </div>
-                      <div className='feature-item'>
-                        <span className='material-icons'>check_circle</span>
-                        <span>Flujo de Aprobaciones</span>
-                      </div>
-                    </div>
-                  </div>
-                </Col>
 
-                <Col lg={4}>
-                  <div className='hero-actions'>
-                    <div className='action-card'>
-                      <div className='action-header'>
-                        <span className='material-icons'>
-                          add_shopping_cart
-                        </span>
-                        <h4>¿Listo para empezar?</h4>
-                      </div>
-                      <p>
-                        Crea una nueva solicitud de compra y optimiza tus
-                        procesos
+                      <h1 className='hero-title'>
+                        Gestión Inteligente de
+                        <span className='hero-highlight'> Compras</span>
+                      </h1>
+
+                      <p className='hero-description'>
+                        Centraliza y optimiza todos tus procesos de adquisición.
+                        Desde órdenes de compra hasta servicios especializados,
+                        mantén el control total de tu presupuesto y proveedores.
                       </p>
-                      {hasPermission(Permission.CREATE_COMPRA) && (
-                        <Button
-                          variant='primary'
-                          size='lg'
-                          className='hero-cta'
-                          onClick={() => router.push('/compras/nuevo')}
-                        >
-                          <span className='material-icons me-2'>add</span>
-                          Nueva Compra
-                        </Button>
-                      )}
 
-                      <div className='quick-stats'>
-                        <div className='quick-stat'>
-                          <span className='stat-number'>
-                            {purchases.length}
-                          </span>
-                          <span className='stat-label'>Compras Activas</span>
+                      <div className='hero-features'>
+                        <div className='feature-item'>
+                          <span className='material-icons'>check_circle</span>
+                          <span>Gestión de Proveedores</span>
                         </div>
-                        <div className='quick-stat'>
-                          <span className='stat-number'>
-                            {
-                              purchases.filter(p => p.status === 'pending')
-                                .length
-                            }
-                          </span>
-                          <span className='stat-label'>Pendientes</span>
+                        <div className='feature-item'>
+                          <span className='material-icons'>check_circle</span>
+                          <span>Control de Presupuesto</span>
+                        </div>
+                        <div className='feature-item'>
+                          <span className='material-icons'>check_circle</span>
+                          <span>Flujo de Aprobaciones</span>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-          </div>
+                  </Col>
 
-          {/* Stats Cards */}
-          <Row className='g-3 mb-4'>
-            <Col md={2}>
-              <Card className='card-stat'>
-                <Card.Body>
-                  <div className='d-flex justify-content-between align-items-center'>
-                    <div>
-                      <h6 className='text-muted mb-0'>Total</h6>
-                      <h3 className='mt-2 mb-0'>{stats.total}</h3>
-                    </div>
-                    <div
-                      className='stat-icon'
-                      style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}
-                    >
-                      <span className='material-icons'>inventory</span>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2}>
-              <Card className='card-stat'>
-                <Card.Body>
-                  <div className='d-flex justify-content-between align-items-center'>
-                    <div>
-                      <h6 className='text-muted mb-0'>Pendientes</h6>
-                      <h3 className='mt-2 mb-0'>{stats.pending}</h3>
-                    </div>
-                    <div
-                      className='stat-icon'
-                      style={{ backgroundColor: '#fff3e0', color: '#f57c00' }}
-                    >
-                      <span className='material-icons'>schedule</span>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2}>
-              <Card className='card-stat'>
-                <Card.Body>
-                  <div className='d-flex justify-content-between align-items-center'>
-                    <div>
-                      <h6 className='text-muted mb-0'>Aprobadas</h6>
-                      <h3 className='mt-2 mb-0'>{stats.approved}</h3>
-                    </div>
-                    <div
-                      className='stat-icon'
-                      style={{ backgroundColor: '#e8f5e8', color: '#388e3c' }}
-                    >
-                      <span className='material-icons'>check_circle</span>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2}>
-              <Card className='card-stat'>
-                <Card.Body>
-                  <div className='d-flex justify-content-between align-items-center'>
-                    <div>
-                      <h6 className='text-muted mb-0'>En Proceso</h6>
-                      <h3 className='mt-2 mb-0'>{stats.inProgress}</h3>
-                    </div>
-                    <div
-                      className='stat-icon'
-                      style={{ backgroundColor: '#e1f5fe', color: '#0288d1' }}
-                    >
-                      <span className='material-icons'>sync</span>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2}>
-              <Card className='card-stat'>
-                <Card.Body>
-                  <div className='d-flex justify-content-between align-items-center'>
-                    <div>
-                      <h6 className='text-muted mb-0'>Completadas</h6>
-                      <h3 className='mt-2 mb-0'>{stats.completed}</h3>
-                    </div>
-                    <div
-                      className='stat-icon'
-                      style={{ backgroundColor: '#e8f5e8', color: '#388e3c' }}
-                    >
-                      <span className='material-icons'>task_alt</span>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2}>
-              <Card className='card-stat'>
-                <Card.Body>
-                  <div className='d-flex justify-content-between align-items-center'>
-                    <div>
-                      <h6 className='text-muted mb-0'>Total CLP</h6>
-                      <h3 className='mt-2 mb-0'>
-                        ${(stats.totalAmount / 1000000).toFixed(1)}M
-                      </h3>
-                    </div>
-                    <div
-                      className='stat-icon'
-                      style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2' }}
-                    >
-                      <span className='material-icons'>attach_money</span>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+                  <Col lg={4}>
+                    <div className='hero-actions'>
+                      <div className='action-card'>
+                        <div className='action-header'>
+                          <span className='material-icons'>
+                            add_shopping_cart
+                          </span>
+                          <h4>¿Listo para empezar?</h4>
+                        </div>
+                        <p>
+                          Crea una nueva solicitud de compra y optimiza tus
+                          procesos
+                        </p>
+                        {hasPermission(Permission.CREATE_COMPRA, resolvedComunidadId) && (
+                          <Button
+                            variant='primary'
+                            size='lg'
+                            className='hero-cta'
+                            onClick={() => router.push('/compras/nuevo')}
+                          >
+                            <span className='material-icons me-2'>add</span>
+                            Nueva Compra
+                          </Button>
+                        )}
 
-          {/* Filtros */}
-          <div className='filter-section'>
-            <div className='filter-header'>
-              <h6 className='mb-0'>
-                <span className='material-icons me-2'>filter_list</span>
-                Filtros de Búsqueda
-              </h6>
+                        <div className='quick-stats'>
+                          <div className='quick-stat'>
+                            <span className='stat-number'>
+                              {purchases.length}
+                            </span>
+                            <span className='stat-label'>Compras Activas</span>
+                          </div>
+                          <div className='quick-stat'>
+                            <span className='stat-number'>
+                              {
+                                purchases.filter(p => p.status === 'pending')
+                                  .length
+                              }
+                            </span>
+                            <span className='stat-label'>Pendientes</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </div>
             </div>
-            <div className='filter-body'>
-              <Row className='g-3'>
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label>Buscar compra</Form.Label>
-                    <Form.Control
-                      type='text'
-                      placeholder='Descripción o número...'
-                      value={filters.search}
-                      onChange={e =>
-                        setFilters({ ...filters, search: e.target.value })
-                      }
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={2}>
-                  <Form.Group>
-                    <Form.Label>Tipo</Form.Label>
-                    <Form.Select
-                      value={filters.type}
-                      onChange={e =>
-                        setFilters({ ...filters, type: e.target.value })
-                      }
-                    >
-                      <option value=''>Todos</option>
-                      <option value='order'>Orden</option>
-                      <option value='service'>Servicio</option>
-                      <option value='maintenance'>Mantenimiento</option>
-                      <option value='supplies'>Suministros</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={2}>
-                  <Form.Group>
-                    <Form.Label>Estado</Form.Label>
-                    <Form.Select
-                      value={filters.status}
-                      onChange={e =>
-                        setFilters({ ...filters, status: e.target.value })
-                      }
-                    >
-                      <option value=''>Todos</option>
-                      <option value='draft'>Borrador</option>
-                      <option value='pending'>Pendiente</option>
-                      <option value='approved'>Aprobado</option>
-                      <option value='in-progress'>En Proceso</option>
-                      <option value='delivered'>Entregado</option>
-                      <option value='completed'>Completado</option>
-                      <option value='cancelled'>Cancelado</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={2}>
-                  <Form.Group>
-                    <Form.Label>Prioridad</Form.Label>
-                    <Form.Select
-                      value={filters.priority}
-                      onChange={e =>
-                        setFilters({ ...filters, priority: e.target.value })
-                      }
-                    >
-                      <option value=''>Todas</option>
-                      <option value='low'>Baja</option>
-                      <option value='medium'>Media</option>
-                      <option value='high'>Alta</option>
-                      <option value='urgent'>Urgente</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label>Proveedor</Form.Label>
-                    <Form.Control
-                      type='text'
-                      placeholder='Nombre del proveedor...'
-                      value={filters.provider}
-                      onChange={e =>
-                        setFilters({ ...filters, provider: e.target.value })
-                      }
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-            </div>
-          </div>
 
-          {/* Controles de vista */}
-          <div className='d-flex justify-content-between align-items-center mb-3'>
-            <div className='d-flex align-items-center gap-3'>
-              <span className='text-muted'>
-                {filteredPurchases.length} compras encontradas
-              </span>
-              {selectedPurchases.length > 0 && (
-                <div className='d-flex align-items-center gap-2'>
-                  <span className='text-primary'>
-                    {selectedPurchases.length} seleccionadas
-                  </span>
-                  <Dropdown>
-                    <Dropdown.Toggle variant='outline-primary' size='sm'>
-                      Acciones
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item
-                        onClick={() => handleBulkAction('approve')}
+            {/* Stats Cards */}
+            <Row className='g-3 mb-4'>
+              <Col md={2}>
+                <Card className='card-stat'>
+                  <Card.Body>
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <h6 className='text-muted mb-0'>Total</h6>
+                        <h3 className='mt-2 mb-0'>{stats.total}</h3>
+                      </div>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#e3f2fd', color: '#1976d2' }}
                       >
-                        <span className='material-icons me-2'>check</span>
-                        Aprobar seleccionadas
-                      </Dropdown.Item>
-                      <Dropdown.Item onClick={() => handleBulkAction('cancel')}>
-                        <span className='material-icons me-2'>cancel</span>
-                        Cancelar seleccionadas
-                      </Dropdown.Item>
-                      <Dropdown.Divider />
-                      <Dropdown.Item onClick={() => handleBulkAction('export')}>
-                        <span className='material-icons me-2'>
-                          file_download
-                        </span>
-                        Exportar seleccionadas
-                      </Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                </div>
-              )}
-            </div>
-            <div className='d-flex align-items-center gap-2'>
-              <span className='text-muted small'>Vista:</span>
-              <div className='btn-group' role='group'>
-                <Button
-                  variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
-                  size='sm'
-                  onClick={() => setViewMode('table')}
-                  className='view-toggle-btn'
-                >
-                  <span className='material-icons'>view_list</span>
-                </Button>
-                <Button
-                  variant={viewMode === 'grid' ? 'primary' : 'outline-primary'}
-                  size='sm'
-                  onClick={() => setViewMode('grid')}
-                  className='view-toggle-btn'
-                >
-                  <span className='material-icons'>grid_view</span>
-                </Button>
-              </div>
-            </div>
-          </div>
+                        <span className='material-icons'>inventory</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={2}>
+                <Card className='card-stat'>
+                  <Card.Body>
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <h6 className='text-muted mb-0'>Pendientes</h6>
+                        <h3 className='mt-2 mb-0'>{stats.pending}</h3>
+                      </div>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#fff3e0', color: '#f57c00' }}
+                      >
+                        <span className='material-icons'>schedule</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={2}>
+                <Card className='card-stat'>
+                  <Card.Body>
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <h6 className='text-muted mb-0'>Aprobadas</h6>
+                        <h3 className='mt-2 mb-0'>{stats.approved}</h3>
+                      </div>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#e8f5e8', color: '#388e3c' }}
+                      >
+                        <span className='material-icons'>check_circle</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={2}>
+                <Card className='card-stat'>
+                  <Card.Body>
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <h6 className='text-muted mb-0'>En Proceso</h6>
+                        <h3 className='mt-2 mb-0'>{stats.inProgress}</h3>
+                      </div>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#e1f5fe', color: '#0288d1' }}
+                      >
+                        <span className='material-icons'>sync</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={2}>
+                <Card className='card-stat'>
+                  <Card.Body>
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <h6 className='text-muted mb-0'>Completadas</h6>
+                        <h3 className='mt-2 mb-0'>{stats.completed}</h3>
+                      </div>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#e8f5e8', color: '#388e3c' }}
+                      >
+                        <span className='material-icons'>task_alt</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={2}>
+                <Card className='card-stat'>
+                  <Card.Body>
+                    <div className='d-flex justify-content-between align-items-center'>
+                      <div>
+                        <h6 className='text-muted mb-0'>Total CLP</h6>
+                        <h3 className='mt-2 mb-0'>
+                          ${(stats.totalAmount / 1000000).toFixed(1)}M
+                        </h3>
+                      </div>
+                      <div
+                        className='stat-icon'
+                        style={{ backgroundColor: '#f3e5f5', color: '#7b1fa2' }}
+                      >
+                        <span className='material-icons'>attach_money</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
 
-          {/* Vista de tabla */}
-          {viewMode === 'table' && (
-            <div className='purchases-table'>
-              <div className='table-header'>
-                <h5 className='table-title'>
-                  <span className='material-icons'>inventory</span>
-                  Compras
-                </h5>
-                <Button variant='outline-secondary' size='sm'>
-                  <span className='material-icons me-1'>file_download</span>
-                  Exportar
-                </Button>
+            {/* Filtros */}
+            <div className='filter-section'>
+              <div className='filter-header'>
+                <h6 className='mb-0'>
+                  <span className='material-icons me-2'>filter_list</span>
+                  Filtros de Búsqueda
+                </h6>
               </div>
-              <div className='table-responsive'>
-                <Table hover className='custom-table mb-0'>
-                  <thead>
-                    <tr>
-                      <th>
-                        <Form.Check
-                          type='checkbox'
-                          checked={
-                            selectedPurchases.length ===
-                              paginatedPurchases.length &&
-                            paginatedPurchases.length > 0
-                          }
-                          onChange={toggleAllSelection}
-                        />
-                      </th>
-                      <th>Número</th>
-                      <th>Descripción</th>
-                      <th>Tipo</th>
-                      <th>Estado</th>
-                      <th>Prioridad</th>
-                      <th>Proveedor</th>
-                      <th>Centro de Costo</th>
-                      <th>Monto</th>
-                      <th>Fecha Solicitada</th>
-                      <th className='text-end'>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedPurchases.map(purchase => (
-                      <tr key={purchase.id} className='data-row'>
-                        <td>
+              <div className='filter-body'>
+                <Row className='g-3'>
+                  <Col md={3}>
+                    <Form.Group>
+                      <Form.Label>Buscar compra</Form.Label>
+                      <Form.Control
+                        type='text'
+                        placeholder='Descripción o número...'
+                        value={filters.search}
+                        onChange={e =>
+                          setFilters({ ...filters, search: e.target.value })
+                        }
+                      />
+                    </Form.Group>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Group>
+                      <Form.Label>Tipo</Form.Label>
+                      <Form.Select
+                        value={filters.type}
+                        onChange={e =>
+                          setFilters({ ...filters, type: e.target.value })
+                        }
+                      >
+                        <option value=''>Todos</option>
+                        <option value='order'>Orden</option>
+                        <option value='service'>Servicio</option>
+                        <option value='maintenance'>Mantenimiento</option>
+                        <option value='supplies'>Suministros</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Group>
+                      <Form.Label>Estado</Form.Label>
+                      <Form.Select
+                        value={filters.status}
+                        onChange={e =>
+                          setFilters({ ...filters, status: e.target.value })
+                        }
+                      >
+                        <option value=''>Todos</option>
+                        <option value='draft'>Borrador</option>
+                        <option value='pending'>Pendiente</option>
+                        <option value='approved'>Aprobado</option>
+                        <option value='in-progress'>En Proceso</option>
+                        <option value='delivered'>Entregado</option>
+                        <option value='completed'>Completado</option>
+                        <option value='cancelled'>Cancelado</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Group>
+                      <Form.Label>Prioridad</Form.Label>
+                      <Form.Select
+                        value={filters.priority}
+                        onChange={e =>
+                          setFilters({ ...filters, priority: e.target.value })
+                        }
+                      >
+                        <option value=''>Todas</option>
+                        <option value='low'>Baja</option>
+                        <option value='medium'>Media</option>
+                        <option value='high'>Alta</option>
+                        <option value='urgent'>Urgente</option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                  <Col md={3}>
+                    <Form.Group>
+                      <Form.Label>Proveedor</Form.Label>
+                      <Form.Control
+                        type='text'
+                        placeholder='Nombre del proveedor...'
+                        value={filters.provider}
+                        onChange={e =>
+                          setFilters({ ...filters, provider: e.target.value })
+                        }
+                      />
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </div>
+            </div>
+
+            {/* Controles de vista */}
+            <div className='d-flex justify-content-between align-items-center mb-3'>
+              <div className='d-flex align-items-center gap-3'>
+                <span className='text-muted'>
+                  {filteredPurchases.length} compras encontradas
+                </span>
+                {selectedPurchases.length > 0 && (
+                  <div className='d-flex align-items-center gap-2'>
+                    <span className='text-primary'>
+                      {selectedPurchases.length} seleccionadas
+                    </span>
+                    <Dropdown>
+                      <Dropdown.Toggle variant='outline-primary' size='sm'>
+                        Acciones
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item
+                          onClick={() => handleBulkAction('approve')}
+                        >
+                          <span className='material-icons me-2'>check</span>
+                          Aprobar seleccionadas
+                        </Dropdown.Item>
+                        <Dropdown.Item onClick={() => handleBulkAction('cancel')}>
+                          <span className='material-icons me-2'>cancel</span>
+                          Cancelar seleccionadas
+                        </Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Item onClick={() => handleBulkAction('export')}>
+                          <span className='material-icons me-2'>
+                            file_download
+                          </span>
+                          Exportar seleccionadas
+                        </Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </div>
+                )}
+              </div>
+              <div className='d-flex align-items-center gap-2'>
+                <span className='text-muted small'>Vista:</span>
+                <div className='btn-group' role='group'>
+                  <Button
+                    variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
+                    size='sm'
+                    onClick={() => setViewMode('table')}
+                    className='view-toggle-btn'
+                  >
+                    <span className='material-icons'>view_list</span>
+                  </Button>
+                  <Button
+                    variant={viewMode === 'grid' ? 'primary' : 'outline-primary'}
+                    size='sm'
+                    onClick={() => setViewMode('grid')}
+                    className='view-toggle-btn'
+                  >
+                    <span className='material-icons'>grid_view</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Vista de tabla */}
+            {viewMode === 'table' && (
+              <div className='purchases-table'>
+                <div className='table-header'>
+                  <h5 className='table-title'>
+                    <span className='material-icons'>inventory</span>
+                    Compras
+                  </h5>
+                  <Button variant='outline-secondary' size='sm'>
+                    <span className='material-icons me-1'>file_download</span>
+                    Exportar
+                  </Button>
+                </div>
+                <div className='table-responsive'>
+                  <Table hover className='custom-table mb-0'>
+                    <thead>
+                      <tr>
+                        <th>
                           <Form.Check
                             type='checkbox'
-                            checked={selectedPurchases.includes(purchase.id)}
-                            onChange={() =>
-                              togglePurchaseSelection(purchase.id)
+                            checked={
+                              selectedPurchases.length ===
+                              paginatedPurchases.length &&
+                              paginatedPurchases.length > 0
                             }
+                            onChange={toggleAllSelection}
                           />
-                        </td>
-                        <td>
-                          <div className='fw-medium'>{purchase.number}</div>
-                          <small className='text-muted'>
-                            {new Date(
-                              purchase.requestDate,
-                            ).toLocaleDateString()}
-                          </small>
-                        </td>
-                        <td>
-                          <div className='fw-medium'>
-                            {purchase.description}
-                          </div>
-                          <small className='text-muted'>
-                            {purchase.items.length} item(s) •{' '}
-                            {purchase.documents} doc(s)
-                          </small>
-                        </td>
-                        <td>{getTypeBadge(purchase.type)}</td>
-                        <td>{getStatusBadge(purchase.status)}</td>
-                        <td>{getPriorityBadge(purchase.priority)}</td>
-                        <td>
-                          <div className='fw-medium'>
-                            {purchase.provider.name}
-                          </div>
-                          <small className='text-muted'>
-                            {purchase.provider.category}
-                          </small>
-                        </td>
-                        <td>
-                          <div className='fw-medium'>
-                            {purchase.costCenter.name}
-                          </div>
-                          <small className='text-muted'>
-                            {purchase.costCenter.department}
-                          </small>
-                        </td>
-                        <td>
-                          <div className='fw-medium'>
-                            {formatCurrency(
-                              purchase.totalAmount,
-                              purchase.currency,
-                            )}
-                          </div>
-                        </td>
-                        <td>
+                        </th>
+                        <th>Número</th>
+                        <th>Descripción</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th>Prioridad</th>
+                        <th>Proveedor</th>
+                        <th>Centro de Costo</th>
+                        <th>Monto</th>
+                        <th>Fecha Solicitada</th>
+                        <th className='text-end'>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedPurchases.map(purchase => (
+                        <tr key={purchase.id} className='data-row'>
+                          <td>
+                            <Form.Check
+                              type='checkbox'
+                              checked={selectedPurchases.includes(purchase.id)}
+                              onChange={() =>
+                                togglePurchaseSelection(purchase.id)
+                              }
+                            />
+                          </td>
+                          <td>
+                            <div className='fw-medium'>{purchase.number}</div>
+                            <small className='text-muted'>
+                              {new Date(
+                                purchase.requestDate,
+                              ).toLocaleDateString()}
+                            </small>
+                          </td>
+                          <td>
+                            <div className='fw-medium'>
+                              {purchase.description}
+                            </div>
+                            <small className='text-muted'>
+                              {purchase.items.length} item(s) •{' '}
+                              {purchase.documents} doc(s)
+                            </small>
+                          </td>
+                          <td>{getTypeBadge(purchase.type)}</td>
+                          <td>{getStatusBadge(purchase.status)}</td>
+                          <td>{getPriorityBadge(purchase.priority)}</td>
+                          <td>
+                            <div className='fw-medium'>
+                              {purchase.provider.name}
+                            </div>
+                            <small className='text-muted'>
+                              {purchase.provider.category}
+                            </small>
+                          </td>
+                          <td>
+                            <div className='fw-medium'>
+                              {purchase.costCenter.name}
+                            </div>
+                            <small className='text-muted'>
+                              {purchase.costCenter.department}
+                            </small>
+                          </td>
+                          <td>
+                            <div className='fw-medium'>
+                              {formatCurrency(
+                                purchase.totalAmount,
+                                purchase.currency,
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <div>
+                              {new Date(
+                                purchase.requiredDate,
+                              ).toLocaleDateString()}
+                            </div>
+                            <small className='text-muted'>
+                              Por {purchase.requestedBy}
+                            </small>
+                          </td>
+                          <td className='text-end'>
+                            <div className='d-flex gap-1 justify-content-end'>
+                              <Button
+                                variant='outline-info'
+                                size='sm'
+                                className='action-button'
+                                onClick={() => handleViewPurchase(purchase.id)}
+                              >
+                                <span className='material-icons'>visibility</span>
+                              </Button>
+                              <Button
+                                variant='outline-primary'
+                                size='sm'
+                                className='action-button'
+                                onClick={() => handleEditPurchase(purchase.id)}
+                              >
+                                <span className='material-icons'>edit</span>
+                              </Button>
+                              <Button
+                                variant='outline-danger'
+                                size='sm'
+                                className='action-button'
+                                onClick={() => handleDeletePurchase(purchase)}
+                              >
+                                <span className='material-icons'>delete</span>
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {/* Vista Grid */}
+            {viewMode === 'grid' && (
+              <Row className='g-3 mb-4'>
+                {paginatedPurchases.map(purchase => (
+                  <Col key={purchase.id} lg={6} xl={4}>
+                    <div className='purchase-card'>
+                      <div className='card-body'>
+                        <div className='d-flex justify-content-between align-items-start mb-3'>
                           <div>
-                            {new Date(
-                              purchase.requiredDate,
-                            ).toLocaleDateString()}
+                            <h6 className='card-title mb-1'>{purchase.number}</h6>
+                            <small className='text-muted'>
+                              {purchase.description}
+                            </small>
                           </div>
+                          <div className='text-end'>
+                            {getStatusBadge(purchase.status)}
+                          </div>
+                        </div>
+
+                        <div className='d-flex gap-2 mb-3'>
+                          {getTypeBadge(purchase.type)}
+                          {getPriorityBadge(purchase.priority)}
+                        </div>
+
+                        <div className='purchase-info mb-3'>
+                          <div className='d-flex align-items-center mb-1'>
+                            <span
+                              className='material-icons me-2 text-muted'
+                              style={{ fontSize: '16px' }}
+                            >
+                              store
+                            </span>
+                            <small>{purchase.provider.name}</small>
+                          </div>
+                          <div className='d-flex align-items-center mb-1'>
+                            <span
+                              className='material-icons me-2 text-muted'
+                              style={{ fontSize: '16px' }}
+                            >
+                              account_balance_wallet
+                            </span>
+                            <small>{purchase.costCenter.name}</small>
+                          </div>
+                          <div className='d-flex align-items-center'>
+                            <span
+                              className='material-icons me-2 text-muted'
+                              style={{ fontSize: '16px' }}
+                            >
+                              person
+                            </span>
+                            <small>Por {purchase.requestedBy}</small>
+                          </div>
+                        </div>
+
+                        <div className='purchase-stats mb-3'>
+                          <Row className='text-center'>
+                            <Col xs={4}>
+                              <div className='fw-bold'>
+                                {purchase.items.length}
+                              </div>
+                              <small className='text-muted'>Items</small>
+                            </Col>
+                            <Col xs={4}>
+                              <div className='fw-bold'>
+                                {formatCurrency(
+                                  purchase.totalAmount,
+                                  purchase.currency,
+                                )}
+                              </div>
+                              <small className='text-muted'>Total</small>
+                            </Col>
+                            <Col xs={4}>
+                              <div className='fw-bold'>{purchase.documents}</div>
+                              <small className='text-muted'>Docs</small>
+                            </Col>
+                          </Row>
+                        </div>
+
+                        <div className='d-flex justify-content-between align-items-center'>
                           <small className='text-muted'>
-                            Por {purchase.requestedBy}
+                            Vence:{' '}
+                            {new Date(purchase.requiredDate).toLocaleDateString()}
                           </small>
-                        </td>
-                        <td className='text-end'>
-                          <div className='d-flex gap-1 justify-content-end'>
+                          <div className='d-flex gap-1'>
                             <Button
                               variant='outline-info'
                               size='sm'
-                              className='action-button'
                               onClick={() => handleViewPurchase(purchase.id)}
                             >
                               <span className='material-icons'>visibility</span>
@@ -858,7 +1043,6 @@ export default function ComprasListado() {
                             <Button
                               variant='outline-primary'
                               size='sm'
-                              className='action-button'
                               onClick={() => handleEditPurchase(purchase.id)}
                             >
                               <span className='material-icons'>edit</span>
@@ -866,235 +1050,119 @@ export default function ComprasListado() {
                             <Button
                               variant='outline-danger'
                               size='sm'
-                              className='action-button'
                               onClick={() => handleDeletePurchase(purchase)}
                             >
                               <span className='material-icons'>delete</span>
                             </Button>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            </div>
-          )}
-
-          {/* Vista Grid */}
-          {viewMode === 'grid' && (
-            <Row className='g-3 mb-4'>
-              {paginatedPurchases.map(purchase => (
-                <Col key={purchase.id} lg={6} xl={4}>
-                  <div className='purchase-card'>
-                    <div className='card-body'>
-                      <div className='d-flex justify-content-between align-items-start mb-3'>
-                        <div>
-                          <h6 className='card-title mb-1'>{purchase.number}</h6>
-                          <small className='text-muted'>
-                            {purchase.description}
-                          </small>
-                        </div>
-                        <div className='text-end'>
-                          {getStatusBadge(purchase.status)}
-                        </div>
-                      </div>
-
-                      <div className='d-flex gap-2 mb-3'>
-                        {getTypeBadge(purchase.type)}
-                        {getPriorityBadge(purchase.priority)}
-                      </div>
-
-                      <div className='purchase-info mb-3'>
-                        <div className='d-flex align-items-center mb-1'>
-                          <span
-                            className='material-icons me-2 text-muted'
-                            style={{ fontSize: '16px' }}
-                          >
-                            store
-                          </span>
-                          <small>{purchase.provider.name}</small>
-                        </div>
-                        <div className='d-flex align-items-center mb-1'>
-                          <span
-                            className='material-icons me-2 text-muted'
-                            style={{ fontSize: '16px' }}
-                          >
-                            account_balance_wallet
-                          </span>
-                          <small>{purchase.costCenter.name}</small>
-                        </div>
-                        <div className='d-flex align-items-center'>
-                          <span
-                            className='material-icons me-2 text-muted'
-                            style={{ fontSize: '16px' }}
-                          >
-                            person
-                          </span>
-                          <small>Por {purchase.requestedBy}</small>
-                        </div>
-                      </div>
-
-                      <div className='purchase-stats mb-3'>
-                        <Row className='text-center'>
-                          <Col xs={4}>
-                            <div className='fw-bold'>
-                              {purchase.items.length}
-                            </div>
-                            <small className='text-muted'>Items</small>
-                          </Col>
-                          <Col xs={4}>
-                            <div className='fw-bold'>
-                              {formatCurrency(
-                                purchase.totalAmount,
-                                purchase.currency,
-                              )}
-                            </div>
-                            <small className='text-muted'>Total</small>
-                          </Col>
-                          <Col xs={4}>
-                            <div className='fw-bold'>{purchase.documents}</div>
-                            <small className='text-muted'>Docs</small>
-                          </Col>
-                        </Row>
-                      </div>
-
-                      <div className='d-flex justify-content-between align-items-center'>
-                        <small className='text-muted'>
-                          Vence:{' '}
-                          {new Date(purchase.requiredDate).toLocaleDateString()}
-                        </small>
-                        <div className='d-flex gap-1'>
-                          <Button
-                            variant='outline-info'
-                            size='sm'
-                            onClick={() => handleViewPurchase(purchase.id)}
-                          >
-                            <span className='material-icons'>visibility</span>
-                          </Button>
-                          <Button
-                            variant='outline-primary'
-                            size='sm'
-                            onClick={() => handleEditPurchase(purchase.id)}
-                          >
-                            <span className='material-icons'>edit</span>
-                          </Button>
-                          <Button
-                            variant='outline-danger'
-                            size='sm'
-                            onClick={() => handleDeletePurchase(purchase)}
-                          >
-                            <span className='material-icons'>delete</span>
-                          </Button>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
-          )}
+                  </Col>
+                ))}
+              </Row>
+            )}
 
-          {/* Paginación */}
-          {totalPages > 1 && (
-            <div className='d-flex justify-content-between align-items-center mt-4'>
-              <span className='text-muted'>
-                Mostrando {startIndex + 1}-
-                {Math.min(startIndex + itemsPerPage, filteredPurchases.length)}{' '}
-                de {filteredPurchases.length} compras
-              </span>
-              <nav>
-                <ul className='pagination'>
-                  <li
-                    className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
-                  >
-                    <button
-                      className='page-link'
-                      onClick={() =>
-                        setCurrentPage(Math.max(1, currentPage - 1))
-                      }
-                      disabled={currentPage === 1}
-                    >
-                      <span className='material-icons'>chevron_left</span>
-                    </button>
-                  </li>
-                  {Array.from({ length: totalPages }, (_, index) => (
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className='d-flex justify-content-between align-items-center mt-4'>
+                <span className='text-muted'>
+                  Mostrando {startIndex + 1}-
+                  {Math.min(startIndex + itemsPerPage, filteredPurchases.length)}{' '}
+                  de {filteredPurchases.length} compras
+                </span>
+                <nav>
+                  <ul className='pagination'>
                     <li
-                      key={index + 1}
-                      className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+                      className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}
                     >
                       <button
                         className='page-link'
-                        onClick={() => setCurrentPage(index + 1)}
+                        onClick={() =>
+                          setCurrentPage(Math.max(1, currentPage - 1))
+                        }
+                        disabled={currentPage === 1}
                       >
-                        {index + 1}
+                        <span className='material-icons'>chevron_left</span>
                       </button>
                     </li>
-                  ))}
-                  <li
-                    className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
-                  >
-                    <button
-                      className='page-link'
-                      onClick={() =>
-                        setCurrentPage(Math.min(totalPages, currentPage + 1))
-                      }
-                      disabled={currentPage === totalPages}
+                    {Array.from({ length: totalPages }, (_, index) => (
+                      <li
+                        key={index + 1}
+                        className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}
+                      >
+                        <button
+                          className='page-link'
+                          onClick={() => setCurrentPage(index + 1)}
+                        >
+                          {index + 1}
+                        </button>
+                      </li>
+                    ))}
+                    <li
+                      className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}
                     >
-                      <span className='material-icons'>chevron_right</span>
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </div>
-          )}
-        </div>
-
-        {/* Modal de eliminación */}
-        <Modal
-          show={showDeleteModal}
-          onHide={() => setShowDeleteModal(false)}
-          centered
-        >
-          <Modal.Header closeButton>
-            <Modal.Title className='text-danger'>
-              <span className='material-icons me-2'>delete</span>
-              Eliminar Compra
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {selectedPurchase && (
-              <>
-                <div className='alert alert-danger'>
-                  <span className='material-icons me-2'>warning</span>
-                  Esta acción no se puede deshacer. La compra será eliminada
-                  permanentemente.
-                </div>
-                <p>
-                  ¿Estás seguro de que deseas eliminar la compra{' '}
-                  <strong>&quot;{selectedPurchase.number}&quot;</strong>?
-                </p>
-                <p className='text-muted'>
-                  Esto también eliminará toda la información relacionada,
-                  incluyendo items y documentos.
-                </p>
-              </>
+                      <button
+                        className='page-link'
+                        onClick={() =>
+                          setCurrentPage(Math.min(totalPages, currentPage + 1))
+                        }
+                        disabled={currentPage === totalPages}
+                      >
+                        <span className='material-icons'>chevron_right</span>
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
             )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button
-              variant='outline-secondary'
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Cancelar
-            </Button>
-            <Button variant='danger' onClick={confirmDelete}>
-              <span className='material-icons me-2'>delete</span>
-              Eliminar
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </Layout>
+          </div>
+
+          {/* Modal de eliminación */}
+          <Modal
+            show={showDeleteModal}
+            onHide={() => setShowDeleteModal(false)}
+            centered
+          >
+            <Modal.Header closeButton>
+              <Modal.Title className='text-danger'>
+                <span className='material-icons me-2'>delete</span>
+                Eliminar Compra
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              {selectedPurchase && (
+                <>
+                  <div className='alert alert-danger'>
+                    <span className='material-icons me-2'>warning</span>
+                    Esta acción no se puede deshacer. La compra será eliminada
+                    permanentemente.
+                  </div>
+                  <p>
+                    ¿Estás seguro de que deseas eliminar la compra{' '}
+                    <strong>&quot;{selectedPurchase.number}&quot;</strong>?
+                  </p>
+                  <p className='text-muted'>
+                    Esto también eliminará toda la información relacionada,
+                    incluyendo items y documentos.
+                  </p>
+                </>
+              )}
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant='outline-secondary'
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button variant='danger' onClick={confirmDelete}>
+                <span className='material-icons me-2'>delete</span>
+                Eliminar
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        </Layout>
       </ProtectedPage>
     </ProtectedRoute>
   );

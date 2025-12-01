@@ -1,10 +1,17 @@
 const db = require('../db');
 
 /**
- * requireCommunity(paramName = 'comunidadId', allowedRoles = [])
+ * requireCommunity(paramName = 'comunidadId', allowedRoles = [], blockBasicRoles = false)
  * valida que el usuario pertenece a la comunidad (o es superadmin)
+ * @param {string} paramName - nombre del parámetro en la ruta
+ * @param {array} allowedRoles - roles permitidos (vacío = todos)
+ * @param {boolean} blockBasicRoles - si es true, bloquea residente/propietario/inquilino
  */
-function requireCommunity(paramName = 'comunidadId', allowedRoles = []) {
+function requireCommunity(
+  paramName = 'comunidadId',
+  allowedRoles = [],
+  blockBasicRoles = false
+) {
   return async (req, res, next) => {
     try {
       if (!req.user) return res.status(401).json({ error: 'unauthorized' });
@@ -51,6 +58,18 @@ function requireCommunity(paramName = 'comunidadId', allowedRoles = []) {
       if (mrows && mrows.length) {
         const rolM = String(mrows[0].rol || '').toLowerCase();
         req.membership = { comunidadId: Number(comunidadId), rol: rolM };
+
+        // Bloquear roles básicos SOLO si blockBasicRoles es true
+        if (blockBasicRoles) {
+          const blockedRoles = ['residente', 'propietario', 'inquilino'];
+          if (blockedRoles.includes(rolM)) {
+            return res.status(403).json({
+              error: 'forbidden',
+              message: 'Este recurso no está disponible para tu rol',
+            });
+          }
+        }
+
         if (!allowedRoles || allowedRoles.length === 0) return next();
         const allowed = allowedRoles.map((r) => String(r).toLowerCase());
         if (allowed.includes(rolM)) return next();

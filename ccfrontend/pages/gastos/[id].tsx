@@ -53,6 +53,11 @@ export default function GastoDetalle() {
   const { comunidadSeleccionada } = useComunidad();
   const { hasPermission } = usePermissions();
 
+  // Id usada para evaluar permisos en esta página (selector global -> fallback a user)
+  const comunidadParaPermisos = Number(
+    comunidadSeleccionada?.id ?? user?.comunidad_id ?? null,
+  );
+
   const [accessDenied, setAccessDenied] = useState(false);
   const [expense, setExpense] = useState<Expense | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +72,21 @@ export default function GastoDetalle() {
       getAprobaciones(Number(id)).then(setApprovalHistory);
     }
   }, [id]);
+
+  // Cuando cambia la comunidad global, re-evaluar permisos y recargar el gasto.
+  useEffect(() => {
+    if (!id) return;
+
+    // Re-evaluar acceso localmente y luego intentar recargar (backend puede devolver 403)
+    const canView =
+      hasPermission(Permission.VIEW_GASTO, comunidadParaPermisos) ||
+      hasPermission(Permission.EDIT_GASTO, comunidadParaPermisos);
+    setAccessDenied(!canView);
+
+    // Intentar recargar el gasto para que el backend confirme permisos (y devuelva 403 si corresponde)
+    loadExpense();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comunidadSeleccionada, id]);
 
   const loadExpense = async () => {
     try {
@@ -333,7 +353,17 @@ export default function GastoDetalle() {
                 Editar
               </button>
 
-              {expense.status === 'pending' && (
+              {hasPermission(Permission.EDIT_GASTO, comunidadParaPermisos) && (
+                <button
+                  className="btn-secondary"
+                  onClick={() => router.push(`/gastos/editar/${expense.id}`)}
+                >
+                  <span className="material-icons">edit</span>
+                  Editar
+                </button>
+              )}
+
+              {expense.status === 'pending' && hasPermission(Permission.APPROVE_PAYMENTS, comunidadParaPermisos) && (
                 <button
                   className="btn-primary"
                   onClick={() => setShowApprovalModal(true)}
@@ -556,10 +586,7 @@ export default function GastoDetalle() {
                     Eliminar Gasto
                   </button>
 
-                  {hasPermission(
-                    Permission.EDIT_GASTO,
-                    Number(comunidadSeleccionada?.id ?? user?.comunidad_id),
-                  ) && (
+                  {hasPermission(Permission.EDIT_GASTO, comunidadParaPermisos) && (
                       <button
                         type="button"
                         className="btn-secondary"
@@ -585,10 +612,7 @@ export default function GastoDetalle() {
                     <button className="btn-secondary" onClick={() => setShowApprovalModal(false)}>
                       Cancelar
                     </button>
-                    {hasPermission(
-                      Permission.APPROVE_PAYMENTS,
-                      Number(comunidadSeleccionada?.id ?? user?.comunidad_id),
-                    ) && (
+                    {hasPermission(Permission.APPROVE_PAYMENTS, comunidadParaPermisos) && (
                         <>
                           <button className="btn-danger" onClick={handleRejectExpense} disabled={actionLoading}>
                             <span className="material-icons">close</span> Rechazar
