@@ -533,7 +533,7 @@
           <img src="https://ui-avatars.com/api/?name=Patricio+Quintanilla&background=004AAD&color=fff&size=128"
             class="avatar" style="width: 120px; height: 120px;">
           <h3 style="font-size: 24px;">Patricio Quintanilla</h3>
-          <p style="font-size: 18px; line-height: 1.4;"><strong>Frontend Developer</strong><br>Responsable del
+          <p style="font-size: 18px; line-height: 1.4;"><strong>Full stack developer</strong><br>Responsable del
             desarrollo de la interfaz, experiencia del usuario, diseño visual, integración de componentes, lógica de
             interacción y optimización general del frontend utilizando Next.js y React.</p>
         </div>
@@ -541,7 +541,7 @@
           <img src="https://ui-avatars.com/api/?name=Frank+Vogt&background=004AAD&color=fff&size=128" class="avatar"
             style="width: 120px; height: 120px;">
           <h3 style="font-size: 24px;">Frank Vogt</h3>
-          <p style="font-size: 18px; line-height: 1.4;"><strong>Backend Developer</strong><br>Encargado de la
+          <p style="font-size: 18px; line-height: 1.4;"><strong>Full stack developer</strong><br>Encargado de la
             arquitectura del sistema, APIs, seguridad, autenticación, lógica de negocio, integración con bases de datos
             y desarrollo de servicios utilizando Node.js, Express y autenticación 2FA.</p>
         </div>
@@ -556,84 +556,79 @@
       </div>
     </section>
 
-    <div class="slide">
-      <h2 style="font-size: 36px; margin-bottom: 15px;">Problemática y Propuesta de Solución</h2>
+<div class="slide">
+  <h2 style="font-size: 42px; margin-bottom: 30px;">Descripción del Proyecto</h2>
 
-      <div style="display: flex; gap: 30px; align-items: stretch; height: 75%; margin-top: -10px;">
+  <div style="display: flex; gap: 40px; align-items: stretch; height: 75%;">
 
-        <div style="display: flex; flex-direction: column; gap: 25px; flex: 3; max-width: 60%;">
+    <div style="display: flex; flex-direction: column; gap: 40px; flex: 3; max-width: 60%;">
 
-          <div class="col"
-            style="background: #fff1f2; border: 2px solid #fecdd3; padding: 20px; border-radius: 16px; box-shadow: 0 8px 20px rgba(225, 29, 72, 0.1); flex: 1; display: flex; flex-direction: column; justify-content: center;">
-
-            <div>
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                <strong style="font-size: 26px; color: #be123c;">⚠️ Problemática Identificada</strong>
-              </div>
-
-              <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; line-height: 1.3; color: #881337;">
-                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
-                  <i class="material-icons" style="font-size: 22px; margin-top: 2px;">error_outline</i>
-                  <span>Gestión administrativa manual mediante herramientas no integradas (Excel, documentos
-                    físicos).</span>
-                </li>
-                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
-                  <i class="material-icons" style="font-size: 22px; margin-top: 2px;">link_off</i>
-                  <span>Falta de trazabilidad y centralización de información financiera.</span>
-                </li>
-                <li style="display: flex; align-items: flex-start; gap: 10px;">
-                  <i class="material-icons" style="font-size: 22px; margin-top: 2px;">sentiment_dissatisfied</i>
-                  <span>Pérdida de confianza de residentes debido a procesos poco transparentes.</span>
-                </li>
-              </ul>
-            </div>
-
+      <div class="col" style="background: #fff1f2; border: 2px solid #fecdd3; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(225, 29, 72, 0.1); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+        
+        <div>
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <strong style="font-size: 32px; color: #be123c;">⚠️ El Problema</strong>
           </div>
-
-          <div class="col"
-            style="background: var(--primary, #1e3a8a); color: white; padding: 20px; border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 74, 173, 0.3); flex: 1; display: flex; flex-direction: column; justify-content: center;">
-
-            <div>
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-                <strong style="font-size: 26px;">✅ Propuesta de Solución</strong>
-              </div>
-
-              <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; line-height: 1.3;">
-                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
-                  <i class="material-icons" style="font-size: 22px; margin-top: 2px; color: #93c5fd;">cloud_done</i>
-                  <span>Plataforma web centralizada con arquitectura multi-tenancy.</span>
-                </li>
-                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
-                  <i class="material-icons" style="font-size: 22px; margin-top: 2px; color: #93c5fd;">autorenew</i>
-                  <span>Automatización de procesos administrativos y financieros.</span>
-                </li>
-                <li style="display: flex; align-items: flex-start; gap: 10px;">
-                  <i class="material-icons" style="font-size: 22px; margin-top: 2px; color: #93c5fd;">security</i>
-                  <span>Seguridad mediante JWT y autenticación de dos factores (2FA).</span>
-                </li>
-              </ul>
-            </div>
-
-          </div>
-
-        </div>
-
-        <div
-          style="flex: 2; max-width: 40%; display: flex; justify-content: center; align-items: center; background: #fff; border-radius: 16px; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.05);">
-
-          <img src="https://undraw.co/ud_steps_3.svg" alt="Ilustración de pasos de un proceso"
-            style="width: 100%; height: auto; max-height: 100%; object-fit: contain;">
-
+          
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 24px; line-height: 1.4; color: #881337;">
+            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons" style="font-size: 28px; margin-top: 3px;">error_outline</i>
+              <span>Gestión manual propensa a errores humanos.</span>
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons" style="font-size: 28px; margin-top: 3px;">link_off</i>
+              <span>Herramientas desconectadas (Excel, WhatsApp).</span>
+            </li>
+            <li style="display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons" style="font-size: 28px; margin-top: 3px;">sentiment_dissatisfied</i>
+              <span>Desconfianza de los residentes.</span>
+            </li>
+          </ul>
         </div>
 
       </div>
+
+      <div class="col" style="background: var(--primary, #1e3a8a); color: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0, 74, 173, 0.3); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+        
+        <div>
+          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <strong style="font-size: 32px;">✅ Nuestra Solución</strong>
+          </div>
+
+          <ul style="list-style: none; padding: 0; margin: 0; font-size: 24px; line-height: 1.4;">
+            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons" style="font-size: 28px; margin-top: 3px; color: #93c5fd;">cloud_done</i>
+              <span>Plataforma centralizada 100% web.</span>
+            </li>
+            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons" style="font-size: 28px; margin-top: 3px; color: #93c5fd;">autorenew</i>
+              <span>Automatización de cargos y conciliaciones.</span>
+            </li>
+            <li style="display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons" style="font-size: 28px; margin-top: 3px; color: #93c5fd;">security</i>
+              <span>Seguridad avanzada (JWT, 2FA).</span>
+            </li>
+          </ul>
+        </div>
+        
+      </div>
+
     </div>
 
-    <section class="slide">
-      <h2 style="font-size: 38px; margin-bottom: 15px;">🧩 Introducción</h2>
+    <div style="flex: 2; max-width: 40%; display: flex; justify-content: center; align-items: center; background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
+        
+        <img src="https://undraw.co/ud_steps_3.svg" alt="Ilustración de pasos de un proceso" style="width: 100%; height: auto; max-height: 100%; object-fit: contain;">
 
-      <div class="grid" style="align-items: flex-start; gap: 35px; margin-top: -10px;">
+    </div>
 
+  </div>
+</div>
+    
+<section class="slide">
+      <h2>🧩 Introducción</h2>
+      
+      <div class="grid" style="align-items: flex-start; gap: 50px; margin-top: 20px;">
+        
         <div class="col-2" style="display: flex; flex-direction: column; justify-content: center; padding-right: 10px;">
 
           <div style="margin-bottom: 20px;">
@@ -733,81 +728,6 @@
         </div>
       </div>
     </section>
-        <div class="slide">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Tecnologías Utilizadas</h2>
-        <p style="font-size: 24px; color: var(--text-light);">Stack tecnológico principal del proyecto Cuentas Claras.
-        </p>
-      </div>
-
-      <div class="grid" style="margin-top: 20px; gap: 25px; align-items: stretch;">
-
-        <div class="col"
-          style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🌐</div>
-            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Frontend</h3>
-            <span style="font-size: 16px; color: var(--text-light);">(ccfrontend)</span>
-          </div>
-          <ul
-            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">⚛️</span> <strong>Framework:</strong>
-              Next.js (React)</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">📘</span> <strong>Lenguaje:</strong>
-              TypeScript</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🎨</span> <strong>UI:</strong> Material-UI,
-              Emotion</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔄</span> <strong>Estado:</strong> Axios,
-              Hooks</li>
-            <li><span style="font-size: 20px;">⚙️</span> <strong>Build:</strong> Babel, SWC</li>
-          </ul>
-        </div>
-
-        <div class="col"
-          style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🔧</div>
-            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Backend</h3>
-            <span style="font-size: 16px; color: var(--text-light);">(ccbackend)</span>
-          </div>
-          <ul
-            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🟢</span> <strong>Runtime:</strong> Node.js
-              (v18+)</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🚀</span> <strong>Framework:</strong>
-              Express.js</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🗄️</span> <strong>DB:</strong> MySQL,
-              Sequelize</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔐</span> <strong>Auth:</strong> JWT, 2FA
-              (OTP)</li>
-            <li><span style="font-size: 20px;">📧</span> <strong>Tools:</strong> Nodemailer, Swagger</li>
-          </ul>
-        </div>
-
-        <div class="col"
-          style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🐳</div>
-            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">DevOps</h3>
-            <span style="font-size: 16px; color: var(--text-light);">(Docker)</span>
-          </div>
-          <ul
-            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">📦</span> <strong>Container:</strong> Docker
-              Images</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🎼</span> <strong>Orchestration:</strong>
-              Docker Compose</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔄</span> <strong>CI/CD:</strong> GitHub
-              Actions (Plan)</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">⚡</span> <strong>Scripts:</strong> NPM
-              Automation</li>
-            <li><span style="font-size: 20px;">☁️</span> <strong>Cloud:</strong> Azure Ready</li>
-          </ul>
-        </div>
-
-      </div>
-    </div>
-
 
     <section class="slide">
       <h2 style="font-size: 48px; margin-bottom: 30px; border-bottom: 3px solid var(--accent); display: inline-block;">
@@ -904,7 +824,7 @@
       </div>
 
       <p style="text-align: center; font-size: 22px; max-width: 100%; margin-bottom: 40px;">
-        Se utilizó la metodología <strong>Ágil</strong>, porque nos permite definir los requisitos durante el desarrollo
+        Se utilizó la metodología <strong>Ágil scrum</strong>, porque nos permite definir los requisitos durante el desarrollo
         y haciendo uso de la retroalimentación directa de usuarios y el cliente.
       </p>
 
@@ -1100,10 +1020,10 @@
     </div>
 
     <div class="slide">
-      <div style="text-align: center; margin-bottom: 12px;">
-        <h2 style="font-size: 28px; margin-bottom: 6px; color: var(--primary);">Arquitectura de Reglas de Negocio</h2>
-        <h3 style="font-size: 15px; color: var(--text-light); font-weight: 400; margin: 0;">
-          Sistema diseñado por capas para garantizar seguridad, consistencia y automatización.
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Arquitectura de Reglas de Negocios</h2>
+        <h3 style="font-size: 24px; color: var(--text-light); font-weight: 400; margin: 0;">
+          Diseño por capas para seguridad, consistencia y automatización.
         </h3>
       </div>
 
@@ -1116,14 +1036,12 @@
             <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 1: Fundamentales</strong>
             <span style="font-size: 11px; color: var(--text-light);">(Seguridad y Aislamiento)</span>
           </div>
-          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
-            <li style="margin-bottom: 5px;">
-              <strong>Multitenancy Estricto:</strong> <span style="font-weight: 600;">Aislamiento lógico total</span>.
-              Datos entre comunidades invisibles entre sí.
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Multitenancy:</strong> Aislamiento de datos <span style="font-weight: 600; color: var(--text-main);">total entre comunidades</span>.
             </li>
             <li>
-              <strong>Seguridad RBAC:</strong> <span style="font-weight: 600;">Permisos granulares</span>.
-              Diferenciación total entre roles.
+              <strong>RBAC:</strong> Control de acceso <span style="font-weight: 600; color: var(--text-main);">granular por roles</span>.
             </li>
           </ul>
         </div>
@@ -1135,14 +1053,12 @@
             <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 2: Estructurales</strong>
             <span style="font-size: 11px; color: var(--text-light);">(Consistencia de Datos)</span>
           </div>
-          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
-            <li style="margin-bottom: 5px;">
-              <strong>Jerarquía Fiel:</strong> <span style="font-weight: 600;">Modelado relacional exacto</span>. Sin
-              unidad física, no existe deuda.
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Modelo Fiel:</strong> Sin unidad física, <span style="font-weight: 600; color: var(--text-main);">no existe deuda</span>.
             </li>
             <li>
-              <strong>Integridad Referencial:</strong> <span style="font-weight: 600;">Validaciones DB</span> que
-              impiden borrar datos vinculados.
+              <strong>Integridad:</strong> Bloqueo automático al <span style="font-weight: 600; color: var(--text-main);">borrar datos vinculados</span>.
             </li>
           </ul>
         </div>
@@ -1154,14 +1070,12 @@
             <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 3: Operativas</strong>
             <span style="font-size: 11px; color: var(--text-light);">(Motor del Negocio)</span>
           </div>
-          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
-            <li style="margin-bottom: 5px;">
-              <strong>Algoritmo de Prorrateo:</strong> <span style="font-weight: 600;">Cálculo automático</span> con
-              precisión decimal, sin error humano.
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Prorrateo:</strong> Cálculo automático con <span style="font-weight: 600; color: var(--text-main);">precisión decimal</span>.
             </li>
             <li>
-              <strong>Lógica de Sanciones:</strong> <span style="font-weight: 600;">Aplicación automática</span> de
-              multas e intereses.
+              <strong>Sanciones:</strong> Aplicación automática de <span style="font-weight: 600; color: var(--text-main);">multas e intereses</span>.
             </li>
           </ul>
         </div>
@@ -1173,14 +1087,12 @@
             <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 4: Administrativas</strong>
             <span style="font-size: 11px; color: var(--text-light);">(Control y Auditoría)</span>
           </div>
-          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
-            <li style="margin-bottom: 5px;">
-              <strong>Flujo de Aprobación:</strong> Gastos sensibles requieren <span
-                style="font-weight: 600;">aprobación digital previa</span>.
+          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
+            <li style="margin-bottom: 10px;">
+              <strong>Aprobaciones:</strong> Validación digital <span style="font-weight: 600; color: var(--text-main);">previa al gasto</span>.
             </li>
             <li>
-              <strong>Trazabilidad:</strong> <span style="font-weight: 600;">Conciliación bancaria inteligente</span>
-              que cierra el ciclo contable.
+              <strong>Trazabilidad:</strong> Conciliación bancaria <span style="font-weight: 600; color: var(--text-main);">inteligente</span>.
             </li>
           </ul>
         </div>
@@ -1188,15 +1100,13 @@
       </div>
     </div>
 
-
-    <div class="slide">
-      <h2>DIAGRAMA MAESTRO HORIZONTAL (ERD Completo)</h2>
-
-      <div class="insight-box">
-        <span class="insight-icon">➡️</span>
-        <strong>Flujo Horizontal:</strong> Organización lineal desde la definición de la comunidad (izquierda) hasta la
-        conciliación bancaria (derecha).
-      </div>
+<div class="slide">
+  <h2>DIAGRAMA MAESTRO HORIZONTAL (ERD Completo)</h2>
+  
+  <div class="insight-box">
+    <span class="insight-icon">➡️</span>
+    <strong>Flujo Horizontal:</strong> Organización lineal desde la definición de la comunidad (izquierda) hasta la conciliación bancaria (derecha).
+  </div>
 
       <div class="mermaid-container"
         style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
