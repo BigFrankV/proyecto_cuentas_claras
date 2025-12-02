@@ -167,6 +167,7 @@
       text-transform: uppercase;
       letter-spacing: 2px;
     }
+
     .mermaid-container {
       background: #fff;
       border: 1px solid #e2e8f0;
@@ -218,10 +219,11 @@
     .btn {
       transition: all 0.3s ease;
     }
+
     .btn:hover {
       background: var(--primary-dark);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
     }
 
     .insight-box {
@@ -485,12 +487,14 @@
     .tech-icon:hover {
       transform: translateY(-10px);
     }
-    .tech-icon:hover { transform: translateY(-10px); }
 
-    .text-light{
-      color: #fff
+    .tech-icon:hover {
+      transform: translateY(-10px);
     }
 
+    .text-light {
+      color: #fff
+    }
   </style>
 </head>
 
@@ -551,159 +555,259 @@
         </div>
       </div>
     </section>
-<section class="slide">
-      <h2>🧩 Introducción</h2>
-      
-      <div class="grid" style="align-items: flex-start; gap: 50px; margin-top: 20px;">
-        
+
+    <div class="slide">
+      <h2 style="font-size: 36px; margin-bottom: 15px;">Problemática y Propuesta de Solución</h2>
+
+      <div style="display: flex; gap: 30px; align-items: stretch; height: 75%; margin-top: -10px;">
+
+        <div style="display: flex; flex-direction: column; gap: 25px; flex: 3; max-width: 60%;">
+
+          <div class="col"
+            style="background: #fff1f2; border: 2px solid #fecdd3; padding: 20px; border-radius: 16px; box-shadow: 0 8px 20px rgba(225, 29, 72, 0.1); flex: 1; display: flex; flex-direction: column; justify-content: center;">
+
+            <div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                <strong style="font-size: 26px; color: #be123c;">⚠️ Problemática Identificada</strong>
+              </div>
+
+              <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; line-height: 1.3; color: #881337;">
+                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="material-icons" style="font-size: 22px; margin-top: 2px;">error_outline</i>
+                  <span>Gestión administrativa manual mediante herramientas no integradas (Excel, documentos
+                    físicos).</span>
+                </li>
+                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="material-icons" style="font-size: 22px; margin-top: 2px;">link_off</i>
+                  <span>Falta de trazabilidad y centralización de información financiera.</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="material-icons" style="font-size: 22px; margin-top: 2px;">sentiment_dissatisfied</i>
+                  <span>Pérdida de confianza de residentes debido a procesos poco transparentes.</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+
+          <div class="col"
+            style="background: var(--primary, #1e3a8a); color: white; padding: 20px; border-radius: 16px; box-shadow: 0 12px 30px rgba(0, 74, 173, 0.3); flex: 1; display: flex; flex-direction: column; justify-content: center;">
+
+            <div>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                <strong style="font-size: 26px;">✅ Propuesta de Solución</strong>
+              </div>
+
+              <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; line-height: 1.3;">
+                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="material-icons" style="font-size: 22px; margin-top: 2px; color: #93c5fd;">cloud_done</i>
+                  <span>Plataforma web centralizada con arquitectura multi-tenancy.</span>
+                </li>
+                <li style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="material-icons" style="font-size: 22px; margin-top: 2px; color: #93c5fd;">autorenew</i>
+                  <span>Automatización de procesos administrativos y financieros.</span>
+                </li>
+                <li style="display: flex; align-items: flex-start; gap: 10px;">
+                  <i class="material-icons" style="font-size: 22px; margin-top: 2px; color: #93c5fd;">security</i>
+                  <span>Seguridad mediante JWT y autenticación de dos factores (2FA).</span>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div
+          style="flex: 2; max-width: 40%; display: flex; justify-content: center; align-items: center; background: #fff; border-radius: 16px; padding: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.05);">
+
+          <img src="https://undraw.co/ud_steps_3.svg" alt="Ilustración de pasos de un proceso"
+            style="width: 100%; height: auto; max-height: 100%; object-fit: contain;">
+
+        </div>
+
+      </div>
+    </div>
+
+    <section class="slide">
+      <h2 style="font-size: 38px; margin-bottom: 15px;">🧩 Introducción</h2>
+
+      <div class="grid" style="align-items: flex-start; gap: 35px; margin-top: -10px;">
+
         <div class="col-2" style="display: flex; flex-direction: column; justify-content: center; padding-right: 10px;">
-          
-          <div style="margin-bottom: 30px;">
-            <h3 style="font-size: 52px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1; letter-spacing: -1px;">
+
+          <div style="margin-bottom: 20px;">
+            <h3
+              style="font-size: 44px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1; letter-spacing: -1px;">
               CUENTAS CLARAS
             </h3>
-            <p style="font-size: 24px; color: var(--text-light); margin-top: 15px; font-weight: 400; border-left: 6px solid var(--accent); padding-left: 20px; line-height: 1.4;">
+            <p
+              style="font-size: 20px; color: var(--text-light); margin-top: 12px; font-weight: 400; border-left: 5px solid var(--accent); padding-left: 15px; line-height: 1.3;">
               Plataforma integral para gestión de comunidades y condominios.
             </p>
           </div>
-          
-          <p style="font-size: 16px; color: var(--accent); margin-bottom: 25px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;">
+
+          <p
+            style="font-size: 14px; color: var(--accent); margin-bottom: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px;">
             FUNCIONALIDADES PRINCIPALES
           </p>
-          
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 22px; color: var(--text-light); line-height: 1.5;">
-            <li style="margin-bottom: 14px; display: flex; align-items: flex-start; gap: 15px;">
-              <i class="material-icons" style="color: var(--accent); font-size: 28px; margin-top: 2px;">check_circle_outline</i>
+
+          <ul
+            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-light); line-height: 1.4;">
+            <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons"
+                style="color: var(--accent); font-size: 22px; margin-top: 2px;">check_circle_outline</i>
               <span>Emisión mensual de gastos comunes.</span>
             </li>
-            <li style="margin-bottom: 14px; display: flex; align-items: flex-start; gap: 15px;">
-              <i class="material-icons" style="color: var(--accent); font-size: 28px; margin-top: 2px;">check_circle_outline</i>
+            <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons"
+                style="color: var(--accent); font-size: 22px; margin-top: 2px;">check_circle_outline</i>
               <span>Registro y prorrateo de consumos.</span>
             </li>
-            <li style="margin-bottom: 14px; display: flex; align-items: flex-start; gap: 15px;">
-              <i class="material-icons" style="color: var(--accent); font-size: 28px; margin-top: 2px;">check_circle_outline</i>
+            <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons"
+                style="color: var(--accent); font-size: 22px; margin-top: 2px;">check_circle_outline</i>
               <span>Gestión de unidades y residentes.</span>
             </li>
-            <li style="margin-bottom: 14px; display: flex; align-items: flex-start; gap: 15px;">
-              <i class="material-icons" style="color: var(--accent); font-size: 28px; margin-top: 2px;">check_circle_outline</i>
+            <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons"
+                style="color: var(--accent); font-size: 22px; margin-top: 2px;">check_circle_outline</i>
               <span>Control de pagos y conciliación.</span>
             </li>
-            <li style="margin-bottom: 14px; display: flex; align-items: flex-start; gap: 15px;">
-              <i class="material-icons" style="color: var(--accent); font-size: 28px; margin-top: 2px;">check_circle_outline</i>
+            <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons"
+                style="color: var(--accent); font-size: 22px; margin-top: 2px;">check_circle_outline</i>
               <span>Gestión de reservas y bitácoras.</span>
             </li>
-            <li style="display: flex; align-items: flex-start; gap: 15px;">
-              <i class="material-icons" style="color: var(--accent); font-size: 28px; margin-top: 2px;">check_circle_outline</i>
+            <li style="display: flex; align-items: flex-start; gap: 12px;">
+              <i class="material-icons"
+                style="color: var(--accent); font-size: 22px; margin-top: 2px;">check_circle_outline</i>
               <span>Roles y permisos por comunidad.</span>
             </li>
           </ul>
 
         </div>
 
-        <div class="col" style="display: flex; flex-direction: column; gap: 30px;">
-          
-          <div style="background: white; border: 1px solid #eee; padding: 35px; border-radius: 20px; box-shadow: 0 15px 30px rgba(0,0,0,0.08);">
-            <div style="display:flex; gap:20px; margin-bottom:30px; align-items:flex-start;">
-              <i class="material-icons" style="font-size:40px; color: var(--accent);">diamond</i>
+        <div class="col" style="display: flex; flex-direction: column; gap: 22px;">
+
+          <div
+            style="background: white; border: 1px solid #eee; padding: 25px; border-radius: 16px; box-shadow: 0 12px 25px rgba(0,0,0,0.08);">
+            <div style="display:flex; gap:15px; margin-bottom:22px; align-items:flex-start;">
+              <i class="material-icons" style="font-size:34px; color: var(--accent);">diamond</i>
               <div>
-                <strong style="font-size: 22px; display: block; margin-bottom: 6px; color: var(--text-main);">Transparencia</strong>
-                <span style="font-size: 18px; color: var(--text-light); line-height: 1.4;">Trazabilidad total del dinero y movimientos.</span>
+                <strong
+                  style="font-size: 19px; display: block; margin-bottom: 5px; color: var(--text-main);">Transparencia</strong>
+                <span style="font-size: 16px; color: var(--text-light); line-height: 1.3;">Trazabilidad completa de cada
+                  transacción y movimiento financiero.</span>
               </div>
             </div>
-            <div style="display:flex; gap:20px; margin-bottom:30px; align-items:flex-start;">
-              <i class="material-icons" style="font-size:40px; color: var(--accent);">lock</i>
+            <div style="display:flex; gap:15px; margin-bottom:22px; align-items:flex-start;">
+              <i class="material-icons" style="font-size:34px; color: var(--accent);">lock</i>
               <div>
-                <strong style="font-size: 22px; display: block; margin-bottom: 6px; color: var(--text-main);">Seguridad</strong>
-                <span style="font-size: 18px; color: var(--text-light); line-height: 1.4;">Datos aislados, encriptados y seguros.</span>
+                <strong
+                  style="font-size: 19px; display: block; margin-bottom: 5px; color: var(--text-main);">Seguridad</strong>
+                <span style="font-size: 16px; color: var(--text-light); line-height: 1.3;">Datos aislados por comunidad,
+                  cifrados y protegidos con autenticación multi-factor.</span>
               </div>
             </div>
-            <div style="display:flex; gap:20px; align-items:flex-start;">
-              <i class="material-icons" style="font-size:40px; color: var(--accent);">flash_on</i>
+            <div style="display:flex; gap:15px; align-items:flex-start;">
+              <i class="material-icons" style="font-size:34px; color: var(--accent);">flash_on</i>
               <div>
-                <strong style="font-size: 22px; display: block; margin-bottom: 6px; color: var(--text-main);">Automatización</strong>
-                <span style="font-size: 18px; color: var(--text-light); line-height: 1.4;">Adiós al cálculo manual propenso a errores.</span>
+                <strong
+                  style="font-size: 19px; display: block; margin-bottom: 5px; color: var(--text-main);">Automatización</strong>
+                <span style="font-size: 16px; color: var(--text-light); line-height: 1.3;">Eliminación de cálculos
+                  manuales mediante procesos automatizados y confiables.</span>
               </div>
             </div>
           </div>
 
-          <div style="background: #f0f9ff; border-left: 8px solid var(--primary); padding: 25px; border-radius: 12px;">
-            <p style="font-size: 19px; margin: 0; color: var(--text-main); line-height: 1.5;">
-              <strong style="color: var(--primary); font-size: 21px; display:block; margin-bottom:8px;">Tecnología Moderna:</strong>
-              Arquitectura escalable, modular y mantenible basada en Backend, Frontend y Contenedorización.
+          <div style="background: #f0f9ff; border-left: 6px solid var(--primary); padding: 20px; border-radius: 10px;">
+            <p style="font-size: 16px; margin: 0; color: var(--text-main); line-height: 1.4;">
+              <strong style="color: var(--primary); font-size: 18px; display:block; margin-bottom:6px;">Stack
+                Tecnológico:</strong>
+              Arquitectura escalable y modular con separación de responsabilidades: Backend (Node.js + Express),
+              Frontend (Next.js + React) y despliegue en contenedores Docker.
             </p>
           </div>
 
         </div>
       </div>
     </section>
+        <div class="slide">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Tecnologías Utilizadas</h2>
+        <p style="font-size: 24px; color: var(--text-light);">Stack tecnológico principal del proyecto Cuentas Claras.
+        </p>
+      </div>
 
-<div class="slide">
-  <h2 style="font-size: 42px; margin-bottom: 30px;">Descripción del Proyecto</h2>
+      <div class="grid" style="margin-top: 20px; gap: 25px; align-items: stretch;">
 
-  <div style="display: flex; gap: 40px; align-items: stretch; height: 75%;">
-
-    <div style="display: flex; flex-direction: column; gap: 40px; flex: 3; max-width: 60%;">
-
-      <div class="col" style="background: #fff1f2; border: 2px solid #fecdd3; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(225, 29, 72, 0.1); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-        
-        <div>
-          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-            <strong style="font-size: 32px; color: #be123c;">⚠️ El Problema</strong>
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 60px; margin-bottom: 15px;">🌐</div>
+            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Frontend</h3>
+            <span style="font-size: 16px; color: var(--text-light);">(ccfrontend)</span>
           </div>
-          
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 24px; line-height: 1.4; color: #881337;">
-            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
-              <i class="material-icons" style="font-size: 28px; margin-top: 3px;">error_outline</i>
-              <span>Gestión manual propensa a errores humanos.</span>
-            </li>
-            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
-              <i class="material-icons" style="font-size: 28px; margin-top: 3px;">link_off</i>
-              <span>Herramientas desconectadas (Excel, WhatsApp).</span>
-            </li>
-            <li style="display: flex; align-items: flex-start; gap: 12px;">
-              <i class="material-icons" style="font-size: 28px; margin-top: 3px;">sentiment_dissatisfied</i>
-              <span>Desconfianza de los residentes.</span>
-            </li>
+          <ul
+            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">⚛️</span> <strong>Framework:</strong>
+              Next.js (React)</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">📘</span> <strong>Lenguaje:</strong>
+              TypeScript</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🎨</span> <strong>UI:</strong> Material-UI,
+              Emotion</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔄</span> <strong>Estado:</strong> Axios,
+              Hooks</li>
+            <li><span style="font-size: 20px;">⚙️</span> <strong>Build:</strong> Babel, SWC</li>
+          </ul>
+        </div>
+
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 60px; margin-bottom: 15px;">🔧</div>
+            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Backend</h3>
+            <span style="font-size: 16px; color: var(--text-light);">(ccbackend)</span>
+          </div>
+          <ul
+            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🟢</span> <strong>Runtime:</strong> Node.js
+              (v18+)</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🚀</span> <strong>Framework:</strong>
+              Express.js</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🗄️</span> <strong>DB:</strong> MySQL,
+              Sequelize</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔐</span> <strong>Auth:</strong> JWT, 2FA
+              (OTP)</li>
+            <li><span style="font-size: 20px;">📧</span> <strong>Tools:</strong> Nodemailer, Swagger</li>
+          </ul>
+        </div>
+
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 60px; margin-bottom: 15px;">🐳</div>
+            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">DevOps</h3>
+            <span style="font-size: 16px; color: var(--text-light);">(Docker)</span>
+          </div>
+          <ul
+            style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">📦</span> <strong>Container:</strong> Docker
+              Images</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🎼</span> <strong>Orchestration:</strong>
+              Docker Compose</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔄</span> <strong>CI/CD:</strong> GitHub
+              Actions (Plan)</li>
+            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">⚡</span> <strong>Scripts:</strong> NPM
+              Automation</li>
+            <li><span style="font-size: 20px;">☁️</span> <strong>Cloud:</strong> Azure Ready</li>
           </ul>
         </div>
 
       </div>
-
-      <div class="col" style="background: var(--primary, #1e3a8a); color: white; padding: 30px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0, 74, 173, 0.3); flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-        
-        <div>
-          <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-            <strong style="font-size: 32px;">✅ Nuestra Solución</strong>
-          </div>
-
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 24px; line-height: 1.4;">
-            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
-              <i class="material-icons" style="font-size: 28px; margin-top: 3px; color: #93c5fd;">cloud_done</i>
-              <span>Plataforma centralizada 100% web.</span>
-            </li>
-            <li style="margin-bottom: 15px; display: flex; align-items: flex-start; gap: 12px;">
-              <i class="material-icons" style="font-size: 28px; margin-top: 3px; color: #93c5fd;">autorenew</i>
-              <span>Automatización de cargos y conciliaciones.</span>
-            </li>
-            <li style="display: flex; align-items: flex-start; gap: 12px;">
-              <i class="material-icons" style="font-size: 28px; margin-top: 3px; color: #93c5fd;">security</i>
-              <span>Seguridad avanzada (JWT, 2FA).</span>
-            </li>
-          </ul>
-        </div>
-        
-      </div>
-
     </div>
 
-    <div style="flex: 2; max-width: 40%; display: flex; justify-content: center; align-items: center; background: #fff; border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.05);">
-        
-        <img src="https://undraw.co/ud_steps_3.svg" alt="Ilustración de pasos de un proceso" style="width: 100%; height: auto; max-height: 100%; object-fit: contain;">
-
-    </div>
-
-  </div>
-</div>
 
     <section class="slide">
       <h2 style="font-size: 48px; margin-bottom: 30px; border-bottom: 3px solid var(--accent); display: inline-block;">
@@ -716,7 +820,7 @@
       </p>
 
       <ul style="font-size: 28px; line-height: 1.5; color: var(--text-light); list-style: none; padding: 0;">
-        
+
         <li style="margin-bottom: 20px; display: flex; align-items: flex-start; gap: 20px;">
           <i class="material-icons" style="font-size: 36px; color: var(--accent); margin-top: 4px;">group</i>
           <span>Unificar todos los procesos administrativos de una comunidad.</span>
@@ -822,12 +926,13 @@
       </div>
     </div>
 
-   <div class="slide">
+    <div class="slide">
       <h2 style="font-size: 42px; margin-bottom: 30px;">Arquitectura del Sistema</h2>
-      
+
       <div class="insight-box">
         <span class="insight-icon">☁️</span>
-        <strong>Dato Técnico:</strong> Separación total entre Frontend (Next.js) y Backend (Node.js). Flujo horizontal de izquierda a derecha.
+        <strong>Dato Técnico:</strong> Separación total entre Frontend (Next.js) y Backend (Node.js). Flujo horizontal
+        de izquierda a derecha.
       </div>
 
       <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe;">
@@ -844,55 +949,56 @@
           U[Usuario / Navegador]
 
           subgraph CLOUD["Nube"]
-            direction LR
-            
-            subgraph EDGE["Edge / Gateway"]
-              direction TB
-              NGINX[Nginx - Reverse Proxy]:::front
-              FE[Frontend - Next.js]:::front
-            end
-            
-            subgraph BACKEND["Backend / API"]
-              direction TB
-              API["API - Express (Node.js)"]:::back
-              WORKERS[Workers / Jobs]:::back
-            end
-            
-            subgraph INFRA["Infraestructura de Datos"]
-              direction TB
-              REDIS[(Redis Cache)]:::data
-              STORAGE[(Object Storage)]:::data
-              MYSQL[(MySQL 8.0)]:::data
-            end
+          direction LR
+
+          subgraph EDGE["Edge / Gateway"]
+          direction TB
+          NGINX[Nginx - Reverse Proxy]:::front
+          FE[Frontend - Next.js]:::front
+          end
+
+          subgraph BACKEND["Backend / API"]
+          direction TB
+          API["API - Express (Node.js)"]:::back
+          WORKERS[Workers / Jobs]:::back
+          end
+
+          subgraph INFRA["Infraestructura de Datos"]
+          direction TB
+          REDIS[(Redis Cache)]:::data
+          STORAGE[(Object Storage)]:::data
+          MYSQL[(MySQL 8.0)]:::data
+          end
           end
 
           subgraph EXTERNAL["Servicios Externos"]
-            direction TB
-            PAYMENT[Pasarela Pagos]:::ext
-            SMTP[Proveedor Email]:::ext
+          direction TB
+          PAYMENT[Pasarela Pagos]:::ext
+          SMTP[Proveedor Email]:::ext
           end
 
           %% Relaciones (Flujo Horizontal)
           U --> NGINX
           NGINX --> FE
           FE --> API
-          
+
           %% Conexiones Backend
           API <--> PAYMENT
-          API --> SMTP
-          API --> WORKERS
-          
-          %% Conexiones Datos
-          API --> REDIS
-          API --> STORAGE
-          API --> MYSQL
-          WORKERS --> MYSQL
+            API --> SMTP
+            API --> WORKERS
+
+            %% Conexiones Datos
+            API --> REDIS
+            API --> STORAGE
+            API --> MYSQL
+            WORKERS --> MYSQL
         </div>
       </div>
     </div>
     <div class="slide">
       <div style="width: 100%; margin-bottom: 30px;">
-        <h2 style="font-size: 54px; color: var(--primary); margin: 0; padding-bottom: 15px; border-bottom: 5px solid var(--accent); width: 100%; text-align: left;">
+        <h2
+          style="font-size: 54px; color: var(--primary); margin: 0; padding-bottom: 15px; border-bottom: 5px solid var(--accent); width: 100%; text-align: left;">
           Modelo de Datos
         </h2>
         <p style="font-size: 26px; color: var(--text-light); margin-top: 15px; font-weight: 400;">
@@ -901,14 +1007,15 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 30px; height: 100%; justify-content: flex-start;">
-        
+
         <div>
           <h4 style="font-size: 30px; color: var(--primary); margin-bottom: 15px; font-weight: 600;">
             ¿Por qué elegimos la 3ra Forma Normal?
           </h4>
-          
+
           <div style="display: flex; gap: 25px;">
-            <div style="flex: 1; background: #fff1f2; border-left: 6px solid #be123c; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+            <div
+              style="flex: 1; background: #fff1f2; border-left: 6px solid #be123c; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <i class="material-icons" style="color: #be123c; font-size: 28px;">warning</i>
                 <strong style="color: #be123c; font-size: 24px;">El Problema (Legacy)</strong>
@@ -918,7 +1025,8 @@
               </p>
             </div>
 
-            <div style="flex: 1; background: #f0fdf4; border-left: 6px solid #15803d; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+            <div
+              style="flex: 1; background: #f0fdf4; border-left: 6px solid #15803d; padding: 20px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
               <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <i class="material-icons" style="color: #15803d; font-size: 28px;">check_circle</i>
                 <strong style="color: #15803d; font-size: 24px;">Nuestra Solución (3NF)</strong>
@@ -934,39 +1042,55 @@
           <h4 style="font-size: 30px; color: var(--primary); margin-bottom: 20px; font-weight: 600;">
             Estructura del Negocio: Los 4 Pilares
           </h4>
-          
+
           <div class="grid" style="gap: 20px; margin-top: 0;">
-            
-            <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-              <div style="background: #eff6ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+
+            <div class="col"
+              style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+              <div
+                style="background: #eff6ff; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                 <span style="font-size: 32px;">🏢</span>
               </div>
-              <strong style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Comunidad</strong>
-              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Entidad raíz y aislamiento de datos (Tenant).</p>
+              <strong
+                style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Comunidad</strong>
+              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Entidad raíz y
+                aislamiento de datos (Tenant).</p>
             </div>
 
-            <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-              <div style="background: #fefce8; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+            <div class="col"
+              style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+              <div
+                style="background: #fefce8; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                 <span style="font-size: 32px;">🏠</span>
               </div>
-              <strong style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Unidad</strong>
-              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Activo físico perpetuo, desacoplado del dueño.</p>
+              <strong
+                style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Unidad</strong>
+              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Activo físico perpetuo,
+                desacoplado del dueño.</p>
             </div>
 
-            <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-              <div style="background: #fdf2f8; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+            <div class="col"
+              style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+              <div
+                style="background: #fdf2f8; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                 <span style="font-size: 32px;">🧾</span>
               </div>
-              <strong style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Emisión</strong>
-              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Generador de deuda. Auditoría financiera exacta.</p>
+              <strong
+                style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Emisión</strong>
+              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Generador de deuda.
+                Auditoría financiera exacta.</p>
             </div>
 
-            <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
-              <div style="background: #f0fdf4; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
+            <div class="col"
+              style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+              <div
+                style="background: #f0fdf4; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
                 <span style="font-size: 32px;">💸</span>
               </div>
-              <strong style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Pago</strong>
-              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Cierre del ciclo. Distribución inteligente.</p>
+              <strong
+                style="font-size: 24px; color: var(--text-main); display: block; margin-bottom: 8px;">Pago</strong>
+              <p style="font-size: 18px; color: var(--text-light); margin: 0; line-height: 1.3;">Cierre del ciclo.
+                Distribución inteligente.</p>
             </div>
 
           </div>
@@ -976,75 +1100,87 @@
     </div>
 
     <div class="slide">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Arquitectura de Reglas de Negocio</h2>
-        <h3 style="font-size: 24px; color: var(--text-light); font-weight: 400; margin: 0;">
-          Un sistema diseñado por capas para garantizar seguridad, consistencia y automatización.
+      <div style="text-align: center; margin-bottom: 12px;">
+        <h2 style="font-size: 28px; margin-bottom: 6px; color: var(--primary);">Arquitectura de Reglas de Negocio</h2>
+        <h3 style="font-size: 15px; color: var(--text-light); font-weight: 400; margin: 0;">
+          Sistema diseñado por capas para garantizar seguridad, consistencia y automatización.
         </h3>
       </div>
 
-      <div class="grid" style="gap: 20px; align-items: stretch;">
-        
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🧱</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 1: Fundamentales</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Seguridad y Aislamiento)</span>
+      <div class="grid" style="gap: 12px; align-items: stretch; margin-top: -10px;">
+
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 8px;">
+            <div style="font-size: 24px; margin-bottom: 3px;">🧱</div>
+            <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 1: Fundamentales</strong>
+            <span style="font-size: 11px; color: var(--text-light);">(Seguridad y Aislamiento)</span>
           </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Multitenancy Estricto:</strong> <span style="font-weight: 600; color: var(--text-main);">Aislamiento lógico total</span>. Datos entre comunidades son invisibles entre sí.
+          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
+            <li style="margin-bottom: 5px;">
+              <strong>Multitenancy Estricto:</strong> <span style="font-weight: 600;">Aislamiento lógico total</span>.
+              Datos entre comunidades invisibles entre sí.
             </li>
             <li>
-              <strong>Seguridad RBAC:</strong> <span style="font-weight: 600; color: var(--text-main);">Permisos granulares</span>. Diferenciación total entre roles (ej. Conserje vs Admin).
+              <strong>Seguridad RBAC:</strong> <span style="font-weight: 600;">Permisos granulares</span>.
+              Diferenciación total entre roles.
             </li>
           </ul>
         </div>
 
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">📐</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 2: Estructurales</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Consistencia de Datos)</span>
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 8px;">
+            <div style="font-size: 24px; margin-bottom: 3px;">📐</div>
+            <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 2: Estructurales</strong>
+            <span style="font-size: 11px; color: var(--text-light);">(Consistencia de Datos)</span>
           </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Jerarquía Fiel:</strong> <span style="font-weight: 600; color: var(--text-main);">Modelado relacional exacto</span>. Sin unidad física, no existe deuda asociada.
+          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
+            <li style="margin-bottom: 5px;">
+              <strong>Jerarquía Fiel:</strong> <span style="font-weight: 600;">Modelado relacional exacto</span>. Sin
+              unidad física, no existe deuda.
             </li>
             <li>
-              <strong>Integridad Referencial:</strong> <span style="font-weight: 600; color: var(--text-main);">Validaciones de base de datos</span> que impiden borrar datos vinculados.
+              <strong>Integridad Referencial:</strong> <span style="font-weight: 600;">Validaciones DB</span> que
+              impiden borrar datos vinculados.
             </li>
           </ul>
         </div>
 
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">⚙️</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 3: Operativas</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Motor del Negocio)</span>
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 8px;">
+            <div style="font-size: 24px; margin-bottom: 3px;">⚙️</div>
+            <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 3: Operativas</strong>
+            <span style="font-size: 11px; color: var(--text-light);">(Motor del Negocio)</span>
           </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Algoritmo de Prorrateo:</strong> <span style="font-weight: 600; color: var(--text-main);">Cálculo automático</span> con precisión decimal, eliminando el error humano.
+          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
+            <li style="margin-bottom: 5px;">
+              <strong>Algoritmo de Prorrateo:</strong> <span style="font-weight: 600;">Cálculo automático</span> con
+              precisión decimal, sin error humano.
             </li>
             <li>
-              <strong>Lógica de Sanciones:</strong> <span style="font-weight: 600; color: var(--text-main);">Aplicación automática</span> de multas e intereses según reglas.
+              <strong>Lógica de Sanciones:</strong> <span style="font-weight: 600;">Aplicación automática</span> de
+              multas e intereses.
             </li>
           </ul>
         </div>
 
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 15px;">
-            <div style="font-size: 40px; margin-bottom: 10px;">🛡️</div>
-            <strong style="font-size: 18px; color: var(--primary); display: block;">Grado 4: Administrativas</strong>
-            <span style="font-size: 14px; color: var(--text-light);">(Control y Auditoría)</span>
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <div style="text-align: center; margin-bottom: 8px;">
+            <div style="font-size: 24px; margin-bottom: 3px;">🛡️</div>
+            <strong style="font-size: 13px; color: var(--primary); display: block;">Grado 4: Administrativas</strong>
+            <span style="font-size: 11px; color: var(--text-light);">(Control y Auditoría)</span>
           </div>
-          <ul style="padding-left: 20px; margin: 0; font-size: 16px; line-height: 1.5; color: var(--text-main);">
-            <li style="margin-bottom: 10px;">
-              <strong>Flujo de Aprobación:</strong> Gastos sensibles requieren <span style="font-weight: 600; color: var(--text-main);">aprobación digital previa</span>.
+          <ul style="padding-left: 16px; margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-main);">
+            <li style="margin-bottom: 5px;">
+              <strong>Flujo de Aprobación:</strong> Gastos sensibles requieren <span
+                style="font-weight: 600;">aprobación digital previa</span>.
             </li>
             <li>
-              <strong>Trazabilidad:</strong> <span style="font-weight: 600; color: var(--text-main);">Conciliación bancaria inteligente</span> que cierra el ciclo contable.
+              <strong>Trazabilidad:</strong> <span style="font-weight: 600;">Conciliación bancaria inteligente</span>
+              que cierra el ciclo contable.
             </li>
           </ul>
         </div>
@@ -1053,39 +1189,42 @@
     </div>
 
 
-<div class="slide">
-  <h2>DIAGRAMA MAESTRO HORIZONTAL (ERD Completo)</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">➡️</span>
-    <strong>Flujo Horizontal:</strong> Organización lineal desde la definición de la comunidad (izquierda) hasta la conciliación bancaria (derecha).
-  </div>
+    <div class="slide">
+      <h2>DIAGRAMA MAESTRO HORIZONTAL (ERD Completo)</h2>
 
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: flex-start; min-width: 1800px;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 30,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+      <div class="insight-box">
+        <span class="insight-icon">➡️</span>
+        <strong>Flujo Horizontal:</strong> Organización lineal desde la definición de la comunidad (izquierda) hasta la
+        conciliación bancaria (derecha).
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: flex-start; min-width: 1800px;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 30,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% ==========================================
           %% ZONA 1: CONFIGURACIÓN Y ESTRUCTURA (IZQUIERDA)
           %% ==========================================
           comunidad { bigint id PK string razon_social }
           edificio { bigint id PK string nombre }
           torre { bigint id PK string nombre }
-          
+
           rol_sistema { int id PK string codigo }
           usuario { bigint id PK string username }
           usuario_rol_comunidad { bigint id PK date desde }
-          
+
           proveedor { bigint id PK string rut }
           categoria_gasto { bigint id PK string nombre }
           centro_costo { bigint id PK string nombre }
@@ -1096,7 +1235,7 @@
           unidad { bigint id PK string codigo decimal alicuota }
           persona { bigint id PK string nombre_completo }
           titulares_unidad { bigint id PK enum tipo }
-          
+
           medidor { bigint id PK enum tipo }
           amenidad { bigint id PK string nombre }
           tipo_infraccion { bigint id PK string nombre }
@@ -1106,7 +1245,7 @@
           %% ==========================================
           documento_compra { bigint id PK decimal total }
           gasto { bigint id PK decimal monto enum estado }
-          
+
           lectura_medidor { bigint id PK decimal lectura }
           reserva_amenidad { bigint id PK enum estado }
           multa { bigint id PK decimal monto }
@@ -1117,7 +1256,7 @@
           %% ==========================================
           emision_gastos_comunes { bigint id PK string periodo }
           detalle_emision_gastos { bigint id PK decimal monto }
-          
+
           cuenta_cobro_unidad { bigint id PK decimal saldo }
           detalle_cuenta_unidad { bigint id PK decimal monto }
 
@@ -1136,7 +1275,7 @@
           comunidad ||--o{ edificio : contiene
           edificio ||--o{ torre : divide_en
           torre ||--o{ unidad : agrupa
-          
+
           %% 2. Definición de Acceso
           comunidad ||--o{ usuario_rol_comunidad : gestiona
           usuario ||--o{ usuario_rol_comunidad : tiene
@@ -1147,7 +1286,7 @@
           unidad ||--o{ titulares_unidad : propiedad
           titulares_unidad }o--|| persona : titular
           unidad ||--o{ medidor : servicio
-          
+
           %% 4. Flujo de Gastos (Egresos)
           proveedor ||--o{ documento_compra : factura
           comunidad ||--o{ categoria_gasto : configura
@@ -1167,103 +1306,106 @@
           comunidad ||--o{ emision_gastos_comunes : emite_mes
           emision_gastos_comunes ||--o{ detalle_emision_gastos : consolida
           gasto ||--o{ detalle_emision_gastos : incluido_en
-          
+
           emision_gastos_comunes ||--o{ cuenta_cobro_unidad : boleta
           cuenta_cobro_unidad }o--|| unidad : cobrada_a
           cuenta_cobro_unidad ||--o{ detalle_cuenta_unidad : items
-          
+
           %% 7. Flujo de Ingreso (El cierre)
           unidad ||--o{ pago : realiza
           pago ||--o{ pago_aplicacion : distribuye
           pago_aplicacion }o--|| cuenta_cobro_unidad : rebaja
           pago |o--|| conciliacion_bancaria : valida
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-    
-<div class="slide">
-  <h2>Módulo 01 · Configuración de Comunidad</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">⚙️</span>
-    <strong>Alcance:</strong> Visualización de todos los parámetros globales, financieros y operativos que definen a la comunidad.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+
+    <div class="slide">
+      <h2>Módulo 01 · Configuración de Comunidad</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">⚙️</span>
+        <strong>Alcance:</strong> Visualización de todos los parámetros globales, financieros y operativos que definen a
+        la comunidad.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- ENTIDAD CENTRAL ---
           comunidad {
-            bigint id PK
-            string razon_social
-            string rut
-            json politica_mora
-            string moneda "CLP/USD"
+          bigint id PK
+          string razon_social
+          string rut
+          json politica_mora
+          string moneda "CLP/USD"
           }
-          
+
           %% --- CONFIGURACIÓN FINANCIERA ---
           parametros_cobranza {
-            bigint id
-            int dias_gracia
-            decimal interes_max
-            enum mora_calculo "diaria/mensual"
+          bigint id
+          int dias_gracia
+          decimal interes_max
+          enum mora_calculo "diaria/mensual"
           }
-          
+
           configuracion_interes {
-            bigint id
-            date aplica_desde
-            decimal tasa_mensual
-            enum metodo "simple/compuesto"
+          bigint id
+          date aplica_desde
+          decimal tasa_mensual
+          enum metodo "simple/compuesto"
           }
 
           %% --- CLASIFICACIÓN DE GASTOS ---
           centro_costo {
-            bigint id
-            string codigo "Ej: CC01"
-            string nombre "Ej: Administración"
+          bigint id
+          string codigo "Ej: CC01"
+          string nombre "Ej: Administración"
           }
-          
+
           categoria_gasto {
-            bigint id
-            string nombre "Ej: Aseo"
-            enum tipo "operacional/fondo"
-            string cta_contable
+          bigint id
+          string nombre "Ej: Aseo"
+          enum tipo "operacional/fondo"
+          string cta_contable
           }
 
           %% --- ACTIVOS Y NORMATIVA ---
           amenidad {
-            bigint id
-            string nombre "Ej: Quincho"
-            int capacidad
-            decimal tarifa
-            bool requiere_aprobacion
+          bigint id
+          string nombre "Ej: Quincho"
+          int capacidad
+          decimal tarifa
+          bool requiere_aprobacion
           }
 
           tipo_infraccion {
-            bigint id
-            string clave "Ej: ruido"
-            decimal monto_default
-            enum prioridad "baja/alta"
+          bigint id
+          string clave "Ej: ruido"
+          decimal monto_default
+          enum prioridad "baja/alta"
           }
 
           proveedor {
-            bigint id
-            string razon_social
-            string rut
-            string giro
+          bigint id
+          string razon_social
+          string rut
+          string giro
           }
-          
+
           %% --- RELACIONES ---
           %% La comunidad define sus reglas financieras
           comunidad ||--|| parametros_cobranza : "define reglas"
@@ -1276,192 +1418,198 @@
           %% La comunidad gestiona sus activos y normas
           comunidad ||--o{ amenidad : "administra"
           comunidad ||--o{ tipo_infraccion : "regula"
-          
+
           %% Relación externa
           comunidad ||--o{ proveedor : "contrata"
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="slide">
-  <h2>Módulo 02 · Usuarios y Seguridad (RBAC)</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">🛡️</span>
-    <strong>Seguridad Jerárquica:</strong> Gestión de identidades, roles temporales por comunidad y doble capa de auditoría (Técnica y de Negocio).
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 02 · Usuarios y Seguridad (RBAC)</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">🛡️</span>
+        <strong>Seguridad Jerárquica:</strong> Gestión de identidades, roles temporales por comunidad y doble capa de
+        auditoría (Técnica y de Negocio).
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. IDENTIDAD Y ACCESO (IZQUIERDA) ---
           persona {
-            bigint id PK
-            string rut
-            string email_contacto
-            string telefono
+          bigint id PK
+          string rut
+          string email_contacto
+          string telefono
           }
-          
+
           usuario {
-            bigint id PK
-            string username
-            string hash_password
-            boolean is_superadmin
-            boolean totp_enabled
+          bigint id PK
+          string username
+          string hash_password
+          boolean is_superadmin
+          boolean totp_enabled
           }
 
           user_preferences {
-            int id
-            json preferences "Tema, Idioma"
+          int id
+          json preferences "Tema, Idioma"
           }
-          
+
           %% --- 2. CONTROL DE ACCESO RBAC (CENTRO) ---
           usuario_rol_comunidad {
-            bigint id PK
-            date desde
-            date hasta "Vigencia del rol"
-            boolean activo
+          bigint id PK
+          date desde
+          date hasta "Vigencia del rol"
+          boolean activo
           }
-          
+
           rol_sistema {
-            int id
-            string codigo "admin, conserje"
-            int nivel_acceso "0-100"
-            bool es_rol_sistema
+          int id
+          string codigo "admin, conserje"
+          int nivel_acceso "0-100"
+          bool es_rol_sistema
           }
 
           comunidad {
-            bigint id PK
-            string razon_social
+          bigint id PK
+          string razon_social
           }
 
           %% --- 3. TRAZABILIDAD Y LOGS (DERECHA/ABAJO) ---
           sesion_usuario {
-            string id "Token"
-            timestamp last_activity
-            string ip_address
+          string id "Token"
+          timestamp last_activity
+          string ip_address
           }
 
           auditoria {
-            bigint id
-            string accion "INSERT/UPDATE"
-            string tabla
-            json valores_nuevos
+          bigint id
+          string accion "INSERT/UPDATE"
+          string tabla
+          json valores_nuevos
           }
 
           bitacora_auditoria {
-            bigint id
-            enum tipo "security, system"
-            enum prioridad "critical, high"
-            string descripcion
+          bigint id
+          enum tipo "security, system"
+          enum prioridad "critical, high"
+          string descripcion
           }
-          
+
           %% --- RELACIONES ---
           %% Identidad
           persona ||--o{ usuario : "tiene credenciales"
           usuario ||--|| user_preferences : "configura"
-          
+
           %% RBAC (El corazón del sistema)
           usuario ||--o{ usuario_rol_comunidad : "ejerce"
           usuario_rol_comunidad }o--|| rol_sistema : "con perfil"
           usuario_rol_comunidad }o--|| comunidad : "en contexto"
-          
+
           %% Auditoría y Sesión
           usuario ||--o{ sesion_usuario : "inicia"
           usuario ||--o{ auditoria : "genera traza datos"
           usuario ||--o{ bitacora_auditoria : "genera evento seg."
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="slide">
-  <h2>Módulo 03 · Infraestructura y Propiedad</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">🏢</span>
-    <strong>Jerarquía Física:</strong> Estructura piramidal para el prorrateo de gastos, asignación de medidores y gestión de la propiedad.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 03 · Infraestructura y Propiedad</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">🏢</span>
+        <strong>Jerarquía Física:</strong> Estructura piramidal para el prorrateo de gastos, asignación de medidores y
+        gestión de la propiedad.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. NIVEL MACRO (IZQUIERDA) ---
           comunidad {
-            bigint id PK
-            string razon_social
+          bigint id PK
+          string razon_social
           }
-          
+
           edificio {
-            bigint id PK
-            string nombre
-            string direccion
+          bigint id PK
+          string nombre
+          string direccion
           }
-          
+
           torre {
-            bigint id PK
-            string nombre
-            string codigo
+          bigint id PK
+          string nombre
+          string codigo
           }
-          
+
           %% --- 2. NIVEL MICRO (CENTRO) ---
           unidad {
-            bigint id PK
-            string codigo "Dpto 101"
-            decimal alicuota "% Gasto Común"
-            decimal m2_utiles
-            boolean activa
+          bigint id PK
+          string codigo "Dpto 101"
+          decimal alicuota "% Gasto Común"
+          decimal m2_utiles
+          boolean activa
           }
-          
+
           %% --- 3. ACTIVOS VINCULADOS (ABAJO) ---
           medidor {
-            bigint id PK
-            string codigo
-            enum tipo "agua/luz/gas"
-            boolean es_compartido
+          bigint id PK
+          string codigo
+          enum tipo "agua/luz/gas"
+          boolean es_compartido
           }
-          
+
           %% --- 4. PROPIEDAD Y HABITABILIDAD (DERECHA) ---
           titulares_unidad {
-            bigint id PK
-            enum tipo "propietario/arrendatario"
-            date desde
-            date hasta
-            decimal porcentaje
+          bigint id PK
+          enum tipo "propietario/arrendatario"
+          date desde
+          date hasta
+          decimal porcentaje
           }
 
           persona {
-            bigint id PK
-            string nombre_completo
-            string email
+          bigint id PK
+          string nombre_completo
+          string email
           }
 
           %% --- RELACIONES ---
           %% Jerarquía Física
           comunidad ||--o{ edificio : "compuesta por"
           edificio ||--o{ torre : "se divide en"
-          
+
           %% Ubicación de la Unidad (Flexible: Puede estar en Torre, Edificio o directo en Comunidad)
           torre ||--o{ unidad : "contiene"
           edificio ||--o{ unidad : "alberga"
@@ -1469,487 +1617,448 @@
 
           %% Servicios
           unidad ||--o{ medidor : "tiene asignado"
-          
+
           %% Propiedad (Relación N:M resuelta)
           unidad ||--o{ titulares_unidad : "poseída/habitada"
           titulares_unidad }o--|| persona : "es"
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <!-- MÓDULO 04 -->
-<div class="slide">
-  <h2>Módulo 04 · Gestión Financiera y Auditoría</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">💰</span>
-    <strong>Trazabilidad Total:</strong> Desde la factura del proveedor, pasando por el flujo de aprobación, hasta la emisión del cobro a la comunidad.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 04 · Gestión Financiera y Auditoría</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">💰</span>
+        <strong>Trazabilidad Total:</strong> Desde la factura del proveedor, pasando por el flujo de aprobación, hasta
+        la emisión del cobro a la comunidad.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. ORIGEN (IZQUIERDA) ---
           proveedor {
-            bigint id PK
-            string razon_social
-            string rut
+          bigint id PK
+          string razon_social
+          string rut
           }
-          
+
           documento_compra {
-            bigint id PK
-            string folio
-            enum tipo "factura/boleta"
-            decimal monto_total
-            date fecha
+          bigint id PK
+          string folio
+          enum tipo "factura/boleta"
+          decimal monto_total
+          date fecha
           }
 
           %% --- 2. GESTIÓN DEL GASTO (CENTRO) ---
           gasto {
-            bigint id PK
-            string numero "G-2025-001"
-            decimal monto
-            enum estado "pendiente/aprobado"
-            boolean extraordinario
+          bigint id PK
+          string numero "G-2025-001"
+          decimal monto
+          enum estado "pendiente/aprobado"
+          boolean extraordinario
           }
-          
+
           gasto_aprobacion {
-            bigint id PK
-            enum accion "aprobar/rechazar"
-            datetime fecha
-            string observaciones
+          bigint id PK
+          enum accion "aprobar/rechazar"
+          datetime fecha
+          string observaciones
           }
 
           %% --- 3. CLASIFICACIÓN (ARRIBA/ABAJO) ---
           centro_costo {
-            bigint id
-            string nombre
+          bigint id
+          string nombre
           }
           categoria_gasto {
-            bigint id
-            string nombre
-            string cta_contable
+          bigint id
+          string nombre
+          string cta_contable
           }
 
           %% --- 4. COBRO A LA COMUNIDAD (DERECHA) ---
           emision_gastos_comunes {
-            bigint id PK
-            string periodo "2025-11"
-            date vencimiento
-            enum estado "borrador/emitido"
+          bigint id PK
+          string periodo "2025-11"
+          date vencimiento
+          enum estado "borrador/emitido"
           }
 
           %% --- RELACIONES ---
           %% Flujo de Entrada
           proveedor ||--o{ documento_compra : "emite"
           documento_compra ||--o{ gasto : "respalda"
-          
+
           %% Clasificación
           gasto }o--|| centro_costo : "imputado a"
           gasto }o--|| categoria_gasto : "clasificado en"
 
           %% Flujo de Control (Auditoría)
           gasto ||--o{ gasto_aprobacion : "requiere"
-          
+
           %% Flujo de Salida (Cobro)
           emision_gastos_comunes ||--o{ gasto : "agrupa (aprobados)"
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <!-- MÓDULO 05 -->
-<div class="slide">
-  <h2>Módulo 05 · Ciclo de Ingresos y Recaudación</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">💸</span>
-    <strong>Flujo de Caja:</strong> Desde la generación masiva de deuda, pasando por la pasarela de pago, hasta la conciliación bancaria final.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 05 · Ciclo de Ingresos y Recaudación</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">💸</span>
+        <strong>Flujo de Caja:</strong> Desde la generación masiva de deuda, pasando por la pasarela de pago, hasta la
+        conciliación bancaria final.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. GENERACIÓN DE COBRO (IZQUIERDA) ---
           emision_gastos_comunes {
-            bigint id PK
-            string periodo
-            enum estado "borrador/emitido"
+          bigint id PK
+          string periodo
+          enum estado "borrador/emitido"
           }
-          
+
           detalle_emision_gastos {
-            bigint id PK
-            decimal monto
-            enum regla "prorrateo/fijo"
+          bigint id PK
+          decimal monto
+          enum regla "prorrateo/fijo"
           }
 
           cuenta_cobro_unidad {
-            bigint id PK
-            decimal monto_total
-            decimal saldo_pendiente
-            enum estado "pendiente/pagado/vencido"
+          bigint id PK
+          decimal monto_total
+          decimal saldo_pendiente
+          enum estado "pendiente/pagado/vencido"
           }
 
           %% --- 2. PASARELA Y PAGOS (CENTRO) ---
           webhook_pago {
-            bigint id PK
-            enum proveedor "webpay/khipu"
-            json payload
-            boolean procesado
+          bigint id PK
+          enum proveedor "webpay/khipu"
+          json payload
+          boolean procesado
           }
 
           pago {
-            bigint id PK
-            decimal monto
-            enum medio "transferencia/webpay"
-            enum estado "pendiente/aplicado"
+          bigint id PK
+          decimal monto
+          enum medio "transferencia/webpay"
+          enum estado "pendiente/aplicado"
           }
 
           %% --- 3. IMPUTACIÓN (EL CEREBRO DEL COBRO) ---
           pago_aplicacion {
-            bigint id PK
-            decimal monto_aplicado
-            int prioridad
+          bigint id PK
+          decimal monto_aplicado
+          int prioridad
           }
 
           %% --- 4. CONTROL BANCARIO (DERECHA) ---
           conciliacion_bancaria {
-            bigint id PK
-            date fecha_banco
-            decimal monto_real
-            enum estado "conciliado/pendiente"
+          bigint id PK
+          date fecha_banco
+          decimal monto_real
+          enum estado "conciliado/pendiente"
           }
 
           %% --- RELACIONES ---
           %% Nivel 1: Emisión Masiva
           emision_gastos_comunes ||--o{ detalle_emision_gastos : "contiene items"
           emision_gastos_comunes ||--o{ cuenta_cobro_unidad : "genera boletas"
-          
+
           %% Nivel 2: Entrada de Dinero (Manual o Automática)
           webhook_pago ||--|| pago : "crea automáticamente"
-          
+
           %% Nivel 3: Distribución del Dinero (Clave del Negocio)
           pago ||--o{ pago_aplicacion : "se distribuye en"
           pago_aplicacion }o--|| cuenta_cobro_unidad : "rebaja deuda de"
 
           %% Nivel 4: Validación Externa
           pago |o--|| conciliacion_bancaria : "se valida contra"
+        </div>
+      </div>
     </div>
-  </div>
-</div>
     <!-- MÓDULO 05.1 -->
-<div class="slide">
-  <h2>Módulo 05.1 · Ciclo Legal de Infracciones</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">⚖️</span>
-    <strong>Gestión Punitiva:</strong> Desde la normativa base, pasando por la evidencia y apelación, hasta el impacto financiero final.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 05.1 · Ciclo Legal de Infracciones</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">⚖️</span>
+        <strong>Gestión Punitiva:</strong> Desde la normativa base, pasando por la evidencia y apelación, hasta el
+        impacto financiero final.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. CONFIGURACIÓN Y ORIGEN (IZQUIERDA) ---
           tipo_infraccion {
-            bigint id
-            string nombre "Ej: Ruido"
-            decimal monto_default
+          bigint id
+          string nombre "Ej: Ruido"
+          decimal monto_default
           }
-          
+
           unidad {
-            bigint id
-            string codigo
+          bigint id
+          string codigo
           }
           persona {
-            bigint id
-            string nombre
+          bigint id
+          string nombre
           }
 
           %% --- 2. EL INCIDENTE (CENTRO) ---
           multa {
-            bigint id PK
-            enum estado "pendiente/apelada/pagada/anulada"
-            decimal monto
-            enum prioridad
-            date fecha_vencimiento
+          bigint id PK
+          enum estado "pendiente/apelada/pagada/anulada"
+          decimal monto
+          enum prioridad
+          date fecha_vencimiento
           }
 
           documento_multa {
-            bigint id
-            string tipo "evidencia/foto"
-            string url
+          bigint id
+          string tipo "evidencia/foto"
+          string url
           }
 
           %% --- 3. PROCESO LEGAL (ABAJO) ---
           multa_apelacion {
-            bigint id
-            text motivo_apelacion
-            enum estado "pendiente/aceptada/rechazada"
-            text resolucion
+          bigint id
+          text motivo_apelacion
+          enum estado "pendiente/aceptada/rechazada"
+          text resolucion
           }
-          
+
           multa_historial {
-            bigint id
-            string accion "cambio_estado"
-            string estado_anterior
-            string estado_nuevo
-            datetime fecha
+          bigint id
+          string accion "cambio_estado"
+          string estado_anterior
+          string estado_nuevo
+          datetime fecha
           }
 
           %% --- 4. COBRO (DERECHA) ---
           detalle_cuenta_unidad {
-            bigint id
-            decimal monto
-            enum origen "multa"
-            bigint origen_id "FK a multa.id"
+          bigint id
+          decimal monto
+          enum origen "multa"
+          bigint origen_id "FK a multa.id"
           }
 
           %% --- RELACIONES ---
           %% Definición
           tipo_infraccion ||--o{ multa : "tipifica"
-          
+
           %% Responsabilidad
           unidad ||--o{ multa : "se cursa a"
           persona ||--o{ multa : "responsable"
-          
+
           %% Evidencia y Trazabilidad
           multa ||--o{ documento_multa : "sustentada por"
           multa ||--o{ multa_historial : "tiene bitácora"
-          
+
           %% Gestión de Conflicto
           multa ||--o{ multa_apelacion : "puede tener"
-          
+
           %% Impacto Financiero
           multa ||--|| detalle_cuenta_unidad : "se cobra como"
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
     <!-- MÓDULO 06 -->
-<div class="slide">
-  <h2>Módulo 06 · Gestión de Espacios Comunes (Amenidades)</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">📅</span>
-    <strong>Ciclo de Reserva:</strong> Validación de disponibilidad, asignación de responsable y control de estados según reglas del recinto.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 06 · Gestión de Espacios Comunes (Amenidades)</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">📅</span>
+        <strong>Ciclo de Reserva:</strong> Validación de disponibilidad, asignación de responsable y control de estados
+        según reglas del recinto.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. CONFIGURACIÓN DEL RECURSO (IZQUIERDA) ---
           amenidad {
-            bigint id PK
-            string nombre
-            int capacidad
-            decimal tarifa
-            boolean requiere_aprobacion
-            text reglas
+          bigint id PK
+          string nombre
+          int capacidad
+          decimal tarifa
+          boolean requiere_aprobacion
+          text reglas
           }
 
           %% --- 2. LOS SOLICITANTES (CENTRO-ABAJO) ---
           unidad {
-            bigint id
-            string codigo
+          bigint id
+          string codigo
           }
           persona {
-            bigint id
-            string nombre
+          bigint id
+          string nombre
           }
 
           %% --- 3. LA TRANSACCIÓN CENTRAL (DERECHA) ---
           reserva_amenidad {
-            bigint id PK
-            datetime inicio
-            datetime fin
-            enum estado "solicitada/aprobada/rechazada/cancelada/cumplida"
+          bigint id PK
+          datetime inicio
+          datetime fin
+          enum estado "solicitada/aprobada/rechazada/cancelada/cumplida"
           }
 
           %% --- RELACIONES ---
-          
+
           %% El recurso define las reglas
           amenidad ||--o{ reserva_amenidad : "es reservada"
-          
+
           %% La solicitud vincula unidad y persona responsable
           unidad ||--o{ reserva_amenidad : "origen solicitud"
           persona ||--o{ reserva_amenidad : "responsable"
-          
+
           %% NOTA TÉCNICA:
           %% Si la tarifa > 0, esto eventualmente generará un
           %% cargo en 'detalle_cuenta_unidad', conectando con Finanzas.
+        </div>
+      </div>
     </div>
-  </div>
-</div>
     <!-- MÓDULO 07 -->
-<div class="slide">
-  <h2>Módulo 07 · Gestión de Soporte y Mantención</h2>
-  
-  <div class="insight-box">
-    <span class="insight-icon">🔧</span>
-    <strong>Ciclo de Resolución:</strong> Flujo simplificado desde el reporte del problema hasta su cierre, con asignación directa de responsables.
-  </div>
-  
-  <div class="mermaid-container" style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
-    <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
-    
-    <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
-      %%{init: {
-        'theme': 'base', 
-        'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe', 'edgeLabelBackground':'#ffffff' },
-        'er': {
-            'layoutDirection': 'LR',
-            'entityPadding': 15,
-            'strokeWidth': 2
-        }
-      }}%%
-      erDiagram
+    <div class="slide">
+      <h2>Módulo 07 · Gestión de Soporte y Mantención</h2>
+
+      <div class="insight-box">
+        <span class="insight-icon">🔧</span>
+        <strong>Ciclo de Resolución:</strong> Flujo simplificado desde el reporte del problema hasta su cierre, con
+        asignación directa de responsables.
+      </div>
+
+      <div class="mermaid-container"
+        style="background-color: #f8fcff; border: 1px solid #e0f2fe; width: 100%; overflow-x: auto;">
+        <button class="zoom-btn" onclick="openFullscreen(this)">🔍 Ampliar</button>
+
+        <div class="mermaid" style="display: flex; justify-content: center; width: 100%;">
+          %%{init: {
+          'theme': 'base',
+          'themeVariables': { 'fontSize': '14px', 'fontFamily': 'Arial', 'primaryColor': '#e0f2fe',
+          'edgeLabelBackground':'#ffffff' },
+          'er': {
+          'layoutDirection': 'LR',
+          'entityPadding': 15,
+          'strokeWidth': 2
+          }
+          }}%%
+          erDiagram
           %% --- 1. QUIÉN REPORTA (IZQUIERDA) ---
           unidad {
-            bigint id PK
-            string codigo "Dpto 101"
+          bigint id PK
+          string codigo "Dpto 101"
           }
           comunidad {
-            bigint id PK
-            string razon_social
+          bigint id PK
+          string razon_social
           }
 
           %% --- 2. EL TICKET (CENTRO - NÚCLEO) ---
           ticket_soporte {
-            bigint id PK
-            string titulo
-            string descripcion
-            string categoria "Gasfitería, Electricidad..."
-            enum prioridad "baja/media/alta"
-            enum estado "abierto/en_progreso/resuelto/cerrado"
-            json attachments_json "Fotos/Evidencia"
-            datetime created_at
+          bigint id PK
+          string titulo
+          string descripcion
+          string categoria "Gasfitería, Electricidad..."
+          enum prioridad "baja/media/alta"
+          enum estado "abierto/en_progreso/resuelto/cerrado"
+          json attachments_json "Fotos/Evidencia"
+          datetime created_at
           }
 
           %% --- 3. QUIÉN RESUELVE (DERECHA) ---
           usuario {
-            bigint id PK
-            string username "Conserje/Admin"
+          bigint id PK
+          string username "Conserje/Admin"
           }
 
           %% --- RELACIONES ---
-          
+
           %% El contexto del problema
           comunidad ||--o{ ticket_soporte : "ámbito global"
           unidad |o--o{ ticket_soporte : "reporta problema"
-          
+
           %% La gestión del problema (Asignación)
           usuario ||--o{ ticket_soporte : "es asignado a"
-          
+
           %% NOTA TÉCNICA:
           %% La evidencia (fotos antes/después) se almacena
           %% directamente en el campo JSON del ticket.
-    </div>
-  </div>
-</div>
-
-   
-    <div class="slide">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h2 style="font-size: 44px; margin-bottom: 15px; color: var(--primary);">Tecnologías Utilizadas</h2>
-        <p style="font-size: 24px; color: var(--text-light);">Stack tecnológico principal del proyecto Cuentas Claras.</p>
-      </div>
-
-      <div class="grid" style="margin-top: 20px; gap: 25px; align-items: stretch;">
-        
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🌐</div>
-            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Frontend</h3>
-            <span style="font-size: 16px; color: var(--text-light);">(ccfrontend)</span>
-          </div>
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">⚛️</span> <strong>Framework:</strong> Next.js (React)</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">📘</span> <strong>Lenguaje:</strong> TypeScript</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🎨</span> <strong>UI:</strong> Material-UI, Emotion</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔄</span> <strong>Estado:</strong> Axios, Hooks</li>
-            <li><span style="font-size: 20px;">⚙️</span> <strong>Build:</strong> Babel, SWC</li>
-          </ul>
         </div>
-
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🔧</div>
-            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">Backend</h3>
-            <span style="font-size: 16px; color: var(--text-light);">(ccbackend)</span>
-          </div>
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🟢</span> <strong>Runtime:</strong> Node.js (v18+)</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🚀</span> <strong>Framework:</strong> Express.js</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🗄️</span> <strong>DB:</strong> MySQL, Sequelize</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔐</span> <strong>Auth:</strong> JWT, 2FA (OTP)</li>
-            <li><span style="font-size: 20px;">📧</span> <strong>Tools:</strong> Nodemailer, Swagger</li>
-          </ul>
-        </div>
-
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); flex: 1; display: flex; flex-direction: column;">
-          <div style="text-align: center; margin-bottom: 25px;">
-            <div style="font-size: 60px; margin-bottom: 15px;">🐳</div>
-            <h3 style="color: #0f172a; margin: 0; font-size: 24px; font-weight: 700;">DevOps</h3>
-            <span style="font-size: 16px; color: var(--text-light);">(Docker)</span>
-          </div>
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 18px; color: var(--text-main); line-height: 1.6;">
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">📦</span> <strong>Container:</strong> Docker Images</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🎼</span> <strong>Orchestration:</strong> Docker Compose</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">🔄</span> <strong>CI/CD:</strong> GitHub Actions (Plan)</li>
-            <li style="margin-bottom: 12px;"><span style="font-size: 20px;">⚡</span> <strong>Scripts:</strong> NPM Automation</li>
-            <li><span style="font-size: 20px;">☁️</span> <strong>Cloud:</strong> Azure Ready</li>
-          </ul>
-        </div>
-
       </div>
     </div>
-    
-   <section class="slide">
+
+
+
+    <section class="slide">
       <div style="text-align: center; margin-bottom: 40px;">
-        <h2 style="font-size: 48px; color: var(--primary); margin: 0; display: inline-flex; align-items: center; gap: 15px;">
+        <h2
+          style="font-size: 48px; color: var(--primary); margin: 0; display: inline-flex; align-items: center; gap: 15px;">
           <i class="material-icons" style="font-size: 56px;">security</i>
           Autenticación y Seguridad
         </h2>
@@ -1957,33 +2066,43 @@
 
       <div class="grid" style="gap: 25px; align-items: stretch; height: 65%;">
 
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <i class="material-icons" style="position: absolute; bottom: -30px; right: -30px; font-size: 180px; color: var(--primary); opacity: 0.05; z-index: 0;">vpn_key</i>
-          
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <i class="material-icons"
+            style="position: absolute; bottom: -30px; right: -30px; font-size: 180px; color: var(--primary); opacity: 0.05; z-index: 0;">vpn_key</i>
+
           <div style="position: relative; z-index: 1;">
-            <h3 style="color: var(--primary); font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px;">
+            <h3
+              style="color: var(--primary); font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px;">
               8.1 Autenticación JWT
             </h3>
-            <p style="font-size: 18px; color: var(--text-light); margin-bottom: 15px;"><strong>Flujo Básico:</strong></p>
-            
-            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 20px; font-weight: 500; color: var(--text-main);">
+            <p style="font-size: 18px; color: var(--text-light); margin-bottom: 15px;"><strong>Flujo Básico:</strong>
+            </p>
+
+            <div
+              style="display: flex; flex-direction: column; gap: 10px; font-size: 20px; font-weight: 500; color: var(--text-main);">
               <div style="background: #eff6ff; padding: 10px; border-radius: 8px;">1. Login de Usuario</div>
               <div style="text-align: center; color: var(--accent);">↓</div>
               <div style="background: #eff6ff; padding: 10px; border-radius: 8px;">2. Emisión de Token (JWT)</div>
               <div style="text-align: center; color: var(--accent);">↓</div>
-              <div style="background: #eff6ff; padding: 10px; border-radius: 8px;">3. Uso en Header <code style="font-size: 16px; color: #d97706;">Authorization</code></div>
+              <div style="background: #eff6ff; padding: 10px; border-radius: 8px;">3. Uso en Header <code
+                  style="font-size: 16px; color: #d97706;">Authorization</code></div>
             </div>
           </div>
         </div>
 
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <i class="material-icons" style="position: absolute; bottom: -30px; right: -30px; font-size: 180px; color: var(--primary); opacity: 0.05; z-index: 0;">qr_code_2</i>
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <i class="material-icons"
+            style="position: absolute; bottom: -30px; right: -30px; font-size: 180px; color: var(--primary); opacity: 0.05; z-index: 0;">qr_code_2</i>
 
           <div style="position: relative; z-index: 1;">
-            <h3 style="color: var(--primary); font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px;">
+            <h3
+              style="color: var(--primary); font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px;">
               8.2 2FA (TOTP)
             </h3>
-            <ul style="list-style: none; padding: 0; margin: 0; font-size: 20px; line-height: 1.6; color: var(--text-main);">
+            <ul
+              style="list-style: none; padding: 0; margin: 0; font-size: 20px; line-height: 1.6; color: var(--text-main);">
               <li style="margin-bottom: 15px; display: flex; gap: 10px;">
                 <i class="material-icons" style="color: var(--accent);">lock_reset</i>
                 Generación de secreto único (Speakeasy).
@@ -2000,28 +2119,36 @@
           </div>
         </div>
 
-        <div class="col" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
-          <i class="material-icons" style="position: absolute; bottom: -30px; right: -30px; font-size: 180px; color: var(--primary); opacity: 0.05; z-index: 0;">shield</i>
+        <div class="col"
+          style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; position: relative; overflow: hidden; box-shadow: var(--card-shadow); display: flex; flex-direction: column;">
+          <i class="material-icons"
+            style="position: absolute; bottom: -30px; right: -30px; font-size: 180px; color: var(--primary); opacity: 0.05; z-index: 0;">shield</i>
 
           <div style="position: relative; z-index: 1;">
-            <h3 style="color: var(--primary); font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px;">
+            <h3
+              style="color: var(--primary); font-size: 26px; margin-bottom: 20px; border-bottom: 2px solid var(--accent); padding-bottom: 10px;">
               8.3 Middleware
             </h3>
-            <ul style="list-style: none; padding: 0; margin: 0; font-size: 20px; line-height: 1.8; color: var(--text-main);">
+            <ul
+              style="list-style: none; padding: 0; margin: 0; font-size: 20px; line-height: 1.8; color: var(--text-main);">
               <li style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
-                <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">helmet()</code>
+                <code
+                  style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">helmet()</code>
                 <br><span style="font-size: 16px; color: var(--text-light);">Protección de Headers HTTP.</span>
               </li>
               <li style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
-                <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">cors()</code>
+                <code
+                  style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">cors()</code>
                 <br><span style="font-size: 16px; color: var(--text-light);">Control de origen cruzado.</span>
               </li>
               <li style="border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 8px;">
-                <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">express-validator</code>
+                <code
+                  style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">express-validator</code>
                 <br><span style="font-size: 16px; color: var(--text-light);">Sanitización de inputs.</span>
               </li>
               <li>
-                <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">rate-limit</code>
+                <code
+                  style="background: #f1f5f9; padding: 4px 8px; border-radius: 4px; color: #0f172a; font-weight: bold;">rate-limit</code>
                 <br><span style="font-size: 16px; color: var(--text-light);">Prevención de fuerza bruta.</span>
               </li>
             </ul>
@@ -2031,22 +2158,24 @@
       </div>
     </section>
 
-<section class="slide" style="padding: 0; overflow: hidden;">
-      
+    <section class="slide" style="padding: 0; overflow: hidden;">
+
       <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; height: 100%; width: 100%;">
-        
+
         <div style="padding: 60px; display: flex; flex-direction: column; justify-content: center; background: white;">
-          
+
           <div style="margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
             <i class="material-icons" style="font-size: 52px; color: var(--primary);">lightbulb</i>
             <h2 style="font-size: 50px; color: var(--primary); margin: 0; border: none;">Conclusión</h2>
           </div>
-          
-          <p style="font-size: 24px; color: var(--text-light); margin-bottom: 40px; border-left: 5px solid var(--accent); padding-left: 25px;">
+
+          <p
+            style="font-size: 24px; color: var(--text-light); margin-bottom: 40px; border-left: 5px solid var(--accent); padding-left: 25px;">
             Cuentas Claras es una solución tecnológica robusta, lista para el mundo real.
           </p>
 
-          <ul style="list-style: none; padding: 0; margin: 0; font-size: 22px; line-height: 2; color: var(--text-main);">
+          <ul
+            style="list-style: none; padding: 0; margin: 0; font-size: 22px; line-height: 2; color: var(--text-main);">
             <li style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px;">
               <i class="material-icons" style="color: var(--accent); font-size: 26px;">check_circle</i>
               Estándares modernos de desarrollo.
@@ -2085,12 +2214,13 @@
             mask-image: linear-gradient(to right, transparent, black 15%);
             -webkit-mask-image: linear-gradient(to right, transparent, black 15%);
           "></div>
-          <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 74, 173, 0.2);"></div>
+          <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 74, 173, 0.2);">
+          </div>
         </div>
 
       </div>
     </section>
-        
+
     <section class="slide"
       style="display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
 
@@ -2101,16 +2231,20 @@
       </p>
 
       <h3 style="font-size: 32px; margin-top: 40px;">Enlaces Vitales del Proyecto</h3>
-      <div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
-        <button class="btn" onclick="window.open('https://cuentasclaras.pquintanilla.cl/dashboard', '_blank')" style="background: var(--primary); color: white; border: none; border-radius: 50px; padding: 15px 35px; font-size: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+      <div
+        style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 20px; margin-top: 20px; flex-wrap: wrap;">
+        <button class="btn" onclick="window.open('https://cuentasclaras.pquintanilla.cl/dashboard', '_blank')"
+          style="background: var(--primary); color: white; border: none; border-radius: 50px; padding: 15px 35px; font-size: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
           <i class="material-icons" style="font-size: 24px;">play_arrow</i>
           <span><strong class="text-light">Frontend:</strong></span>
         </button>
-        <button class="btn" onclick="window.open('https://apicc.pquintanilla.cl/docs/', '_blank')" style="background: var(--primary); color: white; border: none; border-radius: 50px; padding: 15px 35px; font-size: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <button class="btn" onclick="window.open('https://apicc.pquintanilla.cl/docs/', '_blank')"
+          style="background: var(--primary); color: white; border: none; border-radius: 50px; padding: 15px 35px; font-size: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
           <i class="material-icons" style="font-size: 24px;">play_arrow</i>
           <span><strong class="text-light">Backend:</strong></span>
         </button>
-        <button class="btn" onclick="window.open('https://github.com/BigFrankV/proyecto_cuentas_claras', '_blank')" style="background: var(--primary); color: white; border: none; border-radius: 50px; padding: 15px 35px; font-size: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <button class="btn" onclick="window.open('https://github.com/BigFrankV/proyecto_cuentas_claras', '_blank')"
+          style="background: var(--primary); color: white; border: none; border-radius: 50px; padding: 15px 35px; font-size: 18px; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
           <i class="material-icons" style="font-size: 24px;">play_arrow</i>
           <span><strong class="text-light">Proyecto en Github:</strong></span>
         </button>
@@ -2118,25 +2252,29 @@
 
     </section>
 
-   <section class="slide" id="slide-final" style="padding: 0; overflow: hidden;">
-      
+    <section class="slide" id="slide-final" style="padding: 0; overflow: hidden;">
+
       <div style="display: grid; grid-template-columns: 1fr 1fr; height: 100%; width: 100%;">
-        
+
         <div style="padding: 60px; display: flex; flex-direction: column; justify-content: center; text-align: left;">
-          
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png" 
-               style="height: 60px; width: auto; margin-bottom: 40px; filter: brightness(0) invert(1); align-self: flex-start;" 
-               alt="Logo Duoc">
-          
+
+          <img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Logo_DuocUC.svg/2560px-Logo_DuocUC.svg.png"
+            style="height: 60px; width: auto; margin-bottom: 40px; filter: brightness(0) invert(1); align-self: flex-start;"
+            alt="Logo Duoc">
+
           <h1 style="font-size: 80px; margin: 0; line-height: 1; color: white; letter-spacing: -2px;">¡GRACIAS!</h1>
-          <h2 style="font-size: 32px; color: #93c5fd; border: none; margin-top: 10px; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 4px;">
+          <h2
+            style="font-size: 32px; color: #93c5fd; border: none; margin-top: 10px; margin-bottom: 40px; text-transform: uppercase; letter-spacing: 4px;">
             Fin de la presentación
           </h2>
 
           <div style="width: 80px; height: 6px; background: #3673D8; margin-bottom: 40px;"></div>
 
           <div style="margin-bottom: 40px;">
-            <p style="font-size: 18px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">Equipo de Desarrollo</p>
+            <p
+              style="font-size: 18px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">
+              Equipo de Desarrollo</p>
             <ul style="list-style: none; padding: 0; margin: 0; font-size: 24px; color: white; line-height: 1.6;">
               <li style="display: flex; align-items: center; gap: 10px;">
                 <span>Patricio Quintanilla</span>
@@ -2164,8 +2302,9 @@
             mask-image: linear-gradient(to right, transparent, black 20%);
             -webkit-mask-image: linear-gradient(to right, transparent, black 20%);
           "></div>
-          
-          <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 74, 173, 0.3);"></div>
+
+          <div style="position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(0, 74, 173, 0.3);">
+          </div>
         </div>
 
       </div>
