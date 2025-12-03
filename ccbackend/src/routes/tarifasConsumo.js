@@ -221,6 +221,56 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.get('/todas/con-estructura', authenticate, async (req, res) => {
   try {
+    const { comunidad_id } = req.query;
+    
+    let where = ' WHERE 1=1 ';
+    const params = [];
+    
+    // Determinar comunidades permitidas para el usuario
+    let allowedComunidadIds = [];
+
+    if (req.user?.is_superadmin) {
+      // SuperAdmin: si se pide comunidad_id específica, usar esa; sino, todas
+      if (comunidad_id) {
+        allowedComunidadIds = [Number(comunidad_id)];
+      }
+    } else {
+      // Usuario normal: obtener sus comunidades asignadas
+      const personaId = req.user?.persona_id;
+      console.log('🔍 Tarifas - Resolviendo comunidades para persona_id=', personaId);
+
+      try {
+        const [r] = await db.query(
+          `SELECT comunidad_id FROM usuario_miembro_comunidad 
+           WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
+          [personaId]
+        );
+        allowedComunidadIds = (r || []).map((row) => row.comunidad_id).filter(Boolean);
+      } catch (err) {
+        console.error('❌ Error leyendo comunidades:', err);
+      }
+
+      if (!allowedComunidadIds.length) {
+        return res.json([]);
+      }
+
+      // Si se pide comunidad_id específica, validar que esté en las permitidas
+      if (comunidad_id) {
+        const requestedId = Number(comunidad_id);
+        if (allowedComunidadIds.includes(requestedId)) {
+          allowedComunidadIds = [requestedId];
+        } else {
+          return res.json([]);
+        }
+      }
+    }
+
+    // Aplicar filtro de comunidades si corresponde
+    if (allowedComunidadIds.length > 0) {
+      where += ` AND t.comunidad_id IN (${allowedComunidadIds.map(() => '?').join(',')}) `;
+      params.push(...allowedComunidadIds);
+    }
+
     const query = `
       SELECT
         t.id,
@@ -236,10 +286,11 @@ router.get('/todas/con-estructura', authenticate, async (req, res) => {
         ) AS estructura_completa
       FROM tarifa_consumo t
       LEFT JOIN comunidad c ON t.comunidad_id = c.id
+      ${where}
       ORDER BY c.razon_social, t.periodo_desde DESC
     `;
 
-    const [rows] = await db.query(query);
+    const [rows] = await db.query(query, params);
 
     res.json(rows);
   } catch (error) {
@@ -682,24 +733,18 @@ router.get(
  *   post:
  *     tags: [Tarifas de Consumo]
  *     summary: Crear nueva tarifa de consumo
+ *     description: BLOQUEADO para residente, propietario, inquilino
  */
 router.post(
   '/comunidad/:comunidadId',
   [
     authenticate,
-    // Quita requireCommunity temporalmente o ajusta:
-    // requireCommunity('comunidadId', ['admin', 'superadmin', 'contador']),
+    authorize('superadmin', 'admin_comunidad', 'administrador', 'tesorero', 'presidente_comite', 'contador'),
     body('tipo').notEmpty().isIn(['agua', 'gas', 'electricidad']),
     body('periodo_desde').notEmpty(),
     body('precio_por_unidad').isNumeric(),
   ],
   async (req, res) => {
-    // Agrega verificación manual para superadmin
-    if (!req.user.is_superadmin) {
-      // Aquí puedes agregar lógica para verificar si pertenece a la comunidad
-      // Por ejemplo, consulta si req.user.id está en usuario_miembro_comunidad para req.params.comunidadId
-    }
-
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -746,11 +791,12 @@ router.post(
  *   patch:
  *     tags: [Tarifas de Consumo]
  *     summary: Actualizar tarifa
+ *     description: BLOQUEADO para residente, propietario, inquilino
  */
 router.patch(
   '/:id',
   authenticate,
-  authorize('admin', 'superadmin', 'contador'),
+  authorize('superadmin', 'admin_comunidad', 'administrador', 'tesorero', 'presidente_comite', 'contador'),
   async (req, res) => {
     try {
       const id = Number(req.params.id);
@@ -800,11 +846,12 @@ router.patch(
  *   delete:
  *     tags: [Tarifas de Consumo]
  *     summary: Eliminar tarifa
+ *     description: BLOQUEADO para residente, propietario, inquilino, contador
  */
 router.delete(
   '/:id',
   authenticate,
-  authorize('superadmin', 'admin'),
+  authorize('superadmin', 'admin_comunidad', 'administrador'),
   async (req, res) => {
     try {
       const id = Number(req.params.id);

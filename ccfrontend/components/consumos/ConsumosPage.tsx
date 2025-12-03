@@ -1,7 +1,8 @@
 import { Chart, registerables } from 'chart.js';
 import Link from 'next/link';
 import { useRouter } from 'next/router'; // <-- agregado
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Alert } from 'react-bootstrap';
 
 import ModernPagination from '@/components/ui/ModernPagination';
 import PageHeader from '@/components/ui/PageHeader';
@@ -15,6 +16,7 @@ import {
   listAllMedidores, // <-- agregado
 } from '@/lib/medidoresService'; // <-- agregado listMedidores y listAllMedidores
 import { useAuth } from '@/lib/useAuth'; // <-- agregado para obtener usuario
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions'; // Agregar si no está, para getUserCommunities
 
 Chart.register(...registerables);
@@ -23,13 +25,28 @@ Chart.register(...registerables);
 export default function ConsumosPage(): JSX.Element {
   const router = useRouter();
   const { user } = useAuth();
-  const { isSuperUser } = usePermissions(); // Agregar si es necesario
+  const { isSuperUser, hasRoleInCommunity } = usePermissions(); // Agregar hasRoleInCommunity
+  const { comunidadSeleccionada, comunidades } = useComunidad(); // Usar hook global
 
-  const isSuper = !!user?.is_superadmin;
+  const isSuper = isSuperUser();
 
-  // Agregar estados para comunidades y selector
-  const [comunidades, setComunidades] = useState<any[]>([]);
+  // Estado para comunidad seleccionada por superadmin (si aplica)
   const [selectedComunidad, setSelectedComunidad] = useState<any | null>(null);
+
+  // Determinar comunidad actual (filtro global)
+  const resolvedComunidadId = useMemo(() => {
+    return isSuper ? selectedComunidad?.id : comunidadSeleccionada?.id || null;
+  }, [isSuper, selectedComunidad, comunidadSeleccionada]);
+
+  // Verificar si es un rol básico
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (!resolvedComunidadId) { return false; }
+    return (
+      hasRoleInCommunity(resolvedComunidadId, 'residente') ||
+      hasRoleInCommunity(resolvedComunidadId, 'propietario') ||
+      hasRoleInCommunity(resolvedComunidadId, 'inquilino')
+    );
+  }, [resolvedComunidadId, hasRoleInCommunity]);
 
   const mainRef = useRef<HTMLCanvasElement | null>(null);
   const monthlyRef = useRef<HTMLCanvasElement | null>(null);
@@ -81,7 +98,7 @@ export default function ConsumosPage(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
 
   // ahora el medidor puede hidratarse desde la query ?medidor_id=...
-  const [medidorId, setMedidorId] = useState<number>(1);
+  const [medidorId, setMedidorId] = useState<number | null>(null);
   const [periodoInicio, setPeriodoInicio] = useState('2024-01');
   const [periodoFin, setPeriodoFin] = useState('2025-12');
   const [periodoActual, setPeriodoActual] = useState<
@@ -94,6 +111,7 @@ export default function ConsumosPage(): JSX.Element {
   const [selectedType, setSelectedType] = useState<string>('all');
 
   const filteredMedidores = medidores.filter(m => {
+    // Solo aplicar filtro de tipo - el backend ya filtró por permisos
     if (selectedType === 'all') {
       return true;
     }
@@ -106,33 +124,11 @@ export default function ConsumosPage(): JSX.Element {
       if (!currentExists) {
         setMedidorId(filteredMedidores[0].id);
       }
+    } else if (filteredMedidores.length === 0 && medidorId) {
+      // Si no hay medidores filtrados pero había uno seleccionado, limpiar selección
+      setMedidorId(null);
     }
-  }, [selectedType, medidores]);
-
-  // Cargar comunidades para selector (superadmin)
-  useEffect(() => {
-    if (!isSuper) {
-      return undefined;
-    }
-    let mounted = true;
-    (async () => {
-      try {
-        // Asume que hay un servicio getComunidades o similar
-        const resp = await fetch('/api/comunidades'); // Ajustar según tu API
-        const data = await resp.json();
-        if (!mounted) {
-          return;
-        }
-        setComunidades(data || []);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Error cargando comunidades:', err);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [isSuper]);
+  }, [selectedType, medidores, medidorId, filteredMedidores]);
 
   // Fetch medidores dinámicamente basado en rol (siempre usa endpoint global, backend filtra)
   useEffect(() => {
@@ -142,24 +138,34 @@ export default function ConsumosPage(): JSX.Element {
     let mounted = true;
     const loadMedidores = async () => {
       setLoadingMedidores(true);
+      setError(null);
       try {
         const params: any = { limit: 100 };
-        if (isSuper && selectedComunidad?.id) {
-          params.comunidad_id = selectedComunidad.id;
+        if (resolvedComunidadId) {
+          params.comunidad_id = resolvedComunidadId;
         }
         const resp = await listAllMedidores(params);
         if (!mounted) {
           return;
         }
         setMedidores(resp.data || []);
-        // Si hay medidores y medidorId no está en la lista, setear el primero
-        if (resp.data?.length > 0 && !resp.data.find((m: any) => m.id === medidorId)) {
-          setMedidorId(resp.data[0].id);
+
+        // Establecer el primer medidor disponible automáticamente
+        if (resp.data?.length > 0) {
+          // Si no hay medidor seleccionado o el seleccionado no está en la lista
+          if (!medidorId || !resp.data.find((m: any) => m.id === medidorId)) {
+            setMedidorId(resp.data[0].id);
+          }
+        } else {
+          // No hay medidores disponibles
+          setMedidorId(null);
+          setError('No tienes medidores asignados en esta comunidad.');
         }
       } catch (err) {
         // eslint-disable-next-line no-console
         console.error('Error cargando medidores:', err);
         setError('Error al cargar medidores.');
+        setMedidorId(null);
       } finally {
         setLoadingMedidores(false);
       }
@@ -168,22 +174,28 @@ export default function ConsumosPage(): JSX.Element {
     return () => {
       mounted = false;
     };
-  }, [user, isSuper, selectedComunidad]);
+  }, [user, resolvedComunidadId, comunidadSeleccionada]);
 
   // Fetch data from API (dinámico, usa NEXT_PUBLIC_API_BASE_URL o /api)
   useEffect(() => {
-    if (!medidorId) {
+    if (!medidorId || loadingMedidores) {
+      setLoading(false);
       return undefined;
     }
     let mounted = true;
-    const periodo_inicio = '2024-01';
-    const periodo_fin = '2025-12';
-    const params = { medidor_id: String(medidorId), periodo_inicio, periodo_fin };
+    const params = {
+      medidor_id: String(medidorId),
+      periodo_inicio: periodoInicio,
+      periodo_fin: periodoFin,
+    };
 
     const load = async () => {
-      setLoading(true); // Añade loading al inicio
+      setLoading(true);
       try {
         setError(null);
+        // eslint-disable-next-line no-console
+        console.log('🔄 Cargando consumos con params:', params);
+
         const [mensual, trimestral, semanal, estadisticas, detalle] = await Promise.all([
           getConsumoMensual(params),
           getConsumoTrimestral(params),
@@ -191,24 +203,48 @@ export default function ConsumosPage(): JSX.Element {
           getConsumoEstadisticas(params),
           getConsumoDetalle(params),
         ]);
-        if (!mounted) {return;}
+
+        if (!mounted) { return; }
+
+        // eslint-disable-next-line no-console
+        console.log('✅ Datos recibidos:', {
+          mensual,
+          'mensual[0]': mensual[0],
+          'mensual.data': mensual.data,
+          trimestral,
+          semanal,
+          estadisticas,
+          detalle,
+        });
+
         setMensualData(mensual.data ?? mensual);
         setTrimestralData(trimestral.data ?? trimestral);
         setSemanalData(semanal.data ?? semanal);
         setEstadisticas(estadisticas.data ?? estadisticas);
         setDetalleData(detalle.data ?? detalle);
-      } catch (err) {
+      } catch (err: any) {
+        if (!mounted) { return; }
         // eslint-disable-next-line no-console
         console.error('Error fetching consumos:', err);
-        setError('No se pudieron cargar los consumos. Verifica backend.');
+
+        // Mensaje más específico según el error
+        if (err?.response?.status === 403) {
+          setError('No tienes permiso para ver los consumos de este medidor.');
+        } else if (err?.response?.status === 404) {
+          setError('No se encontraron datos de consumo para este medidor.');
+        } else {
+          setError('No se pudieron cargar los consumos. Verifica la conexión con el backend.');
+        }
       } finally {
-        setLoading(false); // Añade setLoading(false) aquí
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     load();
     return () => { mounted = false; };
-  }, [medidorId]);
+  }, [medidorId, loadingMedidores, periodoInicio, periodoFin]);
 
   useEffect(() => {
     // Try to initialize flatpickr if available (optional)
@@ -239,23 +275,42 @@ export default function ConsumosPage(): JSX.Element {
     } catch {
       // ignore if flatpickr is not present
     }
+  }, []);
 
-    // initialize charts after data is loaded
-    if (!loading) {
+  // Inicializar gráficos cuando los datos cambien
+  useEffect(() => {
+    if (!loading && mensualData.length > 0) {
       initializeCharts();
     }
 
     return () => {
-      // cleanup charts
-      mainChart?.destroy();
-      monthlyChart?.destroy();
-      weeklyChart?.destroy();
+      // cleanup charts on unmount or before re-creating
+      if (mainChart) {
+        mainChart.destroy();
+        setMainChart(null);
+      }
+      if (monthlyChart) {
+        monthlyChart.destroy();
+        setMonthlyChart(null);
+      }
+      if (weeklyChart) {
+        weeklyChart.destroy();
+        setWeeklyChart(null);
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, mensualData, trimestralData, semanalData]);
 
   function initializeCharts() {
-    if (mainRef.current) {
+    // eslint-disable-next-line no-console
+    console.log('🎨 Inicializando gráficos con datos:', {
+      mensual: mensualData.length,
+      trimestral: trimestralData.length,
+      semanal: semanalData.length,
+      mensualData,
+    });
+
+    if (mainRef.current && mensualData.length > 0) {
       const existingMain = Chart.getChart(
         mainRef.current as unknown as HTMLCanvasElement,
       );
@@ -268,6 +323,10 @@ export default function ConsumosPage(): JSX.Element {
       }
       const labels = mensualData.map(item => mapMesToLabel(item.mes));
       const data = mensualData.map(item => item.consumo_total_unidad);
+
+      // eslint-disable-next-line no-console
+      console.log('📊 Gráfico principal - Labels:', labels, 'Data:', data);
+
       const c = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -294,9 +353,15 @@ export default function ConsumosPage(): JSX.Element {
         },
       });
       setMainChart(c);
+    } else {
+      // eslint-disable-next-line no-console
+      console.log('⚠️ No se puede crear gráfico principal:', {
+        hasRef: !!mainRef.current,
+        dataLength: mensualData.length,
+      });
     }
 
-    if (monthlyRef.current) {
+    if (monthlyRef.current && trimestralData.length > 0) {
       const existingMonthly = Chart.getChart(
         monthlyRef.current as unknown as HTMLCanvasElement,
       );
@@ -325,7 +390,7 @@ export default function ConsumosPage(): JSX.Element {
       setMonthlyChart(c);
     }
 
-    if (weeklyRef.current) {
+    if (weeklyRef.current && semanalData.length > 0) {
       const existingWeekly = Chart.getChart(
         weeklyRef.current as unknown as HTMLCanvasElement,
       );
@@ -378,13 +443,9 @@ export default function ConsumosPage(): JSX.Element {
     if (e) {
       e.preventDefault();
     }
-    // Llama load() para recargar datos sin recargar página
-    const periodo_inicio = periodoInicio;
-    const periodo_fin = periodoFin;
-    const params = { medidor_id: String(medidorId), periodo_inicio, periodo_fin };
-    // Define load como función global o usa un state para trigger
-    // Por simplicidad, recarga por ahora
-    window.location.reload();
+    // Los cambios en periodoInicio y periodoFin dispararán automáticamente
+    // el useEffect que recarga los datos, no necesitamos hacer nada más aquí
+    // El useEffect ya tiene [periodoInicio, periodoFin] como dependencias
   }
 
   function changePeriodo(periodo: 'month' | 'quarter' | 'year') {
@@ -394,19 +455,34 @@ export default function ConsumosPage(): JSX.Element {
     const currentMonth = now.getMonth() + 1;
 
     if (periodo === 'month') {
-      const startMonth = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
-      const endMonth = startMonth;
-      setPeriodoInicio(startMonth);
-      setPeriodoFin(endMonth);
+      // Último mes completo
+      const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const yearForLastMonth = currentMonth === 1 ? currentYear - 1 : currentYear;
+      const monthStr = `${yearForLastMonth}-${String(lastMonth).padStart(2, '0')}`;
+      setPeriodoInicio(monthStr);
+      setPeriodoFin(monthStr);
     } else if (periodo === 'quarter') {
+      // Últimos 3 meses
       const quarter = Math.ceil(currentMonth / 3);
-      const startMonth = `${currentYear}-${String((quarter - 1) * 3 + 1).padStart(2, '0')}`;
-      const endMonth = `${currentYear}-${String(quarter * 3).padStart(2, '0')}`;
-      setPeriodoInicio(startMonth);
-      setPeriodoFin(endMonth);
+      const startMonth = (quarter - 1) * 3 + 1;
+      let startYear = currentYear;
+      
+      // Si estamos en Q1, mostrar Q4 del año anterior
+      if (quarter === 1) {
+        startYear = currentYear - 1;
+      }
+      
+      const actualStartMonth = quarter === 1 ? 10 : startMonth;
+      const actualEndMonth = quarter === 1 ? 12 : startMonth + 2;
+      
+      setPeriodoInicio(`${startYear}-${String(actualStartMonth).padStart(2, '0')}`);
+      setPeriodoFin(`${startYear}-${String(actualEndMonth).padStart(2, '0')}`);
     } else if (periodo === 'year') {
-      setPeriodoInicio(`${currentYear}-01`);
-      setPeriodoFin(`${currentYear}-12`);
+      // Últimos 12 meses desde el mes actual del año anterior
+      const startYear = currentYear - 1;
+      const startMonth = currentMonth;
+      setPeriodoInicio(`${startYear}-${String(startMonth).padStart(2, '0')}`);
+      setPeriodoFin(`${currentYear}-${String(currentMonth).padStart(2, '0')}`);
     }
   }
 
@@ -483,329 +559,457 @@ export default function ConsumosPage(): JSX.Element {
 
   return (
     <>
-    <PageHeader
-      title="Análisis de Consumos"
-      subtitle="Visualización y análisis de consumos de medidores"
-      icon="analytics"
-    >
-      <div className='d-flex justify-content-between align-items-center w-100 flex-wrap gap-2'>
-        <div className='d-flex align-items-center flex-wrap gap-2'>
-          <Link
-            href='/medidores'
-            className='btn btn-outline-secondary'
-          >
-            Volver a Medidores
-          </Link>
-          <div>
-            <small className="text-muted">
-              Medidor seleccionado: <strong>
-                {medidores.find(m => m.id === medidorId)?.codigo ||
-                 `Medidor ${String(medidorId).padStart(3, '0')}`}
-              </strong>
-            </small>
+      <PageHeader
+        title="Análisis de Consumos"
+        subtitle="Visualización y análisis de consumos de medidores"
+        icon="analytics"
+      >
+        <div className='d-flex justify-content-between align-items-center w-100 flex-wrap gap-2'>
+          <div className='d-flex align-items-center flex-wrap gap-2'>
+            <Link
+              href='/medidores'
+              className='btn btn-outline-secondary'
+            >
+              Volver a Medidores
+            </Link>
+            <div>
+              <small className="text-muted">
+                Medidor seleccionado: <strong>
+                  {medidores.find(m => m.id === medidorId)?.codigo ||
+                    `Medidor ${String(medidorId).padStart(3, '0')}`}
+                </strong>
+              </small>
+            </div>
+          </div>
+
+          <div className='d-flex align-items-center flex-wrap gap-2'>
+            <div className='me-3'>
+              <input
+                id='dateRange'
+                className='form-control form-control-sm'
+                placeholder='Rango de fechas'
+                style={{ width: 220 }}
+              />
+            </div>
+
+            <div className='dropdown'>
+              <button
+                className='btn btn-sm btn-outline-secondary dropdown-toggle'
+                data-bs-toggle='dropdown'
+              >
+                Configuración
+              </button>
+              <ul className='dropdown-menu dropdown-menu-end'>
+                <li>
+                  <Link className='dropdown-item' href='/mi-perfil'>
+                    Mi Perfil
+                  </Link>
+                </li>
+                <li>
+                  <Link className='dropdown-item' href='/tarifas'>
+                    Tarifas de Consumo
+                  </Link>
+                </li>
+                <li>
+                  <hr className='dropdown-divider' />
+                </li>
+                <li>
+                  <Link
+                    className='dropdown-item text-danger'
+                    href='/login'
+                  >
+                    Cerrar Sesión
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
+      </PageHeader>        <main className="container-fluid p-4">
+        {/* Alerta para roles básicos */}
+        {isBasicRoleInCommunity && (
+          <Alert variant='info' className='mb-4'>
+            <Alert.Heading>
+              <span className='material-icons me-2'>info</span>
+              Consulta de Consumos
+            </Alert.Heading>
+            <p className='mb-0'>
+              Puedes consultar los consumos de los medidores asociados a tus unidades.
+              Esta información es de solo lectura.
+            </p>
+          </Alert>
+        )}
 
-        <div className='d-flex align-items-center flex-wrap gap-2'>
-          <div className='me-3'>
-            <input
-                    id='dateRange'
-                    className='form-control form-control-sm'
-                    placeholder='Rango de fechas'
-                    style={{ width: 220 }}
-                  />
-                </div>
+        {error && !loadingMedidores && (
+          <div className="alert alert-danger" role="alert">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
 
-                <div className='dropdown'>
+        {!error && !loadingMedidores && medidores.length === 0 && (
+          <Alert variant='warning' className='mb-4'>
+            <Alert.Heading>
+              <span className='material-icons me-2'>warning</span>
+              No hay medidores disponibles
+            </Alert.Heading>
+            <p className='mb-0'>
+              No tienes medidores asignados en esta comunidad. Contacta al administrador si crees que esto es un error.
+            </p>
+          </Alert>
+        )}
+
+        <div className="row">
+          <div className="col-12 col-lg-3">
+            <div className="filter-panel">
+              <h5 className="mb-3"><span className="material-icons me-2">filter_list</span>Filtros</h5>
+
+              <div className="mb-3">
+                <label className="form-label">Tipo de Servicio</label>
+                <select
+                  className="form-select"
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                >
+                  <option value="all">Todos</option>
+                  <option value="agua">Agua</option>
+                  <option value="electricidad">Electricidad</option>
+                  <option value="gas">Gas</option>
+                </select>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label">Medidor</label>
+                <select
+                  id="meterSelect"
+                  className="form-select"
+                  value={medidorId || ''}
+                  onChange={(e) => setMedidorId(parseInt(e.target.value, 10))}
+                  disabled={loadingMedidores || filteredMedidores.length === 0}
+                >
+                  {loadingMedidores ? (
+                    <option>Cargando...</option>
+                  ) : filteredMedidores.length === 0 ? (
+                    <option>No hay medidores disponibles</option>
+                  ) : (
+                    filteredMedidores.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.medidor_codigo || m.codigo || `Medidor ${m.id}`} - {m.unidad_nombre || `Unidad ${m.unidad_id}`}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+              <div className='mb-3'>
+                <label className='form-label'>Unidad</label>
+                <select id='unitSelect' className='form-select'>
+                  <option value='kwh'>kWh</option>
+                  <option value='m3'>m3</option>
+                </select>
+              </div>
+              <div className='mb-3'>
+                <label className='form-label'>Período Rápido</label>
+                <div className='period-selector'>
                   <button
-                    className='btn btn-sm btn-outline-secondary dropdown-toggle'
-                    data-bs-toggle='dropdown'
+                    className={`period-btn ${periodoActual === 'month' ? 'active' : ''}`}
+                    onClick={() => changePeriodo('month')}
+                    title='Ver último mes completo'
                   >
-                    Configuración
+                    Último Mes
                   </button>
-                  <ul className='dropdown-menu dropdown-menu-end'>
-                    <li>
-                      <Link className='dropdown-item' href='/mi-perfil'>
-                        Mi Perfil
-                      </Link>
-                    </li>
-                    <li>
-                      <Link className='dropdown-item' href='/tarifas'>
-                        Tarifas de Consumo
-                      </Link>
-                    </li>
-                    <li>
-                      <hr className='dropdown-divider' />
-                    </li>
-                    <li>
-                      <Link
-                        className='dropdown-item text-danger'
-                        href='/login'
-                      >
-                        Cerrar Sesión
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </PageHeader>        <main className="container-fluid p-4">
-          {error && (
-            <div className="alert alert-danger" role="alert">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
-
-          <div className="row">
-            <div className="col-12 col-lg-3">
-              <div className="filter-panel">
-                <h5 className="mb-3"><span className="material-icons me-2">filter_list</span>Filtros</h5>
-                
-                <div className="mb-3">
-                  <label className="form-label">Tipo de Servicio</label>
-                  <select 
-                    className="form-select" 
-                    value={selectedType} 
-                    onChange={(e) => setSelectedType(e.target.value)}
+                  <button
+                    className={`period-btn ${periodoActual === 'quarter' ? 'active' : ''}`}
+                    onClick={() => changePeriodo('quarter')}
+                    title='Ver últimos 3 meses'
                   >
-                    <option value="all">Todos</option>
-                    <option value="agua">Agua</option>
-                    <option value="electricidad">Electricidad</option>
-                    <option value="gas">Gas</option>
-                  </select>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label">Medidor</label>
-                  <select id="meterSelect" className="form-select" value={medidorId} onChange={(e) => setMedidorId(parseInt(e.target.value, 10))} disabled={loadingMedidores}>
-                    {loadingMedidores ? (
-                      <option>Cargando...</option>
-                    ) : (
-                      filteredMedidores.map(m => (
-                        <option key={m.id} value={m.id}>{m.medidor_codigo || m.codigo || `Medidor ${m.id}`}</option>
-                      ))
-                    )}
-                  </select>
-                </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Unidad</label>
-                  <select id='unitSelect' className='form-select'>
-                    <option value='kwh'>kWh</option>
-                    <option value='m3'>m3</option>
-                  </select>
-                </div>
-                <div className='mb-3'>
-                  <label className='form-label'>Período</label>
-                  <div className='period-selector'>
-                    <button
-                      className={`period-btn ${periodoActual === 'month' ? 'active' : ''}`}
-                      onClick={() => changePeriodo('month')}
-                    >
-                      Mes
-                    </button>
-                    <button
-                      className={`period-btn ${periodoActual === 'quarter' ? 'active' : ''}`}
-                      onClick={() => changePeriodo('quarter')}
-                    >
-                      Trimestre
-                    </button>
-                    <button
-                      className={`period-btn ${periodoActual === 'year' ? 'active' : ''}`}
-                      onClick={() => changePeriodo('year')}
-                    >
-                      Año
-                    </button>
-                  </div>
-                </div>
-                <div className='d-grid'>
-                  <button className='btn btn-primary' onClick={applyFilters}>
-                    Aplicar filtros
+                    3 Meses
+                  </button>
+                  <button
+                    className={`period-btn ${periodoActual === 'year' ? 'active' : ''}`}
+                    onClick={() => changePeriodo('year')}
+                    title='Ver últimos 12 meses'
+                  >
+                    12 Meses
                   </button>
                 </div>
+                <small className='text-muted d-block mt-2'>
+                  {periodoActual === 'month' && 'Mostrando último mes completo'}
+                  {periodoActual === 'quarter' && 'Mostrando últimos 3 meses'}
+                  {periodoActual === 'year' && 'Mostrando últimos 12 meses'}
+                </small>
               </div>
-
-              <div className='stats-grid mt-3'>
-                <div className='stat-card'>
-                  <div className='stat-value'>
-                    {estadisticas.total_consumo_periodo}
+              <div className='mb-3'>
+                <label className='form-label'>Período Personalizado</label>
+                <div className='row g-2'>
+                  <div className='col-6'>
+                    <input
+                      type='month'
+                      className='form-control form-control-sm'
+                      value={periodoInicio}
+                      onChange={(e) => setPeriodoInicio(e.target.value)}
+                      max={periodoFin}
+                    />
+                    <small className='text-muted'>Desde</small>
                   </div>
-                  <div className='stat-label'>kWh Total</div>
-                  <div className='stat-change positive'>
-                    +4.2% vs mes anterior
+                  <div className='col-6'>
+                    <input
+                      type='month'
+                      className='form-control form-control-sm'
+                      value={periodoFin}
+                      onChange={(e) => setPeriodoFin(e.target.value)}
+                      min={periodoInicio}
+                    />
+                    <small className='text-muted'>Hasta</small>
                   </div>
-                </div>
-
-                <div className='stat-card'>
-                  <div className='stat-value'>
-                    {estadisticas.promedio_consumo_mensual}
-                  </div>
-                  <div className='stat-label'>kWh Promedio/Mes</div>
-                  <div className='stat-change negative'>-1.1% vs periodo</div>
-                </div>
-
-                <div className='stat-card'>
-                  <div className='stat-value'>
-                    ${estadisticas.costo_total_periodo}
-                  </div>
-                  <div className='stat-label'>Costo Total</div>
-                  <div className='stat-change positive'>-2.5% vs periodo</div>
                 </div>
               </div>
             </div>
 
-            <div className='col-12 col-lg-9'>
-              <div
-                className='comparison-mode mb-3'
-                style={{ display: comparisonMode ? 'block' : 'none' }}
-              >
-                <div className='d-flex align-items-center'>
-                  <strong>Modo comparación activo</strong>
+            <div className='stats-grid mt-3'>
+              <div className='stat-card'>
+                <div className='stat-value'>
+                  {estadisticas.total_consumo_periodo}
+                </div>
+                <div className='stat-label'>kWh Total</div>
+                <div className='stat-change positive'>
+                  +4.2% vs mes anterior
                 </div>
               </div>
 
-              <div className='chart-card'>
-                <div className='chart-header d-flex justify-content-between align-items-center'>
-                  <h5 className='mb-0'>Tendencia de Consumo</h5>
-                  <div>
-                    <button
-                      className='btn btn-sm btn-outline-secondary me-2'
-                      onClick={() => exportData('csv')}
-                    >
-                      CSV
-                    </button>
-                    <button
-                      className='btn btn-sm btn-primary me-2'
-                      onClick={() => exportData('excel')}
-                    >
-                      Exportar
-                    </button>
-                    <div
-                      className='btn-group'
-                      role='group'
-                      aria-label='chart types'
-                    >
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => changeChartType('bar')}
-                      >
-                        Bar
-                      </button>
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => changeChartType('line')}
-                      >
-                        Line
-                      </button>
-                      <button
-                        className='btn btn-sm btn-outline-secondary'
-                        onClick={() => changeChartType('area')}
-                      >
-                        Area
-                      </button>
-                    </div>
-                    <div className='form-check form-switch d-inline-block ms-3'>
-                      <input
-                        className='form-check-input'
-                        type='checkbox'
-                        id='comparisonMode'
-                        checked={comparisonMode}
-                        onChange={e => toggleComparison(e.target.checked)}
-                      />
-                      <label
-                        className='form-check-label small'
-                        htmlFor='comparisonMode'
-                      >
-                        Comparación
-                      </label>
-                    </div>
-                  </div>
+              <div className='stat-card'>
+                <div className='stat-value'>
+                  {estadisticas.promedio_consumo_mensual}
                 </div>
-
-                <div className='chart-container' style={{ height: 400 }}>
-                  <canvas id='mainChart' ref={mainRef}></canvas>
-                </div>
+                <div className='stat-label'>kWh Promedio/Mes</div>
+                <div className='stat-change negative'>-1.1% vs periodo</div>
               </div>
 
-              <div className='row mt-3'>
-                <div className='col-md-6'>
-                  <div className='chart-card'>
-                    <div className='chart-header d-flex justify-content-between align-items-center'>
-                      <h6 className='mb-0'>Distribución mensual</h6>
-                    </div>
-                    <div
-                      className='chart-container small'
-                      style={{ height: 300 }}
-                    >
-                      <canvas id='monthlyChart' ref={monthlyRef}></canvas>
-                    </div>
-                  </div>
+              <div className='stat-card'>
+                <div className='stat-value'>
+                  ${estadisticas.costo_total_periodo}
                 </div>
-
-                <div className='col-md-6'>
-                  <div className='chart-card'>
-                    <div className='chart-header d-flex justify-content-between align-items-center'>
-                      <h6 className='mb-0'>Promedio semanal</h6>
-                    </div>
-                    <div
-                      className='chart-container small'
-                      style={{ height: 300 }}
-                    >
-                      <canvas id='weeklyChart' ref={weeklyRef}></canvas>
-                    </div>
-                  </div>
-                </div>
+                <div className='stat-label'>Costo Total</div>
+                <div className='stat-change positive'>-2.5% vs periodo</div>
               </div>
+            </div>
+          </div>
 
-              <div className='consumption-table mt-3'>
-                <div className='d-flex justify-content-between align-items-center p-3 border-bottom'>
-                  <h6 className='mb-0'>Detalle de consumos</h6>
-                  <div>
+          <div className='col-12 col-lg-9'>
+            <div
+              className='comparison-mode mb-3'
+              style={{ display: comparisonMode ? 'block' : 'none' }}
+            >
+              <div className='d-flex align-items-center'>
+                <strong>Modo comparación activo</strong>
+              </div>
+            </div>
+
+            <div className='chart-card'>
+              <div className='chart-header d-flex justify-content-between align-items-center'>
+                <h5 className='mb-0'>Tendencia de Consumo</h5>
+                <div>
+                  <button
+                    className='btn btn-sm btn-outline-secondary me-2'
+                    onClick={() => exportData('csv')}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    className='btn btn-sm btn-primary me-2'
+                    onClick={() => exportData('excel')}
+                  >
+                    Exportar
+                  </button>
+                  <div
+                    className='btn-group'
+                    role='group'
+                    aria-label='chart types'
+                  >
                     <button
-                      className='btn btn-sm btn-outline-secondary me-2'
-                      onClick={() => exportData('pdf')}
+                      className='btn btn-sm btn-outline-secondary'
+                      onClick={() => changeChartType('bar')}
                     >
-                      PDF
+                      Bar
                     </button>
                     <button
                       className='btn btn-sm btn-outline-secondary'
-                      onClick={() => exportData('csv')}
+                      onClick={() => changeChartType('line')}
                     >
-                      CSV
+                      Line
+                    </button>
+                    <button
+                      className='btn btn-sm btn-outline-secondary'
+                      onClick={() => changeChartType('area')}
+                    >
+                      Area
                     </button>
                   </div>
+                  <div className='form-check form-switch d-inline-block ms-3'>
+                    <input
+                      className='form-check-input'
+                      type='checkbox'
+                      id='comparisonMode'
+                      checked={comparisonMode}
+                      onChange={e => toggleComparison(e.target.checked)}
+                    />
+                    <label
+                      className='form-check-label small'
+                      htmlFor='comparisonMode'
+                    >
+                      Comparación
+                    </label>
+                  </div>
                 </div>
-                <div className='table-responsive p-3'>
-                  <table className='table table-striped mb-0'>
-                    <thead>
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Medidor</th>
-                        <th>Consumo</th>
-                        <th>Costo</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detalleData.map((item, index) => (
-                        <tr key={index}>
-                          <td>{item.periodo}</td>
-                          <td>{medidores.find(m => m.id === medidorId)?.codigo || `Medidor ${medidorId}`}</td>
-                          <td>{item.consumo_calculado} m³</td>
-                          <td>${item.costo.toFixed(2)}</td>
-                          <td>
-                            <button className='btn btn-sm btn-outline-secondary'>
-                              Ver
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </div>
+
+              <div className='chart-container' style={{ height: 400 }}>
+                {loading ? (
+                  <div className='d-flex justify-content-center align-items-center' style={{ height: '100%' }}>
+                    <div className='spinner-border text-primary' role='status'>
+                      <span className='visually-hidden'>Cargando...</span>
+                    </div>
+                  </div>
+                ) : mensualData.length === 0 ? (
+                  <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100%' }}>
+                    <span className='material-icons text-muted mb-3' style={{ fontSize: '4rem' }}>show_chart</span>
+                    <h5 className='text-muted mb-2'>No hay datos de consumo disponibles</h5>
+                    <p className='text-muted text-center px-4'>
+                      No se encontraron lecturas registradas para este medidor en el período seleccionado.<br />
+                      Para ver gráficos de consumo, primero debes registrar lecturas del medidor.
+                    </p>
+                    <button 
+                      className='btn btn-primary mt-3'
+                      onClick={() => router.push(`/lecturas?medidor_id=${medidorId}`)}
+                    >
+                      <span className='material-icons me-2'>add</span>
+                      Registrar Lecturas
+                    </button>
+                  </div>
+                ) : mensualData.every(item => item.consumo_total_unidad === 0) ? (
+                  <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100%' }}>
+                    <span className='material-icons text-warning mb-3' style={{ fontSize: '4rem' }}>warning</span>
+                    <h5 className='text-warning mb-2'>Sin consumo registrado</h5>
+                    <p className='text-muted text-center px-4'>
+                      Hay lecturas registradas pero todas tienen el mismo valor (consumo = 0).<br />
+                      Registra más lecturas para ver la evolución del consumo.
+                    </p>
+                    <button 
+                      className='btn btn-warning mt-3'
+                      onClick={() => router.push(`/lecturas?medidor_id=${medidorId}`)}
+                    >
+                      <span className='material-icons me-2'>add</span>
+                      Registrar Nueva Lectura
+                    </button>
+                  </div>
+                ) : (
+                  <canvas id='mainChart' ref={mainRef}></canvas>
+                )}
+              </div>
+            </div>
+
+            <div className='row mt-3'>
+              <div className='col-md-6'>
+                <div className='chart-card'>
+                  <div className='chart-header d-flex justify-content-between align-items-center'>
+                    <h6 className='mb-0'>Distribución mensual</h6>
+                  </div>
+                  <div
+                    className='chart-container small'
+                    style={{ height: 300 }}
+                  >
+                    {loading ? (
+                      <div className='d-flex justify-content-center align-items-center' style={{ height: '100%' }}>
+                        <div className='spinner-border spinner-border-sm text-primary' role='status'>
+                          <span className='visually-hidden'>Cargando...</span>
+                        </div>
+                      </div>
+                    ) : trimestralData.length === 0 ? (
+                      <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100%' }}>
+                        <p className='text-muted small'>Sin datos</p>
+                      </div>
+                    ) : (
+                      <canvas id='monthlyChart' ref={monthlyRef}></canvas>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className='col-md-6'>
+                <div className='chart-card'>
+                  <div className='chart-header d-flex justify-content-between align-items-center'>
+                    <h6 className='mb-0'>Promedio semanal</h6>
+                  </div>
+                  <div
+                    className='chart-container small'
+                    style={{ height: 300 }}
+                  >
+                    {loading ? (
+                      <div className='d-flex justify-content-center align-items-center' style={{ height: '100%' }}>
+                        <div className='spinner-border spinner-border-sm text-primary' role='status'>
+                          <span className='visually-hidden'>Cargando...</span>
+                        </div>
+                      </div>
+                    ) : semanalData.length === 0 ? (
+                      <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100%' }}>
+                        <p className='text-muted small'>Sin datos</p>
+                      </div>
+                    ) : (
+                      <canvas id='weeklyChart' ref={weeklyRef}></canvas>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
+
+            <div className='consumption-table mt-3'>
+              <div className='d-flex justify-content-between align-items-center p-3 border-bottom'>
+                <h6 className='mb-0'>Detalle de consumos</h6>
+                <div>
+                  <button
+                    className='btn btn-sm btn-outline-secondary me-2'
+                    onClick={() => exportData('pdf')}
+                  >
+                    PDF
+                  </button>
+                  <button
+                    className='btn btn-sm btn-outline-secondary'
+                    onClick={() => exportData('csv')}
+                  >
+                    CSV
+                  </button>
+                </div>
+              </div>
+              <div className='table-responsive p-3'>
+                <table className='table table-striped mb-0'>
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Medidor</th>
+                      <th>Consumo</th>
+                      <th>Costo</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detalleData.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.periodo}</td>
+                        <td>{medidores.find(m => m.id === medidorId)?.codigo || `Medidor ${medidorId}`}</td>
+                        <td>{item.consumo_calculado} m³</td>
+                        <td>${item.costo.toFixed(2)}</td>
+                        <td>
+                          <button className='btn btn-sm btn-outline-secondary'>
+                            Ver
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </main>
+        </div>
+      </main>
 
       <style jsx>{`
         /* Mobile Styles */

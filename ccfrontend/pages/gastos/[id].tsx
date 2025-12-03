@@ -75,7 +75,7 @@ export default function GastoDetalle() {
 
   // Cuando cambia la comunidad global, re-evaluar permisos y recargar el gasto.
   useEffect(() => {
-    if (!id) return;
+    if (!id) {return;}
 
     // Re-evaluar acceso localmente y luego intentar recargar (backend puede devolver 403)
     const canView =
@@ -343,14 +343,6 @@ export default function GastoDetalle() {
               >
                 <span className="material-icons">arrow_back</span>
                 Volver
-              </button>
-
-              <button
-                className="btn-secondary"
-                onClick={() => router.push(`/gastos/editar/${expense.id}`)}
-              >
-                <span className="material-icons">edit</span>
-                Editar
               </button>
 
               {hasPermission(Permission.EDIT_GASTO, comunidadParaPermisos) && (

@@ -1,7 +1,6 @@
 import type { Medidor, MedidoresListResponse, Reading } from '@/types/medidores';
 
 import apiClient from './api';
-import http from './httpClient';
 
 
 export async function listMedidores(
@@ -87,31 +86,26 @@ export async function getConsumos(
 const base = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'; // <-- unificado con ConsumosPage
 
 export async function getConsumoMensual(params: Record<string,string>) {
-  const q = new URLSearchParams(params).toString();
-  const res = await http.get(`/consumos/mensual?${q}`);
+  const res = await apiClient.get('/consumos/mensual', { params });
   return res.data;
 }
 
 export async function getConsumoTrimestral(params: Record<string,string>) {
-  const q = new URLSearchParams(params).toString();
-  const res = await http.get(`/consumos/trimestral?${q}`);
+  const res = await apiClient.get('/consumos/trimestral', { params });
   return res.data;
 }
 
 export async function getConsumoSemanal(params: Record<string,string>) {
-  const q = new URLSearchParams(params).toString();
-  const res = await http.get(`/consumos/semanal?${q}`);
+  const res = await apiClient.get('/consumos/semanal', { params });
   return res.data;
 }
 
 export async function getConsumoEstadisticas(params: Record<string,string>) {
-  const q = new URLSearchParams(params).toString();
-  const res = await http.get(`/consumos/estadisticas?${q}`);
+  const res = await apiClient.get('/consumos/estadisticas', { params });
   return res.data;
 }
 
 export async function getConsumoDetalle(params: Record<string,string>) {
-  const q = new URLSearchParams(params).toString();
-  const res = await http.get(`/consumos/detalle?${q}`);
+  const res = await apiClient.get('/consumos/detalle', { params });
   return res.data;
 }

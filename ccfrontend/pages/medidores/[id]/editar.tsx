@@ -1,15 +1,29 @@
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
+import { Alert } from 'react-bootstrap';
 
 import { getMedidor, updateMedidor } from '@/lib/medidoresService';
+import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions } from '@/lib/usePermissions';
 import { Medidor } from '@/types/medidores';
 
 export default function EditarMedidor() {
     const router = useRouter();
     const { id } = router.query;
+    const { user } = useAuth();
+    const { hasRoleInCommunity, isSuperUser } = usePermissions();
+    const { comunidadSeleccionada } = useComunidad();
     const [medidor, setMedidor] = useState<Medidor | null>(null);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Verificar si el usuario es un rol básico (NO puede editar)
+    const isBasicRole = medidor && medidor.comunidad_id ? (
+        hasRoleInCommunity(medidor.comunidad_id, 'residente') ||
+        hasRoleInCommunity(medidor.comunidad_id, 'propietario') ||
+        hasRoleInCommunity(medidor.comunidad_id, 'inquilino')
+    ) : false;
 
     const [formData, setFormData] = useState({
         serialNumber: '',
@@ -77,6 +91,15 @@ export default function EditarMedidor() {
 
     if (!medidor) {
         return <div>Cargando...</div>;
+    }
+
+    if (isBasicRole) {
+        return (
+            <Alert variant='danger'>
+                <Alert.Heading>Acceso Denegado</Alert.Heading>
+                <p>No tienes permisos para editar medidores.</p>
+            </Alert>
+        );
     }
 
     return (

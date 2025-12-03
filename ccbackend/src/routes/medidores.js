@@ -14,17 +14,18 @@ const { authorize } = require('../middleware/authorize');
 
 /**
  * Helper: verifica existencia y tenancy / permisos básicos
- * Retorna: { exists, allowed, comunidadId, activo }
+ * Retorna: { exists, allowed, comunidadId, activo, isBasicRole, userRole, unidadId }
  */
 async function medidorAccessCheck(user, medidorId) {
   try {
     const [mrows] = await db.query(
-      'SELECT comunidad_id, activo FROM medidor WHERE id = ? LIMIT 1',
+      'SELECT m.comunidad_id, m.activo, m.unidad_id FROM medidor m WHERE m.id = ? LIMIT 1',
       [medidorId]
     );
     if (!mrows.length) return { exists: false };
     const comunidadId = mrows[0].comunidad_id;
     const activo = mrows[0].activo;
+    const unidadId = mrows[0].unidad_id;
 
     // DEBUG: log user info to help tracking permisos
     console.log('medidorAccessCheck user debug:', {
@@ -33,13 +34,42 @@ async function medidorAccessCheck(user, medidorId) {
       is_superadmin: user?.is_superadmin,
     });
 
+    // SuperAdmin: acceso total
     if (user?.is_superadmin)
-      return { exists: true, allowed: true, comunidadId, activo };
+      return { exists: true, allowed: true, comunidadId, activo, isBasicRole: false, userRole: 'superadmin', unidadId };
+
+    // Verificar membresía y obtener rol
     const [chk] = await db.query(
-      'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND activo = 1 LIMIT 1',
+      `SELECT umc.id, umc.rol as rol_codigo
+       FROM usuario_miembro_comunidad umc
+       WHERE umc.persona_id = ? AND umc.comunidad_id = ? AND umc.activo = 1 
+       LIMIT 1`,
       [user.persona_id, comunidadId]
     );
-    return { exists: true, allowed: !!chk.length, comunidadId, activo };
+    
+    if (!chk.length) {
+      return { exists: true, allowed: false, comunidadId, activo, isBasicRole: false, userRole: null, unidadId };
+    }
+
+    const userRole = chk[0].rol_codigo;
+    const isBasicRole = ['residente', 'propietario', 'inquilino'].includes(userRole);
+
+    // Si es rol básico, verificar que el medidor pertenezca a una unidad del usuario
+    if (isBasicRole) {
+      const [unidadCheck] = await db.query(
+        `SELECT 1 FROM titulares_unidad tu
+         WHERE tu.persona_id = ? AND tu.unidad_id = ? 
+         AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+         LIMIT 1`,
+        [user.persona_id, unidadId]
+      );
+      
+      const allowed = !!unidadCheck.length;
+      return { exists: true, allowed, comunidadId, activo, isBasicRole, userRole, unidadId };
+    }
+
+    // Admin comunidad o roles superiores: acceso permitido
+    return { exists: true, allowed: true, comunidadId, activo, isBasicRole, userRole, unidadId };
   } catch (err) {
     console.error('medidorAccessCheck error:', err);
     return { exists: false };
@@ -49,6 +79,7 @@ async function medidorAccessCheck(user, medidorId) {
 /**
  * GET /api/medidores/comunidad/:comunidadId
  * Lista desde vista_medidores con paginación y filtros básicos
+ * PROTECCIÓN: Roles básicos solo ven medidores de sus unidades
  */
 router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
   try {
@@ -61,10 +92,16 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
         : (page - 1) * limit;
     const { search, tipo, unidad_id } = req.query;
 
-    // tenancy check: si no es superadmin validar pertenencia
+    // tenancy check: si no es superadmin validar pertenencia y obtener rol
+    let userRole = 'superadmin';
+    let isBasicRole = false;
+
     if (!req.user?.is_superadmin) {
       const [check] = await db.query(
-        'SELECT 1 FROM usuario_miembro_comunidad WHERE persona_id = ? AND comunidad_id = ? AND activo = 1 LIMIT 1',
+        `SELECT umc.rol as rol_codigo
+         FROM usuario_miembro_comunidad umc
+         WHERE umc.persona_id = ? AND umc.comunidad_id = ? AND umc.activo = 1
+         LIMIT 1`,
         [req.user.persona_id, comunidadId]
       );
       if (!check.length)
@@ -72,10 +109,24 @@ router.get('/comunidad/:comunidadId', authenticate, async (req, res) => {
           data: [],
           pagination: { total: 0, limit, offset, pages: 0 },
         });
+      
+      userRole = check[0].rol_codigo;
+      isBasicRole = ['residente', 'propietario', 'inquilino'].includes(userRole);
     }
 
     let where = ' WHERE comunidad_id = ? ';
     const params = [comunidadId];
+
+    // FILTRO ADICIONAL: Roles básicos solo ven medidores de sus unidades
+    if (isBasicRole) {
+      where += ` AND unidad_id IN (
+        SELECT tu.unidad_id FROM titulares_unidad tu
+        WHERE tu.persona_id = ? 
+        AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+      )`;
+      params.push(req.user.persona_id);
+    }
+
     if (search) {
       where +=
         ' AND (medidor_codigo LIKE ? OR serial_number LIKE ? OR marca LIKE ? OR modelo LIKE ?) ';
@@ -191,6 +242,7 @@ router.get('/:id/lecturas', authenticate, async (req, res) => {
 /**
  * POST /api/medidores/:id/lecturas
  * Crear lectura (maneja duplicados por unique periodo)
+ * BLOQUEADO para residente, propietario, inquilino
  */
 router.post('/:id/lecturas', authenticate, async (req, res) => {
   try {
@@ -200,6 +252,14 @@ router.post('/:id/lecturas', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Medidor no encontrado' });
     if (!access.allowed)
       return res.status(403).json({ error: 'No autorizado' });
+
+    // BLOQUEAR ROLES BÁSICOS: solo lectura permitida
+    if (access.isBasicRole) {
+      return res.status(403).json({ 
+        error: 'No tienes permisos para crear lecturas',
+        message: 'Los roles de residente, propietario e inquilino solo pueden ver información'
+      });
+    }
 
     const {
       fecha,
@@ -341,40 +401,34 @@ router.get('/', authenticate, async (req, res) => {
     let where = ' WHERE 1=1 ';
     const params = [];
 
-    // Si se pide comunidad_id y es superadmin, permitirlo
-    if (comunidad_id && req.user?.is_superadmin) {
-      where += ' AND comunidad_id = ? ';
-      params.push(Number(comunidad_id));
-    } else if (!req.user?.is_superadmin) {
-      // filtrar por comunidades asignadas al usuario (misma cláusula usada en otros endpoints)
-      where += ` AND comunidad_id IN (
-        SELECT umc.comunidad_id
-        FROM usuario_miembro_comunidad umc
-        WHERE umc.persona_id = ? AND umc.activo = 1 AND (umc.hasta IS NULL OR umc.hasta > CURDATE())
-      )`;
-      params.push(req.user.persona_id);
+    // Determinar comunidades permitidas para el usuario
+    let allowedComunidadIds = [];
 
-      // obtener comunidades del usuario directamente desde la BD (no confiar en req.user.comunidades)
+    if (req.user?.is_superadmin) {
+      // SuperAdmin: si se pide comunidad_id específica, usar esa; sino, todas
+      if (comunidad_id) {
+        allowedComunidadIds = [Number(comunidad_id)];
+      }
+      // Si no se pide comunidad_id específica, no filtrar (ver todas)
+    } else {
+      // Usuario normal: obtener sus comunidades asignadas
       const personaId = req.user?.persona_id;
-      console.log('Resolviendo comunidades para persona_id=', personaId);
+      console.log('🔍 Resolviendo comunidades para persona_id=', personaId);
 
-      // intentos: 1) vista usuario_miembro_comunidad (usa persona_id)
-      //          2) tabla usuario_rol_comunidad (usa usuario.id -> usuario_id)
-      let comIds = [];
       try {
         const [r] = await db.query(
-          `SELECT comunidad_id FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
+          `SELECT comunidad_id FROM usuario_miembro_comunidad 
+           WHERE persona_id = ? AND activo = 1 AND (hasta IS NULL OR hasta > CURDATE())`,
           [personaId]
         );
-        comIds = (r || []).map((row) => row.comunidad_id).filter(Boolean);
-        console.log('Comunidades desde usuario_miembro_comunidad:', comIds);
+        allowedComunidadIds = (r || []).map((row) => row.comunidad_id).filter(Boolean);
+        console.log('✅ Comunidades desde usuario_miembro_comunidad:', allowedComunidadIds);
       } catch (err) {
-        console.error('Error leyendo usuario_miembro_comunidad:', err);
-        comIds = [];
+        console.error('❌ Error leyendo usuario_miembro_comunidad:', err);
       }
 
-      // fallback: buscar usuario.id por persona_id y leer usuario_rol_comunidad
-      if (!comIds.length) {
+      // Fallback: buscar usuario.id y leer usuario_rol_comunidad
+      if (!allowedComunidadIds.length) {
         try {
           const [urows] = await db.query(
             'SELECT id FROM usuario WHERE persona_id = ? LIMIT 1',
@@ -386,37 +440,70 @@ router.get('/', authenticate, async (req, res) => {
               'SELECT comunidad_id FROM usuario_rol_comunidad WHERE usuario_id = ? AND activo = 1',
               [usuarioId]
             );
-            comIds = (r2 || []).map((row) => row.comunidad_id).filter(Boolean);
-            console.log(
-              'Comunidades desde usuario_rol_comunidad (usuario_id=' +
-                usuarioId +
-                '):',
-              comIds
-            );
-          } else {
-            console.log(
-              'No se encontró usuario.id para persona_id=',
-              personaId
-            );
+            allowedComunidadIds = (r2 || []).map((row) => row.comunidad_id).filter(Boolean);
+            console.log('✅ Comunidades desde usuario_rol_comunidad (usuario_id=' + usuarioId + '):', allowedComunidadIds);
           }
         } catch (err) {
-          console.error('Error leyendo usuario_rol_comunidad fallback:', err);
+          console.error('❌ Error leyendo usuario_rol_comunidad fallback:', err);
         }
       }
 
-      console.log('Comunidades encontradas totales:', comIds);
+      console.log('📋 Comunidades permitidas totales:', allowedComunidadIds);
 
-      if (!comIds.length) {
-        // sin membresías activas -> devolver vacío con pagination
+      if (!allowedComunidadIds.length) {
+        console.log('⚠️ Usuario sin membresías activas - devolver vacío');
         return res.json({
           data: [],
           pagination: { total: 0, limit, offset, pages: 0 },
         });
       }
 
-      // construir IN (...)
-      where += ` AND comunidad_id IN (${comIds.map(() => '?').join(',')}) `;
-      params.push(...comIds);
+      // Si se pide comunidad_id específica, validar que esté en las permitidas
+      if (comunidad_id) {
+        const requestedId = Number(comunidad_id);
+        if (allowedComunidadIds.includes(requestedId)) {
+          console.log('✅ Filtro comunidad_id válido:', requestedId);
+          allowedComunidadIds = [requestedId];
+        } else {
+          console.log('⛔ Comunidad solicitada no permitida:', requestedId, 'permitidas:', allowedComunidadIds);
+          return res.json({
+            data: [],
+            pagination: { total: 0, limit, offset, pages: 0 },
+          });
+        }
+      }
+    }
+
+    // Aplicar filtro de comunidades si corresponde
+    if (allowedComunidadIds.length > 0) {
+      where += ` AND comunidad_id IN (${allowedComunidadIds.map(() => '?').join(',')}) `;
+      params.push(...allowedComunidadIds);
+      console.log('🔒 Filtro aplicado - comunidades:', allowedComunidadIds);
+    }
+
+    // PROTECCIÓN ADICIONAL: Si usuario tiene rol básico, filtrar por sus unidades
+    if (!req.user?.is_superadmin && allowedComunidadIds.length > 0) {
+      // Verificar si tiene rol básico en alguna de las comunidades
+      const [roleCheck] = await db.query(
+        `SELECT DISTINCT umc.rol as rol_codigo
+         FROM usuario_miembro_comunidad umc
+         WHERE umc.persona_id = ? AND umc.comunidad_id IN (${allowedComunidadIds.map(() => '?').join(',')})
+         AND umc.activo = 1`,
+        [req.user.persona_id, ...allowedComunidadIds]
+      );
+
+      const roles = roleCheck.map(r => r.rol_codigo);
+      const isBasicRole = roles.some(r => ['residente', 'propietario', 'inquilino'].includes(r));
+
+      if (isBasicRole) {
+        console.log('👤 Usuario con rol básico - filtrando por unidades propias');
+        // Filtrar solo medidores de unidades donde el usuario es titular
+        where += ` AND unidad_id IN (
+          SELECT unidad_id FROM titulares_unidad 
+          WHERE persona_id = ? AND (hasta IS NULL OR hasta >= CURDATE())
+        )`;
+        params.push(req.user.persona_id);
+      }
     }
 
     if (search) {
@@ -463,7 +550,7 @@ router.get('/', authenticate, async (req, res) => {
  *   post:
  *     tags: [Medidores]
  *     summary: Crear nuevo medidor
- *     description: Crea un nuevo medidor para una unidad
+ *     description: Crea un nuevo medidor para una unidad. BLOQUEADO para residente, propietario, inquilino
  *     requestBody:
  *       required: true
  *       content:
@@ -502,7 +589,7 @@ router.get('/', authenticate, async (req, res) => {
  *       401:
  *         description: No autenticado
  *       403:
- *         description: No autorizado
+ *         description: No autorizado - rol básico intentando crear
  *       409:
  *         description: Medidor duplicado
  *       500:
@@ -512,7 +599,7 @@ router.post(
   '/',
   [
     authenticate,
-    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    authorize('superadmin', 'admin_comunidad', 'administrador', 'tesorero', 'presidente_comite', 'conserje', 'contador'),
     body('unidad_id').isInt({ min: 1 }).withMessage('unidad_id requerido'),
     body('tipo')
       .isIn(['agua', 'gas', 'electricidad', 'otro'])
@@ -605,7 +692,7 @@ router.post(
  *   put:
  *     tags: [Medidores]
  *     summary: Actualizar medidor existente
- *     description: Actualiza los datos de un medidor existente
+ *     description: Actualiza los datos de un medidor existente. BLOQUEADO para residente, propietario, inquilino
  *     parameters:
  *       - name: id
  *         in: path
@@ -637,7 +724,7 @@ router.post(
  *       401:
  *         description: No autenticado
  *       403:
- *         description: No autorizado
+ *         description: No autorizado - rol básico intentando editar
  *       404:
  *         description: Medidor no encontrado
  *       500:
@@ -647,7 +734,7 @@ router.put(
   '/:id',
   [
     authenticate,
-    authorize('superadmin', 'admin_comunidad', 'administrador'),
+    authorize('superadmin', 'admin_comunidad', 'administrador', 'tesorero', 'presidente_comite', 'conserje', 'contador'),
     body('serial_number').optional().trim(),
     body('marca').optional().trim(),
     body('modelo').optional().trim(),

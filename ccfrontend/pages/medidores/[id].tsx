@@ -24,12 +24,16 @@ import {
   listLecturas,
 } from '@/lib/medidoresService';
 import { useAuth, ProtectedRoute } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
+import { usePermissions } from '@/lib/usePermissions';
 import type { Medidor, Reading } from '@/types/medidores';
 
 export default function MedidorDetallePage() {
   const router = useRouter();
   const { id } = router.query;
   const { user } = useAuth();
+  const { hasRoleInCommunity, isSuperUser } = usePermissions();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [medidor, setMedidor] = useState<Medidor | null>(null);
@@ -111,13 +115,21 @@ export default function MedidorDetallePage() {
     if (!user) {
       return false;
     }
-    if (user.is_superadmin) {
+    if (isSuperUser()) {
       return true;
+    }
+    // Bloquear roles básicos
+    if (medidor?.comunidad_id) {
+      const isBasic = 
+        hasRoleInCommunity(medidor.comunidad_id, 'residente') ||
+        hasRoleInCommunity(medidor.comunidad_id, 'propietario') ||
+        hasRoleInCommunity(medidor.comunidad_id, 'inquilino');
+      if (isBasic) {return false;}
     }
     return !!user.memberships?.find(
       (m: any) =>
-        m.comunidad_id === medidor?.comunidad_id &&
-        (m.rol === 'admin' || m.rol === 'gestor'),
+        Number(m.comunidad_id) === Number(medidor?.comunidad_id) &&
+        (m.rol === 'admin_comunidad' || m.rol === 'administrador' || m.rol === 'tesorero' || m.rol === 'presidente_comite'),
     );
   };
 
@@ -213,9 +225,25 @@ export default function MedidorDetallePage() {
                     <div className="text-white-50">{medidor?.marca} {medidor?.modelo} • S/N: {medidor?.numero_serie || '-'}</div>
                   </div>
                   <div className="d-flex gap-2">
-                    <Button variant="outline-light" size="sm" onClick={() => router.back()}><span className="material-icons">arrow_back</span></Button>
-                    <Button variant="light" size="sm" onClick={() => router.push(`/medidores/${medidor?.id}/consumos`)}>Ver Consumos</Button>
-                    <Button variant="outline-light" size="sm" onClick={() => router.push('/lecturas')}>Gestionar Lecturas</Button>
+                    <Button variant="outline-light" size="sm" onClick={() => router.back()}>
+                      <span className="material-icons">arrow_back</span>
+                    </Button>
+                    {canManage() && (
+                      <Button 
+                        variant="warning" 
+                        size="sm" 
+                        onClick={() => router.push(`/medidores/${medidor?.id}/editar`)}
+                      >
+                        <span className="material-icons me-1">edit</span>
+                        Editar
+                      </Button>
+                    )}
+                    <Button variant="light" size="sm" onClick={() => router.push(`/medidores/${medidor?.id}/consumos`)}>
+                      Ver Consumos
+                    </Button>
+                    <Button variant="outline-light" size="sm" onClick={() => router.push('/lecturas')}>
+                      Gestionar Lecturas
+                    </Button>
                   </div>
                 </div>
 

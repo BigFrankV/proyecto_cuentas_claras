@@ -5,12 +5,60 @@ const { authenticate } = require('../middleware/auth'); // Importa authenticate 
 const router = express.Router();
 
 /**
+ * Helper: verificar acceso al medidor según rol del usuario
+ * Roles básicos (propietario, inquilino, residente) solo pueden ver medidores de sus unidades
+ */
+async function checkMedidorAccess(user, medidorId) {
+  // SuperAdmin: acceso total
+  if (user?.is_superadmin) {
+    return { allowed: true, isBasicRole: false };
+  }
+
+  // Verificar que el usuario tenga acceso a la comunidad del medidor
+  const [medidorCheck] = await pool.query(
+    `SELECT m.id, m.comunidad_id, m.unidad_id,
+            umc.rol as rol_codigo
+     FROM medidor m
+     INNER JOIN usuario_miembro_comunidad umc ON m.comunidad_id = umc.comunidad_id
+     WHERE m.id = ? AND umc.persona_id = ? AND umc.activo = 1
+     LIMIT 1`,
+    [medidorId, user.persona_id]
+  );
+
+  if (!medidorCheck.length) {
+    return { allowed: false, isBasicRole: false };
+  }
+
+  const userRole = medidorCheck[0].rol_codigo;
+  const isBasicRole = ['residente', 'propietario', 'inquilino'].includes(
+    userRole
+  );
+
+  // Si es rol básico, verificar que el medidor pertenezca a una unidad del usuario
+  if (isBasicRole) {
+    const [unidadCheck] = await pool.query(
+      `SELECT 1 FROM titulares_unidad tu
+       WHERE tu.persona_id = ? AND tu.unidad_id = ?
+       AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+       LIMIT 1`,
+      [user.persona_id, medidorCheck[0].unidad_id]
+    );
+
+    if (!unidadCheck.length) {
+      return { allowed: false, isBasicRole };
+    }
+  }
+
+  return { allowed: true, isBasicRole };
+}
+
+/**
  * @swagger
  * /consumos/mensual:
  *   get:
  *     tags: [Consumos]
  *     summary: Obtener tendencia de consumo mensual
- *     description: Devuelve los datos de consumo mensual para un medidor específico en un rango de períodos.
+ *     description: Devuelve los datos de consumo mensual para un medidor específico en un rango de períodos. Roles básicos solo ven medidores de sus unidades.
  *     parameters:
  *       - name: medidor_id
  *         in: query
@@ -35,46 +83,82 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Lista de consumos mensuales
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   mes:
- *                     type: string
- *                   consumo_total_unidad:
- *                     type: number
- *                   precio_unitario:
- *                     type: number
- *                   cargo_fijo_mensual:
- *                     type: number
- *                   costo_mensual:
- *                     type: number
+ *       403:
+ *         description: No autorizado - el medidor no pertenece al usuario
  *       500:
  *         description: Error interno del servidor
  */
 // Endpoint para Gráfico Principal: Tendencia de Consumo Mensual
-router.get('/mensual', async (req, res) => {
+router.get('/mensual', authenticate, async (req, res) => {
   try {
     const { medidor_id, periodo_inicio, periodo_fin } = req.query;
+
+    // Verificar acceso al medidor según rol
+    if (!req.user?.is_superadmin) {
+      const [medidorCheck] = await pool.query(
+        `SELECT m.id, m.comunidad_id, m.unidad_id,
+                umc.rol as rol_codigo
+         FROM medidor m
+         INNER JOIN usuario_miembro_comunidad umc ON m.comunidad_id = umc.comunidad_id
+         WHERE m.id = ? AND umc.persona_id = ? AND umc.activo = 1
+         LIMIT 1`,
+        [medidor_id, req.user.persona_id]
+      );
+
+      if (!medidorCheck.length) {
+        return res
+          .status(403)
+          .json({ error: 'No autorizado para ver este medidor' });
+      }
+
+      const userRole = medidorCheck[0].rol_codigo;
+      const isBasicRole = ['residente', 'propietario', 'inquilino'].includes(
+        userRole
+      );
+
+      // Si es rol básico, verificar que el medidor pertenezca a una unidad del usuario
+      if (isBasicRole) {
+        const [unidadCheck] = await pool.query(
+          `SELECT 1 FROM titulares_unidad tu
+           WHERE tu.persona_id = ? AND tu.unidad_id = ?
+           AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+           LIMIT 1`,
+          [req.user.persona_id, medidorCheck[0].unidad_id]
+        );
+
+        if (!unidadCheck.length) {
+          return res.status(403).json({
+            error: 'No autorizado',
+            message: 'Este medidor no pertenece a ninguna de tus unidades',
+          });
+        }
+      }
+    }
+
     const query = `
+      WITH lecturas_ordenadas AS (
+        SELECT 
+          medidor_id,
+          periodo,
+          MAX(lectura) as lectura_actual,
+          LAG(MAX(lectura)) OVER (PARTITION BY medidor_id ORDER BY periodo) as lectura_anterior
+        FROM lectura_medidor
+        WHERE medidor_id = ?
+          AND periodo BETWEEN ? AND ?
+        GROUP BY medidor_id, periodo
+      )
       SELECT
-        vc.periodo AS mes,
-        vc.consumo AS consumo_total_unidad,
+        lo.periodo AS mes,
+        COALESCE(lo.lectura_actual - lo.lectura_anterior, 0) AS consumo_total_unidad,
         COALESCE(tc.precio_por_unidad, 0.00) AS precio_unitario,
         COALESCE(tc.cargo_fijo, 0.00) AS cargo_fijo_mensual,
-        ROUND((vc.consumo * COALESCE(tc.precio_por_unidad, 0.00)) + COALESCE(tc.cargo_fijo, 0.00), 2) AS costo_mensual
-      FROM vista_consumos vc
-      INNER JOIN medidor m ON m.id = vc.medidor_id
+        ROUND((COALESCE(lo.lectura_actual - lo.lectura_anterior, 0) * COALESCE(tc.precio_por_unidad, 0.00)) + COALESCE(tc.cargo_fijo, 0.00), 2) AS costo_mensual
+      FROM lecturas_ordenadas lo
+      INNER JOIN medidor m ON m.id = lo.medidor_id
       LEFT JOIN tarifa_consumo tc ON tc.comunidad_id = m.comunidad_id
         AND tc.tipo = m.tipo
-        AND tc.periodo_desde = vc.periodo
-      WHERE
-        vc.medidor_id = ?
-        AND vc.periodo BETWEEN ? AND ?
-      ORDER BY mes;
+        AND tc.periodo_desde = lo.periodo
+      ORDER BY lo.periodo;
     `;
     const [rows] = await pool.execute(query, [
       medidor_id,
@@ -134,9 +218,17 @@ router.get('/mensual', async (req, res) => {
  *         description: Error interno del servidor
  */
 // Endpoint para Gráfico Mensual (Trimestral): Consumo por Trimestre
-router.get('/trimestral', async (req, res) => {
+router.get('/trimestral', authenticate, async (req, res) => {
   try {
     const { medidor_id, periodo_inicio, periodo_fin } = req.query;
+
+    // Verificar acceso
+    const access = await checkMedidorAccess(req.user, medidor_id);
+    if (!access.allowed) {
+      return res
+        .status(403)
+        .json({ error: 'No autorizado para ver este medidor' });
+    }
     const query = `
       SELECT
         CONCAT(LEFT(vc.periodo, 4), '-Q', QUARTER(STR_TO_DATE(CONCAT(vc.periodo, '-01'), '%Y-%m-%d'))) AS trimestre,
@@ -193,9 +285,17 @@ router.get('/trimestral', async (req, res) => {
  *         description: Error interno del servidor
  */
 // Endpoint para Gráfico Semanal: Promedio de Consumo por Día de la Semana
-router.get('/semanal', async (req, res) => {
+router.get('/semanal', authenticate, async (req, res) => {
   try {
     const { medidor_id } = req.query;
+
+    // Verificar acceso
+    const access = await checkMedidorAccess(req.user, medidor_id);
+    if (!access.allowed) {
+      return res
+        .status(403)
+        .json({ error: 'No autorizado para ver este medidor' });
+    }
     const query = `
       WITH consumo_diario AS (
         SELECT
@@ -270,9 +370,17 @@ router.get('/semanal', async (req, res) => {
  *         description: Error interno del servidor
  */
 // Endpoint para Estadísticas (Cards): Total, Promedio y Costo
-router.get('/estadisticas', async (req, res) => {
+router.get('/estadisticas', authenticate, async (req, res) => {
   try {
     const { medidor_id, periodo_inicio, periodo_fin } = req.query;
+
+    // Verificar acceso
+    const access = await checkMedidorAccess(req.user, medidor_id);
+    if (!access.allowed) {
+      return res
+        .status(403)
+        .json({ error: 'No autorizado para ver este medidor' });
+    }
     const query = `
       SELECT
         COALESCE(SUM(vc.consumo), 0) AS total_consumo_periodo,
@@ -353,9 +461,17 @@ router.get('/estadisticas', async (req, res) => {
  *         description: Error interno del servidor
  */
 // Endpoint para Tabla de Detalle de Consumos
-router.get('/detalle', async (req, res) => {
+router.get('/detalle', authenticate, async (req, res) => {
   try {
     const { medidor_id, periodo_inicio, periodo_fin } = req.query;
+
+    // Verificar acceso
+    const access = await checkMedidorAccess(req.user, medidor_id);
+    if (!access.allowed) {
+      return res
+        .status(403)
+        .json({ error: 'No autorizado para ver este medidor' });
+    }
     const query = `
       SELECT
         vc.periodo,
@@ -391,7 +507,7 @@ router.get('/detalle', async (req, res) => {
  *   get:
  *     tags: [Consumos]
  *     summary: Listar consumos globales con filtros y paginación
- *     description: Devuelve una lista paginada de consumos de medidores en comunidades del usuario (si no es superadmin).
+ *     description: Devuelve una lista paginada de consumos de medidores. Roles básicos solo ven consumos de sus unidades.
  *     parameters:
  *       - name: page
  *         in: query
@@ -441,22 +557,44 @@ router.get('/', authenticate, async (req, res) => {
 
     let where = ' WHERE 1=1 ';
     const params = [];
+    let userRole = 'superadmin';
+    let isBasicRole = false;
 
-    // Filtrar por comunidades del usuario si no es superadmin
+    // Filtrar por comunidades y rol del usuario si no es superadmin
     if (!req.user?.is_superadmin) {
       const [userCommunities] = await pool.query(
-        'SELECT comunidad_id FROM usuario_miembro_comunidad WHERE persona_id = ? AND activo = 1',
+        `SELECT umc.comunidad_id, umc.rol as rol_codigo
+         FROM usuario_miembro_comunidad umc
+         WHERE umc.persona_id = ? AND umc.activo = 1`,
         [req.user.persona_id]
       );
+
       if (userCommunities.length === 0) {
         return res.json({
           data: [],
           pagination: { total: 0, limit, offset, pages: 0 },
         });
       }
-      const communityIds = userCommunities.map((c) => c.comunidad_id); // Removido : any
+
+      const communityIds = userCommunities.map((c) => c.comunidad_id);
       where += ` AND m.comunidad_id IN (${communityIds.map(() => '?').join(',')})`;
       params.push(...communityIds);
+
+      // Detectar si es rol básico
+      userRole = userCommunities[0].rol_codigo;
+      isBasicRole = ['residente', 'propietario', 'inquilino'].includes(
+        userRole
+      );
+
+      // FILTRO ADICIONAL: Roles básicos solo ven consumos de sus unidades
+      if (isBasicRole) {
+        where += ` AND m.unidad_id IN (
+          SELECT tu.unidad_id FROM titulares_unidad tu
+          WHERE tu.persona_id = ?
+          AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+        )`;
+        params.push(req.user.persona_id);
+      }
     } else if (comunidad_id) {
       where += ' AND m.comunidad_id = ?';
       params.push(comunidad_id);
