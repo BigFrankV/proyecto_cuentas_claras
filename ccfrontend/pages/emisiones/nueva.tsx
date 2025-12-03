@@ -204,18 +204,39 @@ export default function EmisionNueva() {
           <title>Acceso denegado — Nueva Emisión</title>
         </Head>
         <Layout title='Nueva Emisión'>
-          <div className='container-fluid py-5'>
-            <div className='row justify-content-center'>
-              <div className='col-md-8 col-lg-6'>
-                <div className='card shadow-sm'>
-                  <div className='card-body text-center py-5'>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-100'>
+              <div className='col-12 col-md-8 col-lg-6'>
+                <div className='card shadow-lg border-0'>
+                  <div className='card-body text-center p-5'>
                     <div className='mb-4'>
-                      <i className='material-icons text-warning' style={{ fontSize: '64px' }}>lock</i>
+                      <span className='material-icons text-danger' style={{ fontSize: '80px' }}>
+                        block
+                      </span>
                     </div>
-                    <h3 className='mb-3'>Acceso Restringido</h3>
-                    <p className='text-muted mb-4'>No tienes permiso para crear emisiones en la comunidad seleccionada.</p>
-                    <div className='d-flex gap-3 justify-content-center'>
-                      <button className='btn btn-primary' onClick={() => router.push('/emisiones')}>Volver a Emisiones</button>
+                    <h2 className='card-title mb-3'>Acceso Denegado</h2>
+                    <p className='card-text text-muted mb-4'>
+                      No tienes permiso para crear emisiones en la comunidad seleccionada.
+                      <br />
+                      Solo los administradores pueden crear emisiones.
+                    </p>
+                    <div className='d-flex gap-2 justify-content-center'>
+                      <button
+                        type='button'
+                        className='btn btn-primary'
+                        onClick={() => router.back()}
+                      >
+                        <span className='material-icons align-middle me-1'>arrow_back</span>
+                        Volver Atrás
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn-outline-primary'
+                        onClick={() => router.push('/emisiones')}
+                      >
+                        <span className='material-icons align-middle me-1'>list</span>
+                        Ver Emisiones
+                      </button>
                     </div>
                   </div>
                 </div>

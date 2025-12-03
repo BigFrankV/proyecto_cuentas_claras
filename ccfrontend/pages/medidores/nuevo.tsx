@@ -367,17 +367,6 @@ export default function NuevoMedidor() {
               <Row className='g-4'>
                 {/* Información Básica */}
                 <Col lg={8}>
-                  {isBasicRoleInCommunity && (
-                    <Alert variant='danger' className='mb-4'>
-                      <Alert.Heading>
-                        <span className='material-icons me-2' style={{verticalAlign: 'middle'}}>block</span>
-                        Acceso Denegado
-                      </Alert.Heading>
-                      <p className='mb-0'>
-                        No tienes permisos para crear medidores. Solo los administradores pueden realizar esta acción.
-                      </p>
-                    </Alert>
-                  )}
                   {!isBasicRoleInCommunity && (
                     <>
                       <div className='form-card'>
