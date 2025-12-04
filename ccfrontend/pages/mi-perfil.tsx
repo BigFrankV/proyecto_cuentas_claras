@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-console */
 import Head from 'next/head';
-import Image from 'next/image';
+// import Image from 'next/image'; // No usar - causa problemas con URLs externas
 import Link from 'next/link';
 import { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -196,6 +196,9 @@ export default function MiPerfil() {
       // Refrescar usuario
       await refreshUser();
 
+      // Disparar evento para actualizar la foto en el Sidebar
+      window.dispatchEvent(new CustomEvent('profile-photo-updated'));
+
       // Limpiar input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -226,6 +229,9 @@ export default function MiPerfil() {
       setProfilePhoto(null);
       setPhotoPreview(null);
       await refreshUser();
+
+      // Disparar evento para actualizar la foto en el Sidebar
+      window.dispatchEvent(new CustomEvent('profile-photo-updated'));
     } catch (error: any) {
       setMessage({ type: 'error', text: error.message });
     }
@@ -586,11 +592,13 @@ export default function MiPerfil() {
                         }}
                       >
                         {profilePhoto ? (
-                          <Image
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             src={profilePhoto}
                             alt='Foto de perfil'
-                            fill
                             style={{
+                              width: '100%',
+                              height: '100%',
                               objectFit: 'cover',
                             }}
                             onError={() => {
@@ -650,16 +658,18 @@ export default function MiPerfil() {
                           </span>
                           Vista previa de la nueva foto
                         </div>
-                        <Image
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
                           src={photoPreview}
                           alt='Preview'
-                          width={120}
-                          height={120}
                           className='img-fluid rounded'
                           style={{
+                            width: '120px',
+                            height: '120px',
                             maxWidth: '120px',
                             maxHeight: '120px',
                             marginBottom: '10px',
+                            objectFit: 'cover',
                           }}
                         />
                         <div className='d-flex gap-2 justify-content-center'>

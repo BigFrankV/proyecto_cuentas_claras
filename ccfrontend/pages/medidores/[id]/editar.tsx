@@ -2,8 +2,9 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-bootstrap';
 
+import Layout from '@/components/layout/Layout';
 import { getMedidor, updateMedidor } from '@/lib/medidoresService';
-import { useAuth } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions';
 import { Medidor } from '@/types/medidores';

@@ -240,6 +240,15 @@ router.get(
         console.log('👑 Usuario superadmin - ve todas las multas');
       }
 
+      // Filtro específico por comunidad_id (cuando viene del frontend)
+      if (req.query.comunidad_id) {
+        sql += ' AND m.comunidad_id = ?';
+        params.push(req.query.comunidad_id);
+        console.log(
+          `🏘️ Filtro adicional: comunidad_id=${req.query.comunidad_id}`
+        );
+      }
+
       // Filtros adicionales
       if (estado && estado !== 'all') {
         sql += ' AND m.estado = ?';

@@ -4,9 +4,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/layout/Layout';
 import PageHeader from '@/components/ui/PageHeader';
 import multasService, { fetchWithAuth } from '@/lib/multasService';
+import { useComunidad } from '@/lib/useComunidad';
 
 const MultaNuevaPage: React.FC = () => {
   const router = useRouter();
+  const { comunidadSeleccionada } = useComunidad();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedViolationType, setSelectedViolationType] = useState<
@@ -36,13 +38,6 @@ const MultaNuevaPage: React.FC = () => {
   const [units, setUnits] = useState<any[]>([]);
   const [loadingUnits, setLoadingUnits] = useState(false);
 
-  // Comunidades del usuario (para casos multi-comunidad)
-  const [comunidades, setComunidades] = useState<any[]>([]);
-  const [selectedComunidadGlobal, setSelectedComunidadGlobal] = useState<
-    number | null
-  >(null);
-  const [comunidadesLoading, setComunidadesLoading] = useState(false);
-
   const filteredUnits = units.filter(
     unit =>
       (unit.codigo || '').toLowerCase().includes(unitSearch.toLowerCase()) ||
@@ -51,56 +46,50 @@ const MultaNuevaPage: React.FC = () => {
         .includes(unitSearch.toLowerCase()),
   );
 
-  // Cargar comunidades al montar (si existe endpoint)
+  // Cargar tipos de infracción cuando se selecciona una comunidad
   useEffect(() => {
-    let mounted = true;
+    if (!comunidadSeleccionada) {
+      setViolationTypes([]);
+      return undefined;
+    }
+
     (async () => {
       try {
-        setComunidadesLoading(true);
-        const base =
-          process.env.NEXT_PUBLIC_API_URL &&
-          process.env.NEXT_PUBLIC_API_URL !== ''
-            ? process.env.NEXT_PUBLIC_API_URL
-            : 'http://localhost:3001';
-        const resp = await fetchWithAuth(`${base}/multas/comunidades/mis`, {
-          method: 'GET',
-        });
-        if (!resp.ok) {
-          // eslint-disable-next-line no-console
-          console.warn(
-            'No se pudieron cargar comunidades (status):',
-            resp.status,
-          );
-          return;
-        }
-        const json = await resp.json();
-        const data = Array.isArray(json) ? json : json.data || [];
-        if (!mounted) {
-          return;
-        }
-        setComunidades(data);
-        if (Array.isArray(data) && data.length === 1) {
-          setSelectedComunidadGlobal(Number(data[0].id));
-        }
+        const comunidadId = Number(comunidadSeleccionada.id);
+        const tipos = await multasService.obtenerTipos(comunidadId);
+        setViolationTypes(
+          (tipos || []).map((t: any, i: number) => ({
+            id: t.id,
+            title: t.nombre,
+            description: t.descripcion,
+            amount: Number(t.monto_default || 0),
+            icon:
+              t.icono ||
+              ['warning', 'gavel', 'pets', 'cleaning_services'][i % 4],
+            color: t.color || '#6f42c1',
+          })),
+        );
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Error cargando comunidades:', err);
-      } finally {
-        setComunidadesLoading(false);
+        console.error('Error cargando tipos de infracción:', err);
       }
     })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  }, [comunidadSeleccionada]);
 
   // Debounce y carga de unidades desde backend (incluye comunidadId si fue seleccionada)
   useEffect(() => {
+    if (!comunidadSeleccionada) {
+      setUnits([]);
+      return undefined;
+    }
+
     const timer = setTimeout(async () => {
       try {
         setLoadingUnits(true);
-        const data =
-          await multasService.obtenerUnidadesAutocompletar(unitSearch);
+        const comunidadId = Number(comunidadSeleccionada.id);
+        const data = await multasService.obtenerUnidadesAutocompletar(
+          unitSearch,
+          comunidadId,
+        );
         const mappedData = data.map((u: any) => ({
           id: u.id,
           codigo: u.codigo,
@@ -122,42 +111,24 @@ const MultaNuevaPage: React.FC = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [unitSearch, selectedComunidadGlobal]);
+  }, [unitSearch, comunidadSeleccionada]);
 
-  // UI: helper para mostrar select de comunidades en Step 2
-  const renderComunidadSelector = () => {
-    if (comunidadesLoading) {
-      return <div className='mb-3'>Cargando comunidades...</div>;
-    }
-    if (!comunidades || comunidades.length <= 1) {
-      if (comunidades && comunidades.length === 1) {
-        return (
-          <div className='mb-3'>
-            <strong>Comunidad:</strong> {comunidades[0].razon_social}
-          </div>
-        );
-      }
-      return null;
+  // UI: mostrar comunidad seleccionada
+  const renderComunidadInfo = () => {
+    if (!comunidadSeleccionada) {
+      return (
+        <div className='alert alert-info mb-3'>
+          <span className='material-icons me-2'>info</span>
+          Por favor selecciona una comunidad del menú superior
+        </div>
+      );
     }
     return (
       <div className='mb-3'>
         <label className='form-label'>Comunidad</label>
-        <select
-          className='form-select'
-          value={selectedComunidadGlobal ?? ''}
-          onChange={e =>
-            setSelectedComunidadGlobal(
-              e.target.value ? Number(e.target.value) : null,
-            )
-          }
-        >
-          <option value=''>-- Seleccione comunidad --</option>
-          {comunidades.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.razon_social}
-            </option>
-          ))}
-        </select>
+        <div className='form-control bg-light'>
+          {comunidadSeleccionada.nombre}
+        </div>
       </div>
     );
   };
@@ -327,12 +298,16 @@ const MultaNuevaPage: React.FC = () => {
       window.alert('Seleccione un tipo de infracción.');
       return;
     }
+    if (!comunidadSeleccionada) {
+      window.alert('Debe seleccionar una comunidad.');
+      return;
+    }
 
     const tipoIdNum = (selectedViolation as any)?.id
       ? Number((selectedViolation as any).id)
       : undefined;
     const payload: any = {
-      comunidad_id: selectedUnitComunidadId ?? undefined,
+      comunidad_id: Number(comunidadSeleccionada.id),
       unidad_id: selectedUnitId,
       tipo_infraccion_id: tipoIdNum,
       tipo_infraccion: selectedViolation.title,
@@ -475,20 +450,20 @@ const MultaNuevaPage: React.FC = () => {
               <div className="fade-in">
                 <h3 className='section-title'>Buscar unidad infractora</h3>
                 <div className="search-section">
-                  {renderComunidadSelector()}
+                  {renderComunidadInfo()}
                   <div className="search-box">
                     <span className="material-icons search-icon">search</span>
                     <input
                       type='text'
                       className='search-input'
                       placeholder={
-                        comunidades && comunidades.length > 1 && !selectedComunidadGlobal
+                        !comunidadSeleccionada
                           ? 'Seleccione comunidad primero...'
                           : 'Buscar por número de unidad o nombre del propietario...'
                       }
                       value={unitSearch}
                       onChange={e => setUnitSearch(e.target.value)}
-                      disabled={comunidades && comunidades.length > 1 && !selectedComunidadGlobal}
+                      disabled={!comunidadSeleccionada}
                       autoFocus
                     />
                   </div>

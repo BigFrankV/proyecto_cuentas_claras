@@ -6,8 +6,8 @@ import { toast } from 'react-hot-toast';
 import Layout from '@/components/layout/Layout';
 import api from '@/lib/api';
 import multasService from '@/lib/multasService';
-import { ProtectedRoute } from '@/lib/useAuth';
-import {useAuth} from '@/lib/useAuth'; // <-- import faltante
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { ProtectedPage, Permission } from '@/lib/usePermissions';
 
 // ============================================
 // TIPOS E INTERFACES
@@ -641,6 +641,7 @@ export default function EditarMulta() {
 
   return (
     <ProtectedRoute>
+      <ProtectedPage permission={Permission.EDIT_MULTA}>
       <Head>
         <title>Editar Multa {multa.numero} — Cuentas Claras</title>
       </Head>
@@ -1450,6 +1451,7 @@ export default function EditarMulta() {
           }
         `}</style>
       </Layout>
-    </ProtectedRoute>
+    </ProtectedPage>
+  </ProtectedRoute>
   );
 }

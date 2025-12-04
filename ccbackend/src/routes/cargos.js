@@ -141,6 +141,181 @@ router.get('/mis-unidades', authenticate, async (req, res) => {
 
 /**
  * @swagger
+ * /cargos/mis-pendientes:
+ *   get:
+ *     tags: [Cargos]
+ *     summary: Obtener todos los cargos pendientes del usuario (cuentas de cobro + multas)
+ *     description: |
+ *       Retorna todos los cargos pendientes del usuario actual unificando:
+ *       - Cuentas de cobro (cuenta_cobro_unidad)
+ *       - Multas (multas)
+ *       Filtra automáticamente por las unidades del usuario.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: comunidad_id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: estados
+ *         schema:
+ *           type: string
+ *           description: Estados separados por coma (pendiente,vencido,parcial)
+ *     responses:
+ *       200:
+ *         description: Lista de cargos pendientes unificados
+ *       401:
+ *         description: No autorizado
+ *       400:
+ *         description: comunidad_id requerido
+ */
+router.get('/mis-pendientes', authenticate, async (req, res) => {
+  try {
+    if (!req.user || !req.user.sub) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
+
+    const usuarioId = req.user.sub;
+    const { comunidad_id, estados = 'pendiente,vencido,parcial' } = req.query;
+
+    if (!comunidad_id) {
+      return res.status(400).json({ error: 'comunidad_id requerido' });
+    }
+
+    // Buscar persona_id asociada al usuario
+    const [usuarioRows] = await db.query(
+      'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+      [usuarioId]
+    );
+
+    if (!usuarioRows || !usuarioRows.length) {
+      return res.json({
+        data: [],
+        total: 0,
+        total_monto: 0,
+        total_interes: 0,
+      });
+    }
+
+    const personaId = usuarioRows[0].persona_id;
+
+    // Obtener unidades del usuario en esta comunidad
+    const [unidades] = await db.query(
+      `SELECT DISTINCT unidad_id
+       FROM titulares_unidad
+       WHERE persona_id = ?
+         AND comunidad_id = ?
+         AND hasta IS NULL`,
+      [personaId, comunidad_id]
+    );
+
+    if (unidades.length === 0) {
+      return res.json({
+        data: [],
+        total: 0,
+        total_monto: 0,
+        total_interes: 0,
+      });
+    }
+
+    const unidadIds = unidades.map((u) => u.unidad_id);
+    const estadosArray = estados.split(',').map((e) => e.trim());
+
+    // Query unificado: cuentas de cobro + multas
+    const [cargos] = await db.query(
+      `
+      SELECT 
+        ccu.id,
+        ccu.unidad_id,
+        u.codigo as unidad_numero,
+        c.razon_social as nombre_comunidad,
+        egc.periodo,
+        egc.fecha_vencimiento,
+        ccu.monto_total as monto,
+        ccu.saldo,
+        ccu.estado,
+        ccu.interes_acumulado,
+        DATEDIFF(CURDATE(), egc.fecha_vencimiento) as dias_vencido,
+        'cuenta_cobro' as tipo_cargo,
+        CONCAT('Gastos Comunes ', egc.periodo) as concepto
+      FROM cuenta_cobro_unidad ccu
+      JOIN unidad u ON ccu.unidad_id = u.id
+      JOIN comunidad c ON ccu.comunidad_id = c.id
+      LEFT JOIN emision_gastos_comunes egc ON ccu.emision_id = egc.id
+      WHERE ccu.comunidad_id = ?
+        AND ccu.unidad_id IN (?)
+        AND ccu.estado IN (?)
+        AND ccu.saldo > 0
+
+      UNION ALL
+
+      SELECT 
+        m.id,
+        m.unidad_id,
+        u.codigo as unidad_numero,
+        c.razon_social as nombre_comunidad,
+        DATE_FORMAT(m.fecha_infraccion, '%Y-%m') as periodo,
+        m.fecha_vencimiento,
+        m.monto,
+        COALESCE(m.monto - COALESCE((
+          SELECT SUM(pa.monto) 
+          FROM pago_aplicacion pa 
+          WHERE pa.cuenta_cobro_unidad_id = m.id
+        ), 0), m.monto) as saldo,
+        CASE
+          WHEN m.fecha_vencimiento < CURDATE() AND m.estado = 'pendiente' THEN 'vencido'
+          ELSE m.estado
+        END as estado,
+        0 as interes_acumulado,
+        DATEDIFF(CURDATE(), m.fecha_vencimiento) as dias_vencido,
+        'multa' as tipo_cargo,
+        CONCAT('Multa: ', ti.nombre) as concepto
+      FROM multas m
+      JOIN unidad u ON m.unidad_id = u.id
+      JOIN comunidad c ON m.comunidad_id = c.id
+      LEFT JOIN tipo_infraccion ti ON m.tipo_infraccion_id = ti.id
+      WHERE m.comunidad_id = ?
+        AND m.unidad_id IN (?)
+        AND m.estado IN (?)
+      HAVING saldo > 0
+
+      ORDER BY fecha_vencimiento ASC
+      `,
+      [
+        comunidad_id,
+        unidadIds,
+        estadosArray,
+        comunidad_id,
+        unidadIds,
+        estadosArray,
+      ]
+    );
+
+    const total_monto = cargos.reduce(
+      (sum, c) => sum + parseFloat(c.saldo || 0),
+      0
+    );
+    const total_interes = cargos.reduce(
+      (sum, c) => sum + parseFloat(c.interes_acumulado || 0),
+      0
+    );
+
+    res.json({
+      data: cargos,
+      total: cargos.length,
+      total_monto,
+      total_interes,
+    });
+  } catch (err) {
+    console.error('Error en /mis-pendientes:', err);
+    res.status(500).json({ error: 'server error', details: err.message });
+  }
+});
+
+/**
+ * @swagger
  * /cargos/todas/resumen:
  *   get:
  *     tags: [Cargos]
