@@ -2813,13 +2813,16 @@ router.post(
 
       const descripcion = `Pago cargo #${cargoId} - ${cargo.unidad_codigo} - ${cargo.periodo || 'Periodo'}`;
 
+      // Redondear monto para Transbank (no acepta decimales en CLP)
+      const montoRedondeado = Math.round(montoPagar);
+
       const paymentData = {
         orderId,
         sessionId: `session-${usuarioId}-${cargoId}-${timestamp}`,
         communityId: cargo.comunidad_id,
         unitId: cargo.unidad_id,
         cargoId: cargoId,
-        amount: montoPagar,
+        amount: montoRedondeado,
         description: descripcion,
       };
 
@@ -2848,7 +2851,7 @@ router.post(
           paymentUrl: webpayResult.paymentUrl,
           token: webpayResult.transactionId,
           gateway: 'webpay',
-          amount: montoPagar,
+          amount: montoRedondeado,
           description: descripcion,
         },
       });

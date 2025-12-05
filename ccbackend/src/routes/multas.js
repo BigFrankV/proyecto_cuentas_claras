@@ -356,6 +356,7 @@ router.get(
             conditions.push(`m.comunidad_id IN (${placeholders})`);
             params.push(...comunidadesAdmin);
           }
+
           if (comunidadesBasico.length > 0) {
             const placeholders = comunidadesBasico.map(() => '?').join(',');
             conditions.push(
@@ -634,6 +635,34 @@ router.post(
         }
       }
 
+      // Si no se proporciona persona_id, obtener el titular actual de la unidad
+      let persona_id_final = persona_id || null;
+      if (!persona_id_final) {
+        try {
+          const [titularRows] = await db.query(
+            `SELECT persona_id 
+             FROM titulares_unidad 
+             WHERE unidad_id = ? 
+               AND (hasta IS NULL OR hasta >= CURDATE())
+             ORDER BY desde DESC, porcentaje DESC
+             LIMIT 1`,
+            [unidad_id]
+          );
+          if (titularRows.length > 0) {
+            persona_id_final = titularRows[0].persona_id;
+            console.log(
+              `✅ Titular obtenido automáticamente: persona_id=${persona_id_final}`
+            );
+          } else {
+            console.warn(
+              `⚠️ No se encontró titular activo para unidad_id=${unidad_id}`
+            );
+          }
+        } catch (err) {
+          console.error('❌ Error buscando titular de unidad:', err);
+        }
+      }
+
       // Resolver tipo_infraccion_id (si existe tabla tipo_infraccion)
       let tipo_infraccion_id = null;
       try {
@@ -676,7 +705,7 @@ router.post(
               numeroGenerado,
               comunidad_id,
               unidad_id,
-              persona_id || null,
+              persona_id_final,
               tipo_infraccion,
               descripcion || null,
               monto,
@@ -1756,13 +1785,16 @@ router.post(
       // 6. Iniciar transacción con Webpay
       const paymentGatewayService = require('../services/paymentGatewayService');
 
+      // Redondear monto para Transbank (no acepta decimales en CLP)
+      const montoRedondeado = Math.round(parseFloat(multa.monto));
+
       const paymentData = {
         orderId,
         sessionId: `session-${usuarioId}-${multaId}-${timestamp}`,
         communityId: multa.comunidad_id,
         unitId: multa.unidad_id,
         multaId: multaId,
-        amount: parseFloat(multa.monto),
+        amount: montoRedondeado,
         description: `Pago de multa #${multa.numero || multaId} - ${multa.motivo}`,
       };
 
@@ -1791,7 +1823,7 @@ router.post(
           paymentUrl: webpayResult.paymentUrl,
           token: webpayResult.transactionId,
           gateway: 'webpay',
-          amount: multa.monto,
+          amount: montoRedondeado,
           description: paymentData.description,
         },
       });
