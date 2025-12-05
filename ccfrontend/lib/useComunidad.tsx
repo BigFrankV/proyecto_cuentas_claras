@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+import api from './api';
+import comunidadesService from './comunidadesService';
 import { useAuth } from './useAuth';
 
 export interface ComunidadSeleccionada {
@@ -32,16 +34,95 @@ export function ComunidadProvider({ children }: ComunidadProviderProps) {
 
   // Cargar comunidades del usuario SOLO cuando cambia el usuario
   useEffect(() => {
-    if (user?.memberships && Array.isArray(user.memberships) && user.memberships.length > 0) {
-      const userComunidades = user.memberships.map((membership: any) => ({
-        id: membership.comunidadId?.toString() || membership.id?.toString(),
-        nombre: membership.comunidad?.razon_social || membership.nombre || 'Sin nombre',
-        rol: membership.rol || 'miembro',
-      }));
+    const cargarComunidades = async () => {
+      if (!user) {
+        setComunidades([]);
+        setComunidadSeleccionada(null);
+        setInitialized(false);
+        return;
+      }
 
+      const comunidadesSet = new Map<string, ComunidadSeleccionada>();
+
+      // 1. Cargar comunidades desde memberships (roles admin)
+      if (user.memberships && Array.isArray(user.memberships) && user.memberships.length > 0) {
+        user.memberships.forEach((membership: any) => {
+          const id = membership.comunidadId?.toString() || membership.comunidad_id?.toString();
+          if (id) {
+            comunidadesSet.set(id, {
+              id,
+              nombre: membership.comunidad?.razon_social || membership.nombre || 'Sin nombre',
+              rol: membership.rol || 'miembro',
+            });
+          }
+        });
+      }
+
+      // 2. Cargar comunidades desde titulares_unidad (propietarios/inquilinos) O todas si es superadmin
+      try {
+        setLoading(true);
+        
+        // eslint-disable-next-line no-console
+        console.log('🔍 [useComunidad] Cargando comunidades...');
+        // eslint-disable-next-line no-console
+        console.log('🔍 [useComunidad] user.is_superadmin:', user.is_superadmin);
+        
+        if (user.is_superadmin) {
+          // Superadmin: cargar TODAS las comunidades del sistema
+          // eslint-disable-next-line no-console
+          console.log('👑 [useComunidad] Superadmin detectado, cargando TODAS las comunidades...');
+          
+          const comunidadesData = await comunidadesService.getComunidades();
+          // eslint-disable-next-line no-console
+          console.log('✅ [useComunidad] Comunidades recibidas:', comunidadesData);
+          // eslint-disable-next-line no-console
+          console.log('📊 [useComunidad] Total comunidades:', comunidadesData.length);
+          
+          comunidadesData.forEach((com: any) => {
+            const id = com.id?.toString();
+            if (id) {
+              comunidadesSet.set(id, {
+                id,
+                nombre: com.nombre || com.razon_social || 'Sin nombre',
+                rol: 'superadmin',
+              });
+            }
+          });
+        } else {
+          // Usuario normal: cargar solo sus unidades
+          // eslint-disable-next-line no-console
+          console.log('👤 [useComunidad] Usuario normal, cargando sus unidades...');
+          const response = await api.get('/cargos/mis-unidades');
+          const unidades = response.data;
+          
+          // eslint-disable-next-line no-console
+          console.log('✅ [useComunidad] Unidades recibidas:', unidades.length);
+          
+          // Agrupar por comunidad_id
+          unidades.forEach((unidad: any) => {
+            const id = unidad.comunidad_id?.toString();
+            if (id && !comunidadesSet.has(id)) {
+              comunidadesSet.set(id, {
+                id,
+                nombre: unidad.nombre_comunidad || 'Sin nombre',
+                rol: unidad.tipo || 'propietario', // propietario, arrendatario, residente
+              });
+            }
+          });
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('❌ [useComunidad] Error cargando comunidades:', err);
+      } finally {
+        setLoading(false);
+      }
+
+      const userComunidades = Array.from(comunidadesSet.values());
+      // eslint-disable-next-line no-console
+      console.log('🏘️ [useComunidad] Comunidades finales del usuario:', userComunidades);
       setComunidades(userComunidades);
 
-      // Solo al inicializar: intentar cargar desde localStorage o dejar en null (todas)
+      // Solo al inicializar: intentar cargar desde localStorage
       if (!initialized) {
         const saved = localStorage.getItem('comunidadSeleccionada');
         if (saved && saved !== 'null') {
@@ -51,30 +132,38 @@ export function ComunidadProvider({ children }: ComunidadProviderProps) {
             if (userComunidades.some(c => c.id === parsed.id)) {
               setComunidadSeleccionada(parsed);
             } else {
-              // Si no existe, empezar con "todas" (null)
-              setComunidadSeleccionada(null);
+              // Si no existe, decidir según el tipo de usuario
+              if (user.is_superadmin) {
+                // Superadmin: iniciar con "Todas las comunidades" (null)
+                setComunidadSeleccionada(null);
+              } else {
+                // Usuario normal: seleccionar la primera comunidad disponible
+                setComunidadSeleccionada(userComunidades.length > 0 ? userComunidades[0] : null);
+              }
             }
           } catch (err) {
-            // Si hay error al parsear, empezar con "todas"
-            setComunidadSeleccionada(null);
+            // En caso de error de parsing
+            if (user.is_superadmin) {
+              setComunidadSeleccionada(null);
+            } else {
+              setComunidadSeleccionada(userComunidades.length > 0 ? userComunidades[0] : null);
+            }
           }
         } else {
-          // Si no hay nada guardado, empezar con "todas" (null)
-          setComunidadSeleccionada(null);
+          // Si no hay nada guardado o es 'null'
+          if (user.is_superadmin) {
+            // Superadmin: iniciar con "Todas las comunidades" (null)
+            setComunidadSeleccionada(null);
+          } else {
+            // Usuario normal: seleccionar la primera comunidad disponible
+            setComunidadSeleccionada(userComunidades.length > 0 ? userComunidades[0] : null);
+          }
         }
         setInitialized(true);
       }
-    } else if (user?.is_superadmin) {
-      // Para superadmin, limpiar
-      setComunidades([]);
-      setComunidadSeleccionada(null);
-      setInitialized(true);
-    } else if (!user) {
-      // Si no hay usuario, limpiar todo
-      setComunidades([]);
-      setComunidadSeleccionada(null);
-      setInitialized(false);
-    }
+    };
+
+    cargarComunidades();
   }, [user, initialized]);
 
   const seleccionarComunidad = (comunidad: ComunidadSeleccionada | null) => {

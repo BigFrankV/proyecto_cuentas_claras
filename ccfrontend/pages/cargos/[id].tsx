@@ -41,6 +41,21 @@ export default function CargoDetallePage() {
         // Obtener el cargo desde la API
         const cargoData = await cargosApi.getById(parseInt(id));
 
+        // Obtener los detalles del cargo
+        let detalles = [];
+        try {
+          const detallesResponse = await fetch(`http://localhost:8081/cargos/${id}/detalle`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+          if (detallesResponse.ok) {
+            detalles = await detallesResponse.json();
+          }
+        } catch (err) {
+          console.error('Error al cargar detalles del cargo:', err);
+        }
+
         // Mapear los datos de la API al formato que espera el componente
         const estadoMapping: Record<
           string,
@@ -75,6 +90,7 @@ export default function CargoDetallePage() {
           fechaCreacion: cargoData.fechaCreacion,
           cuentaCosto: `CCU-${cargoData.id}`, // Generar un código de cuenta de costo
           observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`,
+          detalles, // Agregar detalles
         };
 
         // eslint-disable-next-line no-console
@@ -111,6 +127,22 @@ export default function CargoDetallePage() {
         setError(null);
         try {
           const cargoData = await cargosApi.getById(parseInt(String(id)));
+          
+          // Obtener los detalles del cargo
+          let detalles = [];
+          try {
+            const detallesResponse = await fetch(`http://localhost:8081/cargos/${id}/detalle`, {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              },
+            });
+            if (detallesResponse.ok) {
+              detalles = await detallesResponse.json();
+            }
+          } catch (err) {
+            console.error('Error al cargar detalles del cargo:', err);
+          }
+
           const estadoMapping: Record<string, 'pending' | 'approved' | 'rejected' | 'paid' | 'partial'> = {
             pendiente: 'pending',
             pagado: 'paid',
@@ -140,6 +172,7 @@ export default function CargoDetallePage() {
             fechaCreacion: cargoData.fechaCreacion,
             cuentaCosto: `CCU-${cargoData.id}`,
             observaciones: `Propietario: ${cargoData.propietario || 'N/A'}`,
+            detalles, // Agregar detalles
           };
           setCargo(mappedCargo);
         } catch (err) {

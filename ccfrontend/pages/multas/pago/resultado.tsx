@@ -72,21 +72,17 @@ const ResultadoPagoPage: React.FC = () => {
     return (
       <Layout title="Error">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-              <div className="text-red-600 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-red-800 mb-2">
+          <div className="result-container">
+            <div className="result-card error">
+              <i className="material-icons result-icon-large error-icon">cancel</i>
+              <h2 className="result-title-large">
                 No se pudo procesar el pago
               </h2>
-              <p className="text-red-700 mb-6">
+              <p className="result-subtitle-large">
                 No se recibió información de la transacción.
               </p>
               <Link href="/multas">
-                <span className="inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded hover:bg-red-700">
+                <span className="btn-primary" style={{background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}}>
                   Ver Multas
                 </span>
               </Link>
@@ -102,82 +98,78 @@ const ResultadoPagoPage: React.FC = () => {
     return (
       <Layout title="Pago Exitoso">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-              <div className="text-green-600 mb-4">
-                <svg className="w-20 h-20 mx-auto" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                </svg>
+          <div className="result-container">
+            <div className="result-card success">
+              <div className="result-icon success-icon">
+                <i className="material-icons">check_circle</i>
               </div>
-              <h1 className="text-3xl font-bold text-green-800 mb-3">
+              <h1 className="result-title">
                 ¡Pago Exitoso!
               </h1>
-              <p className="text-lg text-green-700 mb-6">
-                {resultado.message || 'Tu pago ha sido procesado correctamente'}
+              <p className="result-subtitle">
+                {resultado.message || 'Tu pago de multa ha sido procesado correctamente'}
               </p>
 
               {resultado.data && (
-                <div className="bg-white rounded-lg p-6 mb-6 text-left">
-                  <h3 className="font-semibold text-gray-900 mb-4 text-center">
+                <div className="details-card">
+                  <h3 className="details-title">
                     Detalles de la Transacción
                   </h3>
-                  <div className="space-y-3">
+                  <div className="details-list">
                     {resultado.data.orderId && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-gray-600">Orden:</span>
-                        <span className="font-mono text-sm text-gray-900">
+                      <div className="detail-item">
+                        <span className="detail-label">Orden:</span>
+                        <span className="detail-value">
                           {resultado.data.orderId}
                         </span>
                       </div>
                     )}
                     {resultado.data.authorizationCode && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-gray-600">Código de Autorización:</span>
-                        <span className="font-mono text-sm text-gray-900">
+                      <div className="detail-item">
+                        <span className="detail-label">Código de Autorización:</span>
+                        <span className="detail-value">
                           {resultado.data.authorizationCode}
                         </span>
                       </div>
                     )}
                     {resultado.data.amount && (
-                      <div className="flex justify-between border-b pb-2">
-                        <span className="text-gray-600">Monto Pagado:</span>
-                        <span className="font-semibold text-green-600">
+                      <div className="detail-item">
+                        <span className="detail-label">Monto Pagado:</span>
+                        <span className="detail-value amount-success">
                           {formatMonto(resultado.data.amount)}
                         </span>
                       </div>
                     )}
                     {resultado.data.multaId && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">ID Multa:</span>
-                        <span className="text-gray-900">#{resultado.data.multaId}</span>
+                      <div className="detail-item">
+                        <span className="detail-label">ID Multa:</span>
+                        <span className="detail-value">#{resultado.data.multaId}</span>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="action-buttons">
                 {resultado.data?.multaId && (
                   <Link href={`/multas/${resultado.data.multaId}`}>
-                    <span className="inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded hover:bg-green-700">
+                    <span className="btn-primary">
                       Ver Detalle de Multa
                     </span>
                   </Link>
                 )}
                 <Link href="/multas">
-                  <span className="inline-block px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded hover:bg-gray-300">
+                  <span className="btn-secondary">
                     Ver Todas las Multas
                   </span>
                 </Link>
               </div>
 
-              <div className="mt-6 text-sm text-gray-600 bg-white p-4 rounded">
-                <p className="flex items-center justify-center">
-                  <svg className="w-5 h-5 mr-2 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
-                  </svg>
+              <div className="info-box">
+                <i className="material-icons">mail_outline</i>
+                <span>
                   Se ha enviado la confirmación de pago a tu correo electrónico.
-                </p>
+                </span>
               </div>
             </div>
           </div>
@@ -190,36 +182,36 @@ const ResultadoPagoPage: React.FC = () => {
   return (
     <Layout title="Pago Rechazado">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-            <div className="text-red-600 mb-4">
-              
+        <div className="result-container">
+          <div className="result-card error">
+            <div className="result-icon error-icon">
+              <i className="material-icons">cancel</i>
             </div>
-            <h1 className="text-3xl font-bold text-red-800 mb-3">
+            <h1 className="result-title">
               Pago Rechazado
             </h1>
-            <p className="text-lg text-red-700 mb-6">
-              {resultado.error || 'No se pudo completar tu pago'}
+            <p className="result-subtitle">
+              {resultado.error || 'No se pudo completar tu pago de multa'}
             </p>
 
             {resultado.data && (
-              <div className="bg-white rounded-lg p-6 mb-6 text-left">
-                <h3 className="font-semibold text-gray-900 mb-4 text-center">
+              <div className="details-card">
+                <h3 className="details-title">
                   Información de la Transacción
                 </h3>
-                <div className="space-y-3">
+                <div className="details-list">
                   {resultado.data.orderId && (
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-gray-600">Orden:</span>
-                      <span className="font-mono text-sm text-gray-900">
+                    <div className="detail-item">
+                      <span className="detail-label">Orden:</span>
+                      <span className="detail-value">
                         {resultado.data.orderId}
                       </span>
                     </div>
                   )}
                   {resultado.data.responseCode && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Código de Respuesta:</span>
-                      <span className="font-mono text-sm text-gray-900">
+                    <div className="detail-item">
+                      <span className="detail-label">Código de Respuesta:</span>
+                      <span className="detail-value">
                         {resultado.data.responseCode}
                       </span>
                     </div>
@@ -228,38 +220,258 @@ const ResultadoPagoPage: React.FC = () => {
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="action-buttons">
               {resultado.data?.multaId && (
                 <Link href={`/multas/${resultado.data.multaId}/pagar`}>
-                  <span className="inline-block px-6 py-3 bg-red-600 text-white font-semibold rounded hover:bg-red-700">
+                  <span className="btn-primary" style={{background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}}>
                     Intentar Nuevamente
                   </span>
                 </Link>
               )}
               <Link href="/multas">
-                <span className="inline-block px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded hover:bg-gray-300">
+                <span className="btn-secondary">
                   Ver Multas
                 </span>
               </Link>
             </div>
 
-            <div className="mt-6 text-sm text-gray-600 bg-white p-4 rounded">
-              <p className="mb-2">
-                <strong>Posibles causas del rechazo:</strong>
+            <div className="details-card" style={{marginTop: '24px', textAlign: 'left'}}>
+              <p style={{fontWeight: 600, marginBottom: '12px', textAlign: 'center'}}>
+                Posibles causas del rechazo:
               </p>
-              <ul className="text-left space-y-1 ml-6">
-                <li>• Fondos insuficientes en la tarjeta</li>
-                <li>• Tarjeta bloqueada o vencida</li>
-                <li>• Datos incorrectos ingresados</li>
-                <li>• Límite de compra excedido</li>
+              <ul style={{listStyle: 'disc', paddingLeft: '24px', fontSize: '14px', lineHeight: '1.8'}}>
+                <li>Fondos insuficientes en la tarjeta</li>
+                <li>Tarjeta bloqueada o vencida</li>
+                <li>Datos incorrectos ingresados</li>
+                <li>Límite de compra excedido</li>
               </ul>
-              <p className="mt-3">
+              <p style={{marginTop: '16px', textAlign: 'center', fontSize: '14px', color: '#666'}}>
                 Si el problema persiste, contacta con tu banco.
               </p>
             </div>
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .result-container {
+          max-width: 650px;
+          margin: 0 auto;
+        }
+
+        .result-card {
+          background: white;
+          border-radius: 20px;
+          padding: 48px 32px;
+          text-align: center;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          border: 1px solid #f0f0f0;
+        }
+
+        .result-card.success {
+          border-top: 4px solid #10b981;
+        }
+
+        .result-card.error {
+          border-top: 4px solid #ef4444;
+        }
+
+        .result-icon {
+          width: 80px;
+          height: 80px;
+          margin: 0 auto 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .success-icon {
+          background: linear-gradient(135deg, #10b98115 0%, #05966915 100%);
+        }
+
+        .success-icon .material-icons {
+          font-size: 48px;
+          color: #10b981;
+        }
+
+        .error-icon {
+          background: linear-gradient(135deg, #ef444415 0%, #dc262615 100%);
+        }
+
+        .error-icon .material-icons {
+          font-size: 48px;
+          color: #ef4444;
+        }
+
+        .result-title {
+          font-size: 32px;
+          font-weight: 700;
+          color: #1a1a1a;
+          margin: 0 0 12px 0;
+          letter-spacing: -0.5px;
+        }
+
+        .result-subtitle {
+          font-size: 16px;
+          color: #666;
+          margin: 0 0 32px 0;
+          line-height: 1.5;
+        }
+
+        .result-icon-large {
+          font-size: 64px !important;
+          margin-bottom: 16px;
+        }
+
+        .result-title-large {
+          font-size: 28px;
+          font-weight: 700;
+          margin-bottom: 12px;
+        }
+
+        .result-subtitle-large {
+          font-size: 16px;
+          margin-bottom: 24px;
+        }
+
+        .details-card {
+          background: #fafafa;
+          border-radius: 12px;
+          padding: 24px;
+          margin: 32px 0;
+          border: 1px solid #e0e0e0;
+        }
+
+        .details-title {
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
+          margin: 0 0 20px 0;
+          text-align: center;
+        }
+
+        .details-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+
+        .detail-item {
+          display: flex;
+          justify-content: space-between;
+          padding: 12px 0;
+          border-bottom: 1px solid #e5e5e5;
+        }
+
+        .detail-item:last-child {
+          border-bottom: none;
+        }
+
+        .detail-label {
+          font-size: 14px;
+          color: #666;
+        }
+
+        .detail-value {
+          font-size: 14px;
+          font-weight: 500;
+          color: #1a1a1a;
+          font-family: 'Courier New', monospace;
+        }
+
+        .amount-success {
+          color: #10b981 !important;
+          font-weight: 600 !important;
+        }
+
+        .action-buttons {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          margin: 24px 0;
+          flex-wrap: wrap;
+        }
+
+        .btn-primary {
+          display: inline-block;
+          padding: 14px 28px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          border-radius: 10px;
+          font-weight: 600;
+          font-size: 15px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-decoration: none;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-primary:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-secondary {
+          display: inline-block;
+          padding: 14px 28px;
+          background: white;
+          color: #666;
+          border: 2px solid #e0e0e0;
+          border-radius: 10px;
+          font-weight: 500;
+          font-size: 15px;
+          cursor: pointer;
+          transition: all 0.2s;
+          text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+          border-color: #999;
+          color: #333;
+        }
+
+        .info-box {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 16px;
+          background: #f0f9ff;
+          border-radius: 10px;
+          margin-top: 24px;
+        }
+
+        .info-box .material-icons {
+          font-size: 20px;
+          color: #0369a1;
+        }
+
+        .info-box span {
+          font-size: 14px;
+          color: #0369a1;
+        }
+
+        @media (max-width: 640px) {
+          .result-card {
+            padding: 32px 24px;
+          }
+
+          .result-title {
+            font-size: 24px;
+          }
+
+          .action-buttons {
+            flex-direction: column;
+          }
+
+          .btn-primary,
+          .btn-secondary {
+            width: 100%;
+            text-align: center;
+          }
+        }
+      `}</style>
     </Layout>
   );
 };

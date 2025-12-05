@@ -639,8 +639,8 @@ router.post(
       for (const unidad of unidades) {
         // Calcular monto prorrateado según alícuota
         const alicuota = parseFloat(unidad.alicuota || 0);
-        const montoGastosComunes = Math.round(
-          (monto_total * alicuota) / totalAlicuota
+        const montoGastosComunes = parseFloat(
+          ((monto_total * alicuota) / totalAlicuota).toFixed(2)
         );
 
         // Calcular consumos individuales por medidor
@@ -657,7 +657,9 @@ router.post(
             periodo
           );
           if (consumo.cantidad > 0) {
-            consumoAgua = Math.round(consumo.cantidad * tarifas.agua);
+            consumoAgua = parseFloat(
+              (consumo.cantidad * tarifas.agua).toFixed(2)
+            );
             detallesConsumo.push({
               tipo: 'agua',
               cantidad: consumo.cantidad,
@@ -680,7 +682,9 @@ router.post(
             periodo
           );
           if (consumo.cantidad > 0) {
-            consumoLuz = Math.round(consumo.cantidad * tarifas.electricidad);
+            consumoLuz = parseFloat(
+              (consumo.cantidad * tarifas.electricidad).toFixed(2)
+            );
             detallesConsumo.push({
               tipo: 'electricidad',
               cantidad: consumo.cantidad,
@@ -700,7 +704,9 @@ router.post(
             periodo
           );
           if (consumo.cantidad > 0) {
-            consumoGas = Math.round(consumo.cantidad * tarifas.gas);
+            consumoGas = parseFloat(
+              (consumo.cantidad * tarifas.gas).toFixed(2)
+            );
             detallesConsumo.push({
               tipo: 'gas',
               cantidad: consumo.cantidad,
@@ -713,8 +719,11 @@ router.post(
         }
 
         // Monto total del cargo = gastos comunes + consumos
-        const montoTotal =
-          montoGastosComunes + consumoAgua + consumoLuz + consumoGas;
+        const montoTotal = parseFloat(
+          (montoGastosComunes + consumoAgua + consumoLuz + consumoGas).toFixed(
+            2
+          )
+        );
 
         // Crear el cargo
         const [cargoResult] = await db.query(
@@ -729,8 +738,8 @@ router.post(
         // Crear detalles de gastos comunes prorrateados
         if (conceptos && Array.isArray(conceptos) && conceptos.length > 0) {
           for (const concepto of conceptos) {
-            const montoConcepto = Math.round(
-              (concepto.monto * alicuota) / totalAlicuota
+            const montoConcepto = parseFloat(
+              ((concepto.monto * alicuota) / totalAlicuota).toFixed(2)
             );
             await db.query(
               `INSERT INTO detalle_cuenta_unidad 
@@ -848,11 +857,25 @@ router.post(
  */
 router.get('/:id', authenticate, async (req, res) => {
   const id = req.params.id;
+  const userId = req.user.id;
+
+  // Verificar que el usuario tenga acceso a esta emisión
   const [rows] = await db.query(
-    'SELECT * FROM emision_gastos_comunes WHERE id = ? LIMIT 1',
-    [id]
+    `SELECT egc.*, c.razon_social as comunidad_nombre 
+     FROM emision_gastos_comunes egc
+     JOIN comunidad c ON egc.comunidad_id = c.id
+     JOIN usuario_rol_comunidad mc ON c.id = mc.comunidad_id
+     WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+     LIMIT 1`,
+    [id, userId]
   );
-  if (!rows.length) return res.status(404).json({ error: 'not found' });
+
+  if (!rows.length) {
+    return res
+      .status(403)
+      .json({ error: 'No tienes permiso para ver esta emisión' });
+  }
+
   res.json(rows[0]);
 });
 
@@ -880,11 +903,30 @@ router.get('/:id', authenticate, async (req, res) => {
  */
 router.get('/:id/detalle-completo', authenticate, async (req, res) => {
   const id = req.params.id;
+  const userId = req.user.id;
+
   try {
+    // Primero verificar acceso del usuario
+    const [accessCheck] = await db.query(
+      `SELECT 1 FROM usuario_rol_comunidad mc
+       JOIN emision_gastos_comunes egc ON mc.comunidad_id = egc.comunidad_id
+       WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+       LIMIT 1`,
+      [id, userId]
+    );
+
+    if (!accessCheck.length) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes permiso para ver esta emisión' });
+    }
+
+    // Obtener los datos de la emisión
     const [rows] = await db.query(
       `
       SELECT
         egc.id,
+        egc.comunidad_id,
         egc.periodo,
         CASE
           WHEN egc.periodo LIKE '%Extraordinaria%' THEN 'extraordinaria'
@@ -901,28 +943,49 @@ router.get('/:id/detalle-completo', authenticate, async (req, res) => {
         END as estado,
         DATE_FORMAT(egc.created_at, '%Y-%m-%d') as fecha_emision,
         DATE_FORMAT(egc.fecha_vencimiento, '%Y-%m-%d') as fecha_vencimiento,
-        COALESCE(SUM(ccu.monto_total), 0) as monto_total,
-        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as monto_pagado,
-        COUNT(DISTINCT ccu.unidad_id) as cantidad_unidades,
         egc.observaciones as observaciones,
         c.razon_social as nombre_comunidad,
         CASE WHEN egc.periodo LIKE '%Interes%' THEN 1 ELSE 0 END as tiene_interes,
         COALESCE(pc.tasa_mora_mensual, 2.0) as tasa_interes,
         COALESCE(pc.dias_gracia, 5) as dias_gracia,
+        (SELECT r.codigo FROM usuario_rol_comunidad mc2 
+         JOIN rol_sistema r ON mc2.rol_id = r.id
+         WHERE mc2.comunidad_id = egc.comunidad_id AND mc2.usuario_id = ? AND mc2.activo = 1
+         ORDER BY mc2.id DESC LIMIT 1) as rol_usuario,
         egc.created_at,
         egc.updated_at
       FROM emision_gastos_comunes egc
       JOIN comunidad c ON egc.comunidad_id = c.id
-      LEFT JOIN cuenta_cobro_unidad ccu ON egc.id = ccu.emision_id
       LEFT JOIN parametros_cobranza pc ON c.id = pc.comunidad_id
       WHERE egc.id = ?
-      GROUP BY egc.id, egc.periodo, egc.estado, egc.created_at, egc.fecha_vencimiento, egc.observaciones, c.razon_social, pc.tasa_mora_mensual, pc.dias_gracia, egc.updated_at
       LIMIT 1
     `,
+      [userId, id]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Emisión no encontrada' });
+    }
+
+    // Obtener totales de las cuentas de cobro
+    const [totals] = await db.query(
+      `SELECT 
+        COALESCE(SUM(ccu.monto_total), 0) as monto_total,
+        COALESCE(SUM(ccu.monto_total - ccu.saldo), 0) as monto_pagado,
+        COUNT(DISTINCT ccu.unidad_id) as cantidad_unidades
+       FROM cuenta_cobro_unidad ccu
+       WHERE ccu.emision_id = ?`,
       [id]
     );
-    if (!rows.length) return res.status(404).json({ error: 'not found' });
-    res.json(rows[0]);
+
+    const result = {
+      ...rows[0],
+      monto_total: totals[0].monto_total,
+      monto_pagado: totals[0].monto_pagado,
+      cantidad_unidades: totals[0].cantidad_unidades,
+    };
+
+    res.json(result);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'server error' });
@@ -1018,7 +1081,25 @@ router.post(
 // obtener conceptos/prorrateo de una emision
 router.get('/:id/detalles', authenticate, async (req, res) => {
   const emisionId = req.params.id;
+  const userId = req.user.id;
+
   try {
+    // Verificar acceso
+    const [accessCheck] = await db.query(
+      `SELECT egc.id 
+       FROM emision_gastos_comunes egc
+       JOIN usuario_rol_comunidad mc ON egc.comunidad_id = mc.comunidad_id
+       WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+       LIMIT 1`,
+      [emisionId, userId]
+    );
+
+    if (!accessCheck.length) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes permiso para ver esta emisión' });
+    }
+
     const [rows] = await db.query(
       `
       SELECT
@@ -1071,7 +1152,25 @@ router.get('/:id/detalles', authenticate, async (req, res) => {
 // obtener gastos incluidos en una emision
 router.get('/:id/gastos', authenticate, async (req, res) => {
   const emisionId = req.params.id;
+  const userId = req.user.id;
+
   try {
+    // Verificar acceso
+    const [accessCheck] = await db.query(
+      `SELECT egc.id 
+       FROM emision_gastos_comunes egc
+       JOIN usuario_rol_comunidad mc ON egc.comunidad_id = mc.comunidad_id
+       WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+       LIMIT 1`,
+      [emisionId, userId]
+    );
+
+    if (!accessCheck.length) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes permiso para ver esta emisión' });
+    }
+
     const [rows] = await db.query(
       `
       SELECT
@@ -1122,11 +1221,29 @@ router.get('/:id/gastos', authenticate, async (req, res) => {
 // obtener unidades y prorrateo de una emision
 router.get('/:id/unidades', authenticate, async (req, res) => {
   const emisionId = req.params.id;
+  const userId = req.user.id;
+
   try {
+    // Verificar acceso a la emisión
+    const [accessCheck] = await db.query(
+      `SELECT egc.id 
+       FROM emision_gastos_comunes egc
+       JOIN usuario_rol_comunidad mc ON egc.comunidad_id = mc.comunidad_id
+       WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+       LIMIT 1`,
+      [emisionId, userId]
+    );
+
+    if (!accessCheck.length) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes permiso para ver esta emisión' });
+    }
+
     const [rows] = await db.query(
       `
       SELECT
-        u.id,
+        ccu.id,
         u.codigo as numero,
         CASE
           WHEN u.m2_utiles > 0 THEN 'Departamento'
@@ -1135,11 +1252,11 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
           ELSE 'Unidad'
         END as tipo,
         COALESCE(
-          CONCAT(p.nombres, ' ', p.apellidos),
+          GROUP_CONCAT(DISTINCT CONCAT(p.nombres, ' ', p.apellidos) SEPARATOR ', '),
           'Sin asignar'
         ) as propietario,
         COALESCE(
-          p.email,
+          GROUP_CONCAT(DISTINCT p.email SEPARATOR ', '),
           ''
         ) as contacto,
         u.alicuota as alicuota,
@@ -1157,6 +1274,7 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
       LEFT JOIN titulares_unidad tu ON u.id = tu.unidad_id AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
       LEFT JOIN persona p ON tu.persona_id = p.id
       WHERE ccu.emision_id = ?
+      GROUP BY ccu.id, u.id, u.codigo, u.m2_utiles, u.nro_estacionamiento, u.nro_bodega, u.alicuota, ccu.monto_total, ccu.saldo, ccu.estado, ccu.created_at
       ORDER BY u.codigo
     `,
       [emisionId]
@@ -1190,7 +1308,25 @@ router.get('/:id/unidades', authenticate, async (req, res) => {
 // obtener pagos realizados para una emision
 router.get('/:id/pagos', authenticate, async (req, res) => {
   const emisionId = req.params.id;
+  const userId = req.user.id;
+
   try {
+    // Verificar acceso
+    const [accessCheck] = await db.query(
+      `SELECT egc.id 
+       FROM emision_gastos_comunes egc
+       JOIN usuario_rol_comunidad mc ON egc.comunidad_id = mc.comunidad_id
+       WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+       LIMIT 1`,
+      [emisionId, userId]
+    );
+
+    if (!accessCheck.length) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes permiso para ver esta emisión' });
+    }
+
     const [rows] = await db.query(
       `
       SELECT
@@ -1252,7 +1388,25 @@ router.get('/:id/pagos', authenticate, async (req, res) => {
 // historial de cambios (auditoria)
 router.get('/:id/auditoria', authenticate, async (req, res) => {
   const emisionId = req.params.id;
+  const userId = req.user.id;
+
   try {
+    // Verificar acceso
+    const [accessCheck] = await db.query(
+      `SELECT egc.id 
+       FROM emision_gastos_comunes egc
+       JOIN usuario_rol_comunidad mc ON egc.comunidad_id = mc.comunidad_id
+       WHERE egc.id = ? AND mc.usuario_id = ? AND mc.activo = 1
+       LIMIT 1`,
+      [emisionId, userId]
+    );
+
+    if (!accessCheck.length) {
+      return res
+        .status(403)
+        .json({ error: 'No tienes permiso para ver esta emisión' });
+    }
+
     const [rows] = await db.query(
       `
       SELECT

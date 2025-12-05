@@ -145,20 +145,50 @@ export default function Sidebar() {
 
   // Cargar foto de perfil cuando el usuario cambie
   useEffect(() => {
-    if (user) {
-      const loadProfilePhoto = async () => {
-        try {
-          const photoUrl = await profileService.getProfilePhoto();
-          setProfilePhoto(photoUrl);
-        } catch (error) {
-          // Si hay error, dejar como null (mostrará iniciales)
-          setProfilePhoto(null);
-        }
-      };
-      loadProfilePhoto();
-    } else {
+    if (!user) {
       setProfilePhoto(null);
+      return undefined;
     }
+
+    const loadProfilePhoto = async () => {
+      try {
+        // eslint-disable-next-line no-console
+        console.log('📸 [Sidebar] Cargando foto de perfil para usuario:', user.username);
+        const photoUrl = await profileService.getProfilePhoto();
+        // eslint-disable-next-line no-console
+        console.log('📸 [Sidebar] URL recibida:', photoUrl);
+        // Simplemente setear la URL si existe, el onError del img manejará si falla
+        if (photoUrl) {
+          setProfilePhoto(photoUrl);
+          // eslint-disable-next-line no-console
+          console.log('📸 [Sidebar] Foto seteada en estado');
+        } else {
+          setProfilePhoto(null);
+          // eslint-disable-next-line no-console
+          console.log('📸 [Sidebar] No hay foto, usando iniciales');
+        }
+      } catch (error) {
+        // Si hay error, dejar como null (mostrará iniciales)
+        // eslint-disable-next-line no-console
+        console.error('📸 [Sidebar] Error cargando foto:', error);
+        setProfilePhoto(null);
+      }
+    };
+    
+    loadProfilePhoto();
+
+    // Escuchar evento de actualización de foto de perfil
+    const handleProfilePhotoUpdate = () => {
+      // eslint-disable-next-line no-console
+      console.log('📸 [Sidebar] Evento profile-photo-updated recibido');
+      loadProfilePhoto();
+    };
+
+    window.addEventListener('profile-photo-updated', handleProfilePhotoUpdate);
+
+    return () => {
+      window.removeEventListener('profile-photo-updated', handleProfilePhotoUpdate);
+    };
   }, [user]);
 
   return (
@@ -192,7 +222,9 @@ export default function Sidebar() {
         {/* Información del usuario */}
         <div className='d-flex align-items-center mb-2 px-2'>
           {profilePhoto ? (
-            <Image
+            // Usar img nativa en lugar de Next.js Image para evitar CORS issues
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
               src={profilePhoto}
               alt="Foto de perfil"
               className='avatar me-2'
@@ -202,6 +234,16 @@ export default function Sidebar() {
                 borderRadius: '6px',
                 objectFit: 'cover',
                 border: '2px solid rgba(255, 255, 255, 0.2)',
+              }}
+              onLoad={() => {
+                // eslint-disable-next-line no-console
+                console.log('✅ [Sidebar] Imagen cargada exitosamente');
+              }}
+              onError={(e) => {
+                // Si falla la carga, ocultar imagen y usar iniciales
+                // eslint-disable-next-line no-console
+                console.error('❌ [Sidebar] Error cargando imagen, URL:', profilePhoto);
+                setProfilePhoto(null);
               }}
             />
           ) : (

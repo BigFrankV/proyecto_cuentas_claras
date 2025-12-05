@@ -1,7 +1,9 @@
+import { useAuth } from '@/lib/useAuth';
 import { useComunidad } from '@/lib/useComunidad';
 
 export default function GlobalComunidadSelector() {
   const { comunidadSeleccionada, seleccionarComunidad, comunidades, loading } = useComunidad();
+  const { user } = useAuth();
 
   if (loading) {
     return (
@@ -18,8 +20,8 @@ export default function GlobalComunidadSelector() {
     );
   }
 
-  // Si no hay comunidades, no mostrar nada
-  if (!comunidades || comunidades.length === 0) {
+  // Si no hay comunidades Y no es superadmin, no mostrar nada
+  if ((!comunidades || comunidades.length === 0) && !user?.is_superadmin) {
     return null;
   }
 
@@ -45,6 +47,13 @@ export default function GlobalComunidadSelector() {
       }
     }
   };
+
+  // Debug logs
+  console.log('🎯 [GlobalComunidadSelector] Renderizando...');
+  console.log('🎯 [GlobalComunidadSelector] user?.is_superadmin:', user?.is_superadmin);
+  console.log('🎯 [GlobalComunidadSelector] comunidades:', comunidades);
+  console.log('🎯 [GlobalComunidadSelector] comunidades.length:', comunidades?.length);
+  console.log('🎯 [GlobalComunidadSelector] comunidadSeleccionada:', comunidadSeleccionada);
 
   return (
     <>

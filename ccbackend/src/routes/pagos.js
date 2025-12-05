@@ -1829,6 +1829,238 @@ router.post(
 
 /**
  * @swagger
+ * /api/pagos/aplicar-multiple:
+ *   post:
+ *     tags: [Pagos]
+ *     summary: Crear y aplicar pago a múltiples cargos (cuentas de cobro y multas)
+ *     description: |
+ *       Crea un nuevo pago y lo aplica automáticamente a múltiples cargos.
+ *       Soporta tanto cuentas de cobro como multas.
+ *       Usa transacciones para garantizar integridad.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - order_id
+ *               - transaction_id
+ *               - amount
+ *               - cargos
+ *             properties:
+ *               order_id:
+ *                 type: string
+ *                 description: ID de orden del gateway
+ *                 example: "PAY-2025-12345"
+ *               transaction_id:
+ *                 type: string
+ *                 description: ID de transacción del gateway
+ *                 example: "TRX-WEBPAY-98765"
+ *               amount:
+ *                 type: number
+ *                 description: Monto total del pago
+ *                 example: 150000.00
+ *               cargos:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - cargo_id
+ *                     - monto
+ *                     - tipo
+ *                   properties:
+ *                     cargo_id:
+ *                       type: integer
+ *                       description: ID del cargo
+ *                     monto:
+ *                       type: number
+ *                       description: Monto aplicado a este cargo
+ *                     tipo:
+ *                       type: string
+ *                       enum: [cuenta_cobro, multa]
+ *                       description: Tipo de cargo
+ *                     unidad_id:
+ *                       type: integer
+ *                       description: ID de la unidad
+ *                     comunidad_id:
+ *                       type: integer
+ *                       description: ID de la comunidad
+ *     responses:
+ *       200:
+ *         description: Pago creado y aplicado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 pago_id:
+ *                   type: integer
+ *                   description: ID del pago creado
+ *                   example: 123
+ *                 message:
+ *                   type: string
+ *                   example: "Pago aplicado exitosamente a 3 cargos"
+ *       400:
+ *         description: Datos inválidos
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error del servidor
+ */
+router.post(
+  '/aplicar-multiple',
+  [
+    authenticate,
+    body('order_id').notEmpty().withMessage('order_id requerido'),
+    body('transaction_id').notEmpty().withMessage('transaction_id requerido'),
+    body('amount').isFloat({ min: 0 }).withMessage('amount debe ser positivo'),
+    body('cargos').isArray({ min: 1 }).withMessage('cargos debe ser un array'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+      await connection.beginTransaction();
+
+      const { order_id, transaction_id, amount, cargos } = req.body;
+      const usuarioId = req.user.sub;
+
+      // Buscar persona_id del usuario
+      const [usuarioRows] = await connection.query(
+        'SELECT persona_id FROM usuario WHERE id = ? LIMIT 1',
+        [usuarioId]
+      );
+
+      if (!usuarioRows || !usuarioRows.length) {
+        await connection.rollback();
+        return res.status(401).json({ error: 'Usuario no encontrado' });
+      }
+
+      const personaId = usuarioRows[0].persona_id;
+      const comunidadId = cargos[0].comunidad_id;
+      const unidadId = cargos[0].unidad_id;
+
+      // 1. Crear registro de pago
+      const [pagoResult] = await connection.query(
+        `INSERT INTO pago (
+          comunidad_id,
+          unidad_id,
+          persona_id,
+          fecha,
+          monto,
+          medio,
+          referencia,
+          estado,
+          comprobante_num
+        ) VALUES (?, ?, ?, CURDATE(), ?, 'webpay', ?, 'aplicado', ?)`,
+        [comunidadId, unidadId, personaId, amount, transaction_id, order_id]
+      );
+
+      const pagoId = pagoResult.insertId;
+
+      // 2. Aplicar a cada cargo
+      for (let i = 0; i < cargos.length; i++) {
+        const cargo = cargos[i];
+
+        // Crear pago_aplicacion
+        await connection.query(
+          `INSERT INTO pago_aplicacion (
+            pago_id,
+            cuenta_cobro_unidad_id,
+            monto,
+            prioridad
+          ) VALUES (?, ?, ?, ?)`,
+          [pagoId, cargo.cargo_id, cargo.monto, i + 1]
+        );
+
+        // Actualizar saldo según tipo
+        if (cargo.tipo === 'multa') {
+          // Para multas, actualizar estado
+          await connection.query(
+            `UPDATE multas
+             SET estado = CASE
+                 WHEN monto <= ? THEN 'pagado'
+                 ELSE estado
+               END,
+               updated_at = NOW()
+             WHERE id = ?`,
+            [cargo.monto, cargo.cargo_id]
+          );
+        } else {
+          // Para cuentas de cobro
+          await connection.query(
+            `UPDATE cuenta_cobro_unidad
+             SET saldo = saldo - ?,
+                 estado = CASE
+                   WHEN (saldo - ?) <= 0 THEN 'pagado'
+                   WHEN (saldo - ?) < monto_total THEN 'parcial'
+                   ELSE estado
+                 END,
+                 updated_at = NOW()
+             WHERE id = ?`,
+            [cargo.monto, cargo.monto, cargo.monto, cargo.cargo_id]
+          );
+        }
+      }
+
+      // 3. Registrar en bitácora (opcional)
+      try {
+        await connection.query(
+          `INSERT INTO bitacora (
+            usuario_id,
+            accion,
+            entidad,
+            entidad_id,
+            detalles
+          ) VALUES (?, 'PAGO_MULTIPLE_WEBPAY', 'pago', ?, ?)`,
+          [
+            usuarioId,
+            pagoId,
+            JSON.stringify({
+              monto: amount,
+              cargos: cargos.length,
+              transaction_id,
+              order_id,
+            }),
+          ]
+        );
+      } catch (bitacoraError) {
+        // No fallar si bitácora falla
+        console.error('Error en bitácora:', bitacoraError);
+      }
+
+      await connection.commit();
+
+      res.json({
+        success: true,
+        pago_id: pagoId,
+        message: `Pago aplicado exitosamente a ${cargos.length} cargo(s)`,
+      });
+    } catch (error) {
+      await connection.rollback();
+      console.error('Error en /aplicar-multiple:', error);
+      res
+        .status(500)
+        .json({ error: 'Error al aplicar pago', details: error.message });
+    } finally {
+      connection.release();
+    }
+  }
+);
+
+/**
+ * @swagger
  * /api/pagos/{id}/aplicar:
  *   post:
  *     tags: [Pagos]

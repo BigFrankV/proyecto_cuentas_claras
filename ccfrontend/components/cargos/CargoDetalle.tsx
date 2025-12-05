@@ -470,6 +470,84 @@ export default function CargoDetalle({
                   </h5>
                 </div>
 
+                {/* Desglose de conceptos si está disponible */}
+                {cargo.detalles && cargo.detalles.length > 0 && (
+                  <div className='mb-3' style={{ 
+                    padding: '12px', 
+                    backgroundColor: '#f8f9fa', 
+                    borderRadius: '6px',
+                    border: '1px solid #e9ecef',
+                  }}>
+                    <div style={{ 
+                      fontSize: '0.85rem', 
+                      fontWeight: '600', 
+                      color: '#495057', 
+                      marginBottom: '10px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}>
+                      <i className='material-icons' style={{ fontSize: '16px' }}>receipt_long</i>
+                      Desglose por concepto:
+                    </div>
+                    <div style={{ fontSize: '0.8rem' }}>
+                      {cargo.detalles.map((detalle: any, index: number) => (
+                        <div key={detalle.id || index} style={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'flex-start',
+                          padding: '6px 8px',
+                          marginBottom: '4px',
+                          backgroundColor: '#fff',
+                          borderRadius: '4px',
+                          border: '1px solid #e9ecef',
+                        }}>
+                          <div style={{ flex: 1, paddingRight: '8px' }}>
+                            <div style={{ 
+                              color: '#212529',
+                              fontWeight: '500',
+                              fontSize: '0.8rem',
+                              marginBottom: '2px',
+                            }}>
+                              {detalle.categoria || detalle.descripcion || 'Sin categoría'}
+                            </div>
+                            {detalle.descripcion && detalle.categoria && (
+                              <div style={{ 
+                                color: '#6c757d',
+                                fontSize: '0.75rem',
+                              }}>
+                                {detalle.descripcion}
+                              </div>
+                            )}
+                            {detalle.origen && (
+                              <span style={{
+                                fontSize: '0.7rem',
+                                color: '#6c757d',
+                                fontStyle: 'italic',
+                              }}>
+                                ({detalle.origen})
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ 
+                            fontWeight: '600',
+                            color: '#0d6efd',
+                            fontSize: '0.85rem',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            <AmountCell amount={detalle.monto} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ 
+                      height: '1px', 
+                      backgroundColor: '#dee2e6', 
+                      margin: '10px 0' ,
+                    }}></div>
+                  </div>
+                )}
+
                 <div className='info-row'>
                   <span className='info-label'>Monto Total:</span>
                   <span className='info-value money'>

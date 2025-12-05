@@ -7,12 +7,14 @@ import ModernPagination from '@/components/ui/ModernPagination';
 import PageHeader from '@/components/ui/PageHeader';
 import multasService from '@/lib/multasService';
 import { useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions, Permission } from '@/lib/usePermissions';
 import { TipoInfraccion } from '@/types/multas';
 
 const MultasListadoPage: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
+  const { comunidadSeleccionada } = useComunidad();
   const { hasPermission } = usePermissions();
 
   // Data states
@@ -48,20 +50,38 @@ const MultasListadoPage: React.FC = () => {
   });
 
   const loadData = useCallback(async () => {
+    // Para roles normales, requiere comunidad seleccionada
+    // Para superadmin, puede ver todas si comunidadSeleccionada es null
+    const isSuperadmin = user?.is_superadmin;
+    
+    if (!isSuperadmin && !comunidadSeleccionada) {
+      setMultas([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      // Load types for filter
-      const tipos = await multasService.obtenerTipos(user?.comunidad_id);
-      setTiposInfraccion(tipos);
-
-      // Load fines
-      const queryParams = {
+      const queryParams: any = {
         ...filtros,
         pagina: currentPage,
-        comunidad_id: user?.comunidad_id,
       };
       
+      // Solo agregar comunidad_id si hay una seleccionada
+      if (comunidadSeleccionada) {
+        const comunidadId = Number(comunidadSeleccionada.id);
+        queryParams.comunidad_id = comunidadId;
+        
+        // Load types for filter
+        const tipos = await multasService.obtenerTipos(comunidadId);
+        setTiposInfraccion(tipos);
+      } else {
+        // Superadmin viendo todas: no filtrar por comunidad
+        setTiposInfraccion([]);
+      }
+
+      // Load fines
       const response = await multasService.getMultas(queryParams);
       const data = response.data || [];
       setMultas(data);
@@ -70,12 +90,15 @@ const MultasListadoPage: React.FC = () => {
 
       // Calculate stats (mocked for now, ideally from backend)
       const newStats = data.reduce((acc: any, curr: any) => {
-        if (curr.estado === 'pendiente') {
-          acc.totalPendiente += curr.monto;
+        const estado = String(curr.estado || '').toLowerCase();
+        const monto = Number(curr.monto) || 0;
+        
+        if (estado === 'pendiente') {
+          acc.totalPendiente += monto;
           acc.countPendientes++;
         }
-        if (curr.estado === 'vencido') {
-          acc.totalVencido += curr.monto;
+        if (estado === 'vencido') {
+          acc.totalVencido += monto;
           acc.countVencidas++;
         }
         return acc;
@@ -89,7 +112,7 @@ const MultasListadoPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, filtros, user?.comunidad_id]);
+  }, [currentPage, filtros, comunidadSeleccionada]);
 
   useEffect(() => {
     if (user) {
@@ -162,6 +185,21 @@ const MultasListadoPage: React.FC = () => {
     return new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(amount);
   };
 
+  // Mensaje si no hay comunidad seleccionada (solo para usuarios no-superadmin)
+  if (!comunidadSeleccionada && !user?.is_superadmin) {
+    return (
+      <Layout title="Gestión de Multas">
+        <div className="multas-page">
+          <div className="alert alert-info text-center p-5">
+            <span className="material-icons" style={{ fontSize: '48px', color: '#0dcaf0' }}>business</span>
+            <h4 className="mt-3">Selecciona una comunidad</h4>
+            <p className="text-muted">Por favor selecciona una comunidad del menú superior para ver las multas.</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout title="Gestión de Multas">
       <div className="multas-page">
@@ -170,7 +208,7 @@ const MultasListadoPage: React.FC = () => {
           subtitle="Administración y control de infracciones"
           icon="gavel"
           primaryAction={
-            (hasPermission(Permission.MANAGE_MULTAS) || hasPermission(Permission.VIEW_MULTA)) ? {
+            hasPermission(Permission.CREATE_MULTA, comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : undefined) ? {
               label: 'Nueva Multa',
               icon: 'add',
               href: '/multas-nueva',
@@ -408,13 +446,15 @@ const MultasListadoPage: React.FC = () => {
                           >
                             <span className="material-icons">visibility</span>
                           </button>
-                          <button 
-                            className="btn-icon" 
-                            onClick={() => router.push(`/multas/${multa.id}/editar`)}
-                            title="Editar"
-                          >
-                            <span className="material-icons">edit</span>
-                          </button>
+                          {hasPermission(Permission.EDIT_MULTA, comunidadSeleccionada?.id ? Number(comunidadSeleccionada.id) : undefined) && (
+                            <button 
+                              className="btn-icon" 
+                              onClick={() => router.push(`/multas/${multa.id}/editar`)}
+                              title="Editar"
+                            >
+                              <span className="material-icons">edit</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

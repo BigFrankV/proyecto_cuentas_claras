@@ -116,6 +116,7 @@ export default function EmisionDetalle() {
   const loadEmissionData = async () => {
     try {
       setLoading(true);
+      setAccessDenied(false);
       const emisionId = Number(id);
 
       // Cargar datos en paralelo
@@ -134,6 +135,16 @@ export default function EmisionDetalle() {
         emisionesService.getPagosEmision(emisionId),
         emisionesService.getAuditoriaEmision(emisionId),
       ]);
+
+      // Verificar si hay error 403 en la emisión principal
+      if (emisionResponse.status === 'rejected') {
+        const error = emisionResponse.reason;
+        if (error?.response?.status === 403 || /403|forbidden|permiso/i.test(String(error))) {
+          setAccessDenied(true);
+          setLoading(false);
+          return;
+        }
+      }
 
       // Procesar emisión principal
       let emissionData: EmissionDetail | null = null;
@@ -160,46 +171,60 @@ export default function EmisionDetalle() {
       // Procesar conceptos/detalles
       let conceptsData: Concept[] = [];
       if (detallesResponse.status === 'fulfilled') {
+        console.log('✅ Detalles de emisión recibidos:', detallesResponse.value);
         conceptsData = detallesResponse.value.map((detalle: any) => ({
           id: detalle.id.toString(),
-          name: detalle.categoria_nombre || 'Sin categoría',
-          description: detalle.regla_prorrateo || '',
-          amount: detalle.monto,
+          name: detalle.nombre || detalle.categoria_nombre || 'Sin categoría',
+          description: detalle.descripcion || detalle.regla_prorrateo || '',
+          amount: Number(detalle.monto) || 0,
           distributionType: mapReglaToDistributionType(detalle.regla_prorrateo),
-          category: detalle.categoria_nombre || 'General',
+          category: detalle.categoria || detalle.categoria_nombre || 'General',
         }));
+        console.log('📊 Conceptos procesados:', conceptsData);
+      } else {
+        console.error('❌ Error cargando detalles:', detallesResponse);
       }
 
       // Procesar gastos
       let expensesData: ExpenseDetail[] = [];
       if (gastosResponse.status === 'fulfilled') {
+        console.log('✅ Gastos de emisión recibidos:', gastosResponse.value);
         expensesData = gastosResponse.value.map((gasto: any) => ({
           id: gasto.id.toString(),
-          description: gasto.glosa,
-          amount: gasto.monto,
-          category: gasto.categoria_nombre || 'General',
-          supplier: gasto.centro_costo_nombre || 'Sin proveedor',
+          description: gasto.descripcion || gasto.glosa || 'Sin descripción',
+          amount: Number(gasto.monto) || 0,
+          category: gasto.categoria || gasto.categoria_nombre || 'General',
+          supplier: gasto.proveedor || gasto.centro_costo_nombre || 'Sin proveedor',
           date: gasto.fecha,
           document: `Gasto #${gasto.id}`,
         }));
+        console.log('💰 Gastos procesados:', expensesData);
+      } else {
+        console.error('❌ Error cargando gastos:', gastosResponse);
       }
 
       // Procesar unidades
       let unitsData: UnitDetail[] = [];
       if (unidadesResponse.status === 'fulfilled') {
-        unitsData = unidadesResponse.value.map((unidad: any) => ({
-          id: unidad.id.toString(),
-          number: unidad.unidad_codigo || unidad.id.toString(),
-          type: 'Departamento', // Por ahora hardcodeado
-          owner: unidad.titular_nombres
-            ? `${unidad.titular_nombres} ${unidad.titular_apellidos || ''}`.trim()
-            : 'Sin asignar',
-          contact: '', // No disponible en la API
-          participation: 0, // Se puede calcular después
-          totalAmount: unidad.monto_total,
-          paidAmount: unidad.monto_total - unidad.saldo,
-          status: mapEstadoCobroToStatus(unidad.estado),
-        }));
+        unitsData = unidadesResponse.value.map((unidad: any) => {
+          const totalAmount = Number(unidad.monto_total) || 0;
+          const saldo = Number(unidad.saldo) || 0;
+          const paidAmount = totalAmount - saldo;
+          
+          return {
+            id: unidad.id.toString(),
+            number: unidad.unidad_codigo || unidad.numero || unidad.id.toString(),
+            type: 'Departamento',
+            owner: unidad.titular_nombres
+              ? `${unidad.titular_nombres} ${unidad.titular_apellidos || ''}`.trim()
+              : 'Sin asignar',
+            contact: '',
+            participation: 0,
+            totalAmount,
+            paidAmount: paidAmount >= 0 ? paidAmount : 0,
+            status: mapEstadoCobroToStatus(unidad.estado),
+          };
+        });
 
         // Actualizar unitCount en emission
         if (emissionData) {
@@ -248,17 +273,26 @@ export default function EmisionDetalle() {
       setUnits(unitsData);
       setPayments(paymentsData);
       setHistory(historyData);
-    } catch (error) {
+    } catch (error: any) {
       // eslint-disable-next-line no-console
       console.error('Error loading emission data:', error);
-      const message = String(error || '');
-      if (/403|forbidden/i.test(message)) {
+      
+      // Verificar si es error de permisos
+      if (error?.response?.status === 403) {
         setAccessDenied(true);
         setLoading(false);
         return;
       }
-      // Fallback a datos mock si falla la API
-      loadMockData();
+      
+      const message = String(error || '');
+      if (/403|forbidden|permiso/i.test(message)) {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+      
+      // Otros errores
+      setEmission(null);
     } finally {
       setLoading(false);
     }
@@ -503,22 +537,83 @@ export default function EmisionDetalle() {
       <ProtectedRoute>
         <Layout title='Emisión no encontrada'>
           {accessDenied ? (
-            <div className='text-center py-5'>
-              <div className='alert alert-warning'>
-                <i className='material-icons me-2'>warning</i>
-                No tienes permiso para ver esta emisión en la comunidad seleccionada.
-              </div>
-              <div>
-                <Link href='/emisiones' className='btn btn-primary'>Volver a Emisiones</Link>
+            <div className='container py-5'>
+              <div className='row justify-content-center'>
+                <div className='col-md-8 col-lg-6'>
+                  <div className='card border-warning'>
+                    <div className='card-body text-center p-5'>
+                      <div className='mb-4'>
+                        <i className='material-icons' style={{ fontSize: '64px', color: '#ff9800' }}>
+                          block
+                        </i>
+                      </div>
+                      <h2 className='h3 mb-3'>Acceso Denegado</h2>
+                      <p className='text-muted mb-4'>
+                        No tienes permiso para ver esta emisión. Esto puede deberse a que:
+                      </p>
+                      <ul className='list-unstyled text-start mb-4'>
+                        <li className='mb-2'>
+                          <i className='material-icons text-warning me-2' style={{ fontSize: '20px', verticalAlign: 'middle' }}>
+                            arrow_right
+                          </i>
+                          La emisión pertenece a una comunidad diferente a la seleccionada
+                        </li>
+                        <li className='mb-2'>
+                          <i className='material-icons text-warning me-2' style={{ fontSize: '20px', verticalAlign: 'middle' }}>
+                            arrow_right
+                          </i>
+                          No tienes membresía activa en la comunidad de esta emisión
+                        </li>
+                        <li className='mb-2'>
+                          <i className='material-icons text-warning me-2' style={{ fontSize: '20px', verticalAlign: 'middle' }}>
+                            arrow_right
+                          </i>
+                          Tu rol en la comunidad no permite ver emisiones
+                        </li>
+                      </ul>
+                      <div className='alert alert-info mb-4'>
+                        <i className='material-icons me-2' style={{ verticalAlign: 'middle' }}>
+                          info
+                        </i>
+                        <strong>Sugerencia:</strong> Verifica que hayas seleccionado la comunidad correcta en el filtro global.
+                      </div>
+                      <div className='d-flex gap-2 justify-content-center'>
+                        <Link href='/emisiones' className='btn btn-primary'>
+                          <i className='material-icons me-2' style={{ fontSize: '18px', verticalAlign: 'middle' }}>
+                            arrow_back
+                          </i>
+                          Volver a Emisiones
+                        </Link>
+                        <button 
+                          className='btn btn-outline-secondary'
+                          onClick={() => router.reload()}
+                        >
+                          <i className='material-icons me-2' style={{ fontSize: '18px', verticalAlign: 'middle' }}>
+                            refresh
+                          </i>
+                          Reintentar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
             <div className='text-center py-5'>
+              <div className='mb-4'>
+                <i className='material-icons' style={{ fontSize: '64px', color: '#6c757d' }}>
+                  error_outline
+                </i>
+              </div>
               <h3>Emisión no encontrada</h3>
               <p className='text-muted'>
-                La emisión solicitada no existe o no tienes permisos para verla.
+                La emisión solicitada no existe o ha sido eliminada.
               </p>
-              <Link href='/emisiones' className='btn btn-primary'>
+              <Link href='/emisiones' className='btn btn-primary mt-3'>
+                <i className='material-icons me-2' style={{ fontSize: '18px', verticalAlign: 'middle' }}>
+                  arrow_back
+                </i>
                 Volver a Emisiones
               </Link>
             </div>
@@ -618,6 +713,119 @@ export default function EmisionDetalle() {
             <div className='col-md-4'>
               <div className='amount-card'>
                 <div className='card-body'>
+                  {/* Desglose de conceptos */}
+                  {concepts.length > 0 && (
+                    <div className='mb-3'>
+                      <div style={{ 
+                        fontSize: '0.9rem', 
+                        fontWeight: '600', 
+                        color: '#495057', 
+                        marginBottom: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}>
+                        <i className='material-icons' style={{ fontSize: '18px' }}>receipt_long</i>
+                        Desglose por concepto:
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#555' }}>
+                        {concepts.map((concept, index) => (
+                          <div key={concept.id} style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            padding: '6px 8px',
+                            marginBottom: '4px',
+                            backgroundColor: '#f8f9fa',
+                            borderRadius: '4px',
+                            border: '1px solid #e9ecef',
+                          }}>
+                            <span style={{ color: '#495057', fontSize: '0.8rem' }}>
+                              {concept.name}
+                            </span>
+                            <span style={{ fontWeight: '600', color: '#0d6efd', fontSize: '0.85rem' }}>
+                              {formatCurrency(concept.amount)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Desglose de gastos incluidos */}
+                  {expenses.length > 0 && (
+                    <div className='mb-3'>
+                      <div style={{ 
+                        fontSize: '0.9rem', 
+                        fontWeight: '600', 
+                        color: '#495057', 
+                        marginBottom: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}>
+                        <i className='material-icons' style={{ fontSize: '18px' }}>receipt</i>
+                        Gastos incluidos:
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: '#555' }}>
+                        {expenses.slice(0, 5).map((expense, index) => (
+                          <div key={expense.id} style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            padding: '6px 8px',
+                            marginBottom: '4px',
+                            backgroundColor: '#f8f9fa',
+                            borderRadius: '4px',
+                            border: '1px solid #e9ecef',
+                          }}>
+                            <div style={{ flex: 1, paddingRight: '8px' }}>
+                              <div style={{ 
+                                color: '#212529',
+                                fontWeight: '500',
+                                fontSize: '0.8rem',
+                                marginBottom: '2px',
+                              }}>
+                                {expense.description}
+                              </div>
+                              <div style={{ 
+                                color: '#6c757d',
+                                fontSize: '0.7rem',
+                              }}>
+                                {expense.category}
+                              </div>
+                            </div>
+                            <div style={{ 
+                              fontWeight: '600',
+                              color: '#198754',
+                              fontSize: '0.85rem',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {formatCurrency(expense.amount)}
+                            </div>
+                          </div>
+                        ))}
+                        {expenses.length > 5 && (
+                          <div style={{ 
+                            fontSize: '0.75rem', 
+                            color: '#6c757d', 
+                            textAlign: 'center',
+                            marginTop: '8px',
+                            fontStyle: 'italic',
+                          }}>
+                            +{expenses.length - 5} gastos más (ver pestaña Gastos)
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {(concepts.length > 0 || expenses.length > 0) && (
+                    <div style={{ 
+                      height: '1px', 
+                      backgroundColor: '#dee2e6', 
+                      margin: '12px 0',
+                    }}></div>
+                  )}
+
                   <div className='amount-item total'>
                     <label>Total emisión:</label>
                     <div className='amount'>
@@ -762,6 +970,244 @@ export default function EmisionDetalle() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Resumen Financiero Completo */}
+                    {(concepts.length > 0 || expenses.length > 0) && (
+                      <div className='mt-4'>
+                        <h5 className='mb-3'>
+                          <i className='material-icons me-2' style={{ verticalAlign: 'middle' }}>
+                            account_balance
+                          </i>
+                          Composición del Total a Pagar
+                        </h5>
+                        <div className='row'>
+                          {/* Conceptos (prorrateo) */}
+                          {concepts.length > 0 && (
+                            <div className='col-md-6 mb-3'>
+                              <div style={{
+                                padding: '16px',
+                                backgroundColor: '#f8f9fa',
+                                borderRadius: '8px',
+                                border: '1px solid #dee2e6',
+                              }}>
+                                <h6 className='mb-3' style={{ 
+                                  color: '#495057',
+                                  fontWeight: '600',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}>
+                                  <i className='material-icons' style={{ fontSize: '20px' }}>
+                                    pie_chart
+                                  </i>
+                                  Conceptos de Prorrateo ({concepts.length})
+                                </h6>
+                                <div style={{ marginBottom: '12px' }}>
+                                  {concepts.map((concept) => (
+                                    <div key={concept.id} style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      padding: '10px 12px',
+                                      marginBottom: '8px',
+                                      backgroundColor: '#fff',
+                                      borderRadius: '6px',
+                                      border: '1px solid #e9ecef',
+                                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    }}>
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ 
+                                          fontWeight: '600',
+                                          color: '#212529',
+                                          fontSize: '0.9rem',
+                                          marginBottom: '4px',
+                                        }}>
+                                          {concept.name}
+                                        </div>
+                                        <div style={{
+                                          fontSize: '0.75rem',
+                                          color: '#6c757d',
+                                        }}>
+                                          <span className='badge bg-light text-dark me-1'>
+                                            {concept.category}
+                                          </span>
+                                          <span className='badge bg-secondary'>
+                                            {concept.distributionType === 'proportional'
+                                              ? 'Proporcional'
+                                              : concept.distributionType === 'equal'
+                                                ? 'Igualitario'
+                                                : 'Personalizado'}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div style={{
+                                        fontWeight: '700',
+                                        color: '#0d6efd',
+                                        fontSize: '1rem',
+                                        whiteSpace: 'nowrap',
+                                        marginLeft: '12px',
+                                      }}>
+                                        {formatCurrency(concept.amount)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{
+                                  borderTop: '2px solid #dee2e6',
+                                  paddingTop: '10px',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontWeight: '700',
+                                  fontSize: '1rem',
+                                }}>
+                                  <span style={{ color: '#495057' }}>Subtotal Conceptos:</span>
+                                  <span style={{ color: '#0d6efd' }}>
+                                    {formatCurrency(
+                                      concepts.reduce((sum, c) => sum + c.amount, 0),
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Gastos Incluidos */}
+                          {expenses.length > 0 && (
+                            <div className='col-md-6 mb-3'>
+                              <div style={{
+                                padding: '16px',
+                                backgroundColor: '#f8f9fa',
+                                borderRadius: '8px',
+                                border: '1px solid #dee2e6',
+                              }}>
+                                <h6 className='mb-3' style={{ 
+                                  color: '#495057',
+                                  fontWeight: '600',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}>
+                                  <i className='material-icons' style={{ fontSize: '20px' }}>
+                                    receipt
+                                  </i>
+                                  Gastos Incluidos ({expenses.length})
+                                </h6>
+                                <div style={{ 
+                                  marginBottom: '12px',
+                                  maxHeight: expenses.length > 5 ? '400px' : 'none',
+                                  overflowY: expenses.length > 5 ? 'auto' : 'visible',
+                                }}>
+                                  {expenses.map((expense) => (
+                                    <div key={expense.id} style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      padding: '10px 12px',
+                                      marginBottom: '8px',
+                                      backgroundColor: '#fff',
+                                      borderRadius: '6px',
+                                      border: '1px solid #e9ecef',
+                                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                    }}>
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ 
+                                          fontWeight: '600',
+                                          color: '#212529',
+                                          fontSize: '0.9rem',
+                                          marginBottom: '4px',
+                                        }}>
+                                          {expense.description}
+                                        </div>
+                                        <div style={{
+                                          fontSize: '0.75rem',
+                                          color: '#6c757d',
+                                        }}>
+                                          <span className='badge bg-light text-dark me-1'>
+                                            {expense.category}
+                                          </span>
+                                          {expense.supplier && (
+                                            <span style={{ fontSize: '0.7rem' }}>
+                                              • {expense.supplier}
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div style={{
+                                        fontWeight: '700',
+                                        color: '#198754',
+                                        fontSize: '1rem',
+                                        whiteSpace: 'nowrap',
+                                        marginLeft: '12px',
+                                      }}>
+                                        {formatCurrency(expense.amount)}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <div style={{
+                                  borderTop: '2px solid #dee2e6',
+                                  paddingTop: '10px',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  fontWeight: '700',
+                                  fontSize: '1rem',
+                                }}>
+                                  <span style={{ color: '#495057' }}>Subtotal Gastos:</span>
+                                  <span style={{ color: '#198754' }}>
+                                    {formatCurrency(
+                                      expenses.reduce((sum, e) => sum + e.amount, 0),
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Total General */}
+                        <div style={{
+                          padding: '20px',
+                          backgroundColor: '#e7f3ff',
+                          borderRadius: '8px',
+                          border: '2px solid #0d6efd',
+                          marginTop: '16px',
+                        }}>
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}>
+                            <div>
+                              <div style={{ 
+                                fontSize: '1.1rem',
+                                fontWeight: '700',
+                                color: '#212529',
+                                marginBottom: '4px',
+                              }}>
+                                <i className='material-icons me-2' style={{ 
+                                  verticalAlign: 'middle',
+                                  fontSize: '24px',
+                                }}>
+                                  paid
+                                </i>
+                                Total Emisión
+                              </div>
+                              <div style={{ 
+                                fontSize: '0.85rem',
+                                color: '#6c757d',
+                              }}>
+                                Incluye {concepts.length} concepto(s) y {expenses.length} gasto(s)
+                              </div>
+                            </div>
+                            <div style={{
+                              fontSize: '1.8rem',
+                              fontWeight: '700',
+                              color: '#0d6efd',
+                            }}>
+                              {formatCurrency(emission.totalAmount)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

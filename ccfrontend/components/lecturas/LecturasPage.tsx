@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, ChangeEvent, FormEvent, useMemo } from 'react';
 import { Button, Form, InputGroup, Alert } from 'react-bootstrap';
 
 import ModernPagination from '@/components/ui/ModernPagination';
@@ -8,14 +8,17 @@ import {
   listLecturas,
   createLectura,
 } from '@/lib/medidoresService';
-import { ProtectedRoute } from '@/lib/useAuth';
+import { ProtectedRoute, useAuth } from '@/lib/useAuth';
+import { useComunidad } from '@/lib/useComunidad';
 import { usePermissions } from '@/lib/usePermissions';
 import { Medidor as Meter, Reading as Reading } from '@/types/medidores';  // Asume que existe en types/medidores.ts
 
 
 
 export default function LecturasPage(): React.ReactElement {
-  const { hasPermission } = usePermissions();
+  const { user } = useAuth();
+  const { hasPermission, hasRoleInCommunity, isSuperUser } = usePermissions();
+  const { comunidadSeleccionada, comunidades } = useComunidad();
   const [meters, setMeters] = useState<Meter[]>([]);
   const [selectedMeter, setSelectedMeter] = useState<Meter | null>(null);
   const [readings, setReadings] = useState<Reading[]>([]);
@@ -27,12 +30,34 @@ export default function LecturasPage(): React.ReactElement {
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [search, setSearch] = useState<string>('');
   const [readingPeriod, setReadingPeriod] = useState<string>('');  // Inicializa como string vacío
-  // Cargar medidores al montar
+  const [selectedComunidad, setSelectedComunidad] = useState<number | null>(null);
+
+  // Determinar la comunidad a usar (global filter)
+  const resolvedComunidadId = useMemo(() => {
+    const isSuper = isSuperUser();
+    return isSuper ? selectedComunidad : comunidadSeleccionada?.id || null;
+  }, [isSuperUser, selectedComunidad, comunidadSeleccionada]);
+
+  // Verificar si es un rol básico (NO puede crear lecturas)
+  const isBasicRoleInCommunity = useMemo(() => {
+    if (!resolvedComunidadId) {return false;}
+    const comunidadId = typeof resolvedComunidadId === 'string' ? parseInt(resolvedComunidadId, 10) : resolvedComunidadId;
+    return (
+      hasRoleInCommunity(comunidadId, 'residente') ||
+      hasRoleInCommunity(comunidadId, 'propietario') ||
+      hasRoleInCommunity(comunidadId, 'inquilino')
+    );
+  }, [resolvedComunidadId, hasRoleInCommunity]);
+  // Cargar medidores al montar o cuando cambia la comunidad
   useEffect(() => {
     const loadMeters = async () => {
       setLoading(true);
       try {
-        const resp = await listAllMedidores({ limit: 100 }); // Global para superadmin
+        const params: any = { limit: 100 };
+        if (resolvedComunidadId) {
+          params.comunidad_id = typeof resolvedComunidadId === 'string' ? parseInt(resolvedComunidadId, 10) : resolvedComunidadId;
+        }
+        const resp = await listAllMedidores(params);
         setMeters(resp.data || []);
         if (resp.data?.length > 0) {setSelectedMeter(resp.data[0]);}
       } catch (err) {
@@ -42,7 +67,7 @@ export default function LecturasPage(): React.ReactElement {
       }
     };
     loadMeters();
-  }, []);
+  }, [resolvedComunidadId, comunidadSeleccionada]);
 
   // Cargar lecturas cuando cambia medidor
   useEffect(() => {
@@ -124,8 +149,64 @@ export default function LecturasPage(): React.ReactElement {
       </PageHeader>
 
       <main className='container-fluid p-4'>
+        {/* Alerta para roles básicos */}
+        {isBasicRoleInCommunity && (
+          <Alert variant='info' className='mb-4'>
+            <Alert.Heading>
+              <span className='material-icons me-2'>info</span>
+              Vista de Solo Lectura
+            </Alert.Heading>
+            <p className='mb-0'>
+              Puedes consultar las lecturas de los medidores asociados a tus unidades,
+              pero no puedes registrar nuevas lecturas. Esta función está reservada
+              para administradores y personal autorizado.
+            </p>
+          </Alert>
+        )}
+
+        {/* Selector de medidor para roles básicos */}
+        {isBasicRoleInCommunity && meters.length > 0 && (
+          <div className='card mb-4 shadow-sm'>
+            <div className='card-body'>
+              <div className='row align-items-center'>
+                <div className='col-md-6'>
+                  <Form.Group className='mb-0'>
+                    <Form.Label className='fw-bold'>
+                      <span className='material-icons me-2' style={{ fontSize: '18px', verticalAlign: 'middle' }}>speed</span>
+                      Seleccionar Medidor
+                    </Form.Label>
+                    <Form.Select
+                      value={selectedMeter?.id || ''}
+                      onChange={(e) => {
+                        const meter = meters.find(m => m.id === Number(e.target.value));
+                        if (meter) {handleMeterSelect(meter);}
+                      }}
+                      size='lg'
+                    >
+                      {filteredMeters.map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.medidor_codigo} - {m.unidad} ({m.tipo})
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </div>
+                {selectedMeter && (
+                  <div className='col-md-6'>
+                    <div className='d-flex flex-column'>
+                      <small className='text-muted'>Última Lectura</small>
+                      <h4 className='mb-0 text-primary'>{selectedMeter.ultima_lectura || '-'} kWh</h4>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className='row'>
-          {/* Formulario de registro - Full width en mobile, 4 columnas en desktop */}
+          {/* Formulario de registro - Solo visible para no-básicos */}
+          {!isBasicRoleInCommunity && (
           <div className='col-12 col-lg-4 mb-4 mb-lg-0'>
             <div className='reading-form-card card shadow-sm'>
                   <div className='card-header bg-primary text-white'>
@@ -223,9 +304,10 @@ export default function LecturasPage(): React.ReactElement {
                   </div>
                 </div>
               </div>
+          )}
 
-              {/* Historial de lecturas - Full width en mobile, 8 columnas en desktop */}
-              <div className='col-12 col-lg-8'>
+              {/* Historial de lecturas - Full width cuando básico, 8 columnas cuando no */}
+              <div className={isBasicRoleInCommunity ? 'col-12' : 'col-12 col-lg-8'}>
                 <div className='reading-history card shadow-sm'>
                   <div className='card-header bg-light d-flex justify-content-between align-items-center flex-wrap gap-2'>
                     <h5 className='mb-0'>
@@ -237,10 +319,12 @@ export default function LecturasPage(): React.ReactElement {
                         <span className='material-icons me-1' style={{ fontSize: '16px' }}>download</span>
                         Exportar
                       </Button>
+                      {!isBasicRoleInCommunity && (
                       <Button variant='primary' size='sm'>
                         <span className='material-icons me-1' style={{ fontSize: '16px' }}>add</span>
                         Agregar Masiva
                       </Button>
+                      )}
                     </div>
                   </div>
                   <div className='card-body p-0'>

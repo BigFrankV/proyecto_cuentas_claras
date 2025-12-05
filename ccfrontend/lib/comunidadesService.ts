@@ -401,9 +401,11 @@ class ComunidadesService {
 
   // Función para normalizar datos de comunidad desde backend (snake_case) a frontend (camelCase)
   private normalizeComunidad(comunidad: any): Comunidad {
+    const razonSocial = comunidad.razon_social || comunidad.nombre || '';
     return {
       id: comunidad.id,
-      nombre: comunidad.razon_social || comunidad.nombre || '',
+      nombre: razonSocial,
+      razon_social: razonSocial, // Agregar razon_social explícitamente
       direccion: comunidad.direccion || '',
       tipo: comunidad.tipo || 'Edificio',
       estado: comunidad.estado || 'Activa',

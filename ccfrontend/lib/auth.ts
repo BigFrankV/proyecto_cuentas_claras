@@ -147,6 +147,11 @@ class AuthService {
         // eslint-disable-next-line no-console
         console.log('Usuario extraído del token:', user);
 
+        // Guardar token en localStorage ANTES de llamar a getCurrentUser
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth_token', token);
+        }
+
         // Intentar obtener información completa del usuario del servidor
         try {
           const fullUserData = await this.getCurrentUser();
@@ -167,9 +172,8 @@ class AuthService {
         throw new Error('Token de autenticación inválido');
       }
 
-      // Guardar token y datos de usuario en localStorage
+      // Guardar datos de usuario en localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_token', token);
         localStorage.setItem('user_data', JSON.stringify(user));
       }
 

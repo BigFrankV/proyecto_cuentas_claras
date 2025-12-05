@@ -130,20 +130,39 @@ export default function EditarProveedor() {
       <ProtectedRoute>
         <Layout>
           <div className='container-fluid'>
-            <div className='row justify-content-center align-items-center min-vh-50'>
-              <div className='col-12 col-md-8'>
-                <div className='card shadow-sm'>
+            <div className='row justify-content-center align-items-center min-vh-100'>
+              <div className='col-12 col-md-8 col-lg-6'>
+                <div className='card shadow-lg border-0'>
                   <div className='card-body text-center p-5'>
                     <div className='mb-4'>
-                      <span className='material-icons text-danger' style={{ fontSize: '56px' }}>
+                      <span className='material-icons text-danger' style={{ fontSize: '80px' }}>
                         block
                       </span>
                     </div>
-                    <h2>Acceso Denegado</h2>
-                    <p className='text-muted'>No tienes permisos para editar Proveedores.</p>
-                    <Button variant='primary' onClick={() => router.push('/proveedores')}>
-                      Volver a Proveedores
-                    </Button>
+                    <h2 className='card-title mb-3'>Acceso Denegado</h2>
+                    <p className='card-text text-muted mb-4'>
+                      No tienes permisos para editar Proveedores.
+                      <br />
+                      Si crees que esto es un error, contacta al administrador.
+                    </p>
+                    <div className='d-flex gap-2 justify-content-center'>
+                      <button
+                        type='button'
+                        className='btn btn-primary'
+                        onClick={() => router.back()}
+                      >
+                        <span className='material-icons align-middle me-1'>arrow_back</span>
+                        Volver Atrás
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn-outline-primary'
+                        onClick={() => router.push('/proveedores')}
+                      >
+                        <span className='material-icons align-middle me-1'>list</span>
+                        Ver Proveedores
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

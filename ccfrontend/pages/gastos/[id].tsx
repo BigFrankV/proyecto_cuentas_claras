@@ -75,7 +75,7 @@ export default function GastoDetalle() {
 
   // Cuando cambia la comunidad global, re-evaluar permisos y recargar el gasto.
   useEffect(() => {
-    if (!id) return;
+    if (!id) {return;}
 
     // Re-evaluar acceso localmente y luego intentar recargar (backend puede devolver 403)
     const canView =
@@ -266,10 +266,44 @@ export default function GastoDetalle() {
     return (
       <ProtectedRoute>
         <Layout>
-          <div className='text-center py-5'>
-            <span className='material-icons text-danger mb-3' style={{ fontSize: '4rem' }}>block</span>
-            <h4>Acceso Denegado</h4>
-            <p className='text-muted'>No tienes permisos para ver este gasto en la comunidad seleccionada.</p>
+          <div className='container-fluid'>
+            <div className='row justify-content-center align-items-center min-vh-100'>
+              <div className='col-12 col-md-8 col-lg-6'>
+                <div className='card shadow-lg border-0'>
+                  <div className='card-body text-center p-5'>
+                    <div className='mb-4'>
+                      <span className='material-icons text-danger' style={{ fontSize: '80px' }}>
+                        block
+                      </span>
+                    </div>
+                    <h2 className='card-title mb-3'>Acceso Denegado</h2>
+                    <p className='card-text text-muted mb-4'>
+                      No tienes permisos para ver este gasto en la comunidad seleccionada.
+                      <br />
+                      Si crees que esto es un error, contacta al administrador.
+                    </p>
+                    <div className='d-flex gap-2 justify-content-center'>
+                      <button
+                        type='button'
+                        className='btn btn-primary'
+                        onClick={() => router.back()}
+                      >
+                        <span className='material-icons align-middle me-1'>arrow_back</span>
+                        Volver Atrás
+                      </button>
+                      <button
+                        type='button'
+                        className='btn btn-outline-primary'
+                        onClick={() => router.push('/gastos')}
+                      >
+                        <span className='material-icons align-middle me-1'>list</span>
+                        Ver Gastos
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </Layout>
       </ProtectedRoute>
@@ -343,14 +377,6 @@ export default function GastoDetalle() {
               >
                 <span className="material-icons">arrow_back</span>
                 Volver
-              </button>
-
-              <button
-                className="btn-secondary"
-                onClick={() => router.push(`/gastos/editar/${expense.id}`)}
-              >
-                <span className="material-icons">edit</span>
-                Editar
               </button>
 
               {hasPermission(Permission.EDIT_GASTO, comunidadParaPermisos) && (

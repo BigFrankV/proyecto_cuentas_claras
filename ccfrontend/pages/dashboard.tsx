@@ -24,10 +24,9 @@ import { EstadoPago } from '@/types/pagos';
 export default function Dashboard() {
   const { user } = useAuth();
   const { isSuperUser, getUserRoleName } = usePermissions();
-  const { comunidadSeleccionada, comunidades: comunidadesGlobal } = useComunidad();
+  const { comunidadSeleccionada, comunidades: comunidadesGlobal, seleccionarComunidad } = useComunidad();
 
-  // Estados para datos dinámicos - AHORA USA FILTRO GLOBAL
-  const [comunidades, setComunidades] = useState<Comunidad[]>([]);
+  // Estados para datos dinámicos - USA FILTRO GLOBAL
   const [searchComunidad, setSearchComunidad] = useState('');
   const [showComunidadDropdown, setShowComunidadDropdown] = useState(false);
   const [notificacionesCount] = useState(0);
@@ -36,43 +35,22 @@ export default function Dashboard() {
   const [, setIsLoading] = useState(true);
   const [, setError] = useState<string | null>(null);
 
-  // Cargar comunidades para búsqueda local (mantener compatibilidad)
+  // Debug logs
   useEffect(() => {
-    let isMounted = true;
+    console.log('🎮 [Dashboard] Renderizando...');
+    console.log('🎮 [Dashboard] user:', user);
+    console.log('🎮 [Dashboard] comunidadesGlobal:', comunidadesGlobal);
+    console.log('🎮 [Dashboard] comunidadesGlobal.length:', comunidadesGlobal?.length);
+    console.log('🎮 [Dashboard] comunidadSeleccionada:', comunidadSeleccionada);
+  }, [user, comunidadesGlobal, comunidadSeleccionada]);
 
-    const loadComunidades = async () => {
-      try {
-        if (!user) {
-          setIsLoading(false);
-          return;
-        }
-
-        const comunidadesData = await comunidadesService.getComunidades();
-
-        if (!isMounted) {
-          return;
-        }
-
-        setComunidades(comunidadesData);
-      } catch (err) {
-        if (isMounted) {
-          // eslint-disable-next-line no-console
-          console.error('❌ [Dashboard] Error loading comunidades:', err);
-          setError('Error al cargar las comunidades');
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadComunidades();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user]);
+  // Función para cambiar de comunidad usando el hook global
+  const handleComunidadChange = (comunidadId: number) => {
+    const comunidad = comunidadesGlobal.find(c => c.id === comunidadId.toString());
+    if (comunidad) {
+      seleccionarComunidad(comunidad);
+    }
+  };
 
   // Función para cargar datos del dashboard usando FILTRO GLOBAL
   const loadDashboardData = async (comunidadId: number | null) => {
@@ -108,10 +86,6 @@ export default function Dashboard() {
       setDashboardData(null);
     }
   }, [comunidadSeleccionada]);
-
-  function handleComunidadChange(id: number) {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <ProtectedRoute>
@@ -312,8 +286,7 @@ export default function Dashboard() {
                     value={
                       showComunidadDropdown
                         ? searchComunidad
-                        : comunidades.find(c => c.id === Number(comunidadSeleccionada?.id))
-                            ?.nombre || 'Seleccionar Comunidad'
+                        : comunidadSeleccionada?.nombre || 'Seleccionar Comunidad'
                     }
                     onChange={e => {
                       setSearchComunidad(e.target.value);
@@ -345,7 +318,7 @@ export default function Dashboard() {
                       overflowY: 'auto',
                     }}
                   >
-                    {comunidades
+                    {comunidadesGlobal
                       .filter(c =>
                         c.nombre
                           .toLowerCase()
@@ -355,11 +328,11 @@ export default function Dashboard() {
                         <button
                           key={comunidad.id}
                           className={`d-block w-100 text-start px-3 py-2 border-0 bg-white hover-bg-light ${
-                            comunidad.id === Number(comunidadSeleccionada?.id) ? 'bg-primary bg-opacity-10 fw-semibold' : ''
+                            comunidad.id === comunidadSeleccionada?.id ? 'bg-primary bg-opacity-10 fw-semibold' : ''
                           }`}
                           style={{ cursor: 'pointer' }}
                           onMouseDown={() => {
-                            handleComunidadChange(comunidad.id);
+                            handleComunidadChange(Number(comunidad.id));
                             setSearchComunidad('');
                             setShowComunidadDropdown(false);
                           }}
@@ -374,10 +347,10 @@ export default function Dashboard() {
                             <div>
                               <div className='fw-medium'>{comunidad.nombre}</div>
                               <small className='text-muted'>
-                                {comunidad.direccion}
+                                {comunidad.rol || 'Sin rol'}
                               </small>
                             </div>
-                            {comunidad.id === Number(comunidadSeleccionada?.id) && (
+                            {comunidad.id === comunidadSeleccionada?.id && (
                               <span className='material-icons ms-auto text-primary'>
                                 check
                               </span>
@@ -385,7 +358,7 @@ export default function Dashboard() {
                           </div>
                         </button>
                       ))}
-                    {comunidades.filter(c =>
+                    {comunidadesGlobal.filter(c =>
                       c.nombre
                         .toLowerCase()
                         .includes(searchComunidad.toLowerCase()),
