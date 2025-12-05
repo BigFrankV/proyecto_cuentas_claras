@@ -55,6 +55,48 @@ async function obtenerComunidadesUsuario(
 }
 
 // ============================================
+// HELPER: Obtener rol del usuario en una comunidad específica
+// ============================================
+async function obtenerRolEnComunidad(usuarioId, comunidadId) {
+  // Buscar rol administrativo primero
+  const [roles] = await db.query(
+    `SELECT r.codigo as rol
+     FROM usuario_rol_comunidad urc
+     INNER JOIN rol_sistema r ON r.id = urc.rol_id
+     WHERE urc.usuario_id = ?
+       AND urc.comunidad_id = ?
+       AND urc.activo = 1
+       AND (urc.desde <= CURDATE())
+       AND (urc.hasta IS NULL OR urc.hasta >= CURDATE())
+     LIMIT 1`,
+    [usuarioId, comunidadId]
+  );
+
+  if (roles && roles.length > 0) {
+    return roles[0].rol;
+  }
+
+  // Si no tiene rol administrativo, buscar en titulares_unidad
+  const [titulares] = await db.query(
+    `SELECT tu.tipo
+     FROM titulares_unidad tu
+     INNER JOIN usuario u ON u.persona_id = tu.persona_id
+     WHERE u.id = ?
+       AND tu.comunidad_id = ?
+       AND (tu.desde <= CURDATE())
+       AND (tu.hasta IS NULL OR tu.hasta >= CURDATE())
+     LIMIT 1`,
+    [usuarioId, comunidadId]
+  );
+
+  if (titulares && titulares.length > 0) {
+    return titulares[0].tipo; // propietario, arrendatario, etc.
+  }
+
+  return null;
+}
+
+// ============================================
 // HELPER: Registrar en historial
 // ============================================
 async function registrarHistorial(
@@ -156,7 +198,6 @@ async function resolveMultaId(idOrNumero) {
 router.get(
   '/',
   authenticate,
-  MultasPermissions.canView,
   [
     query('estado')
       .optional()
@@ -208,19 +249,25 @@ router.get(
 
       const params = [];
 
-      if (req.viewOnlyOwn && req.user.persona_id) {
-        // Usuario solo ve sus propias multas
-        sql += ' AND m.persona_id = ?';
-        params.push(req.user.persona_id);
-        console.log(
-          `🔒 Filtro aplicado: solo multas de persona_id=${req.user.persona_id}`
-        );
-      } else if (!req.user?.is_superadmin) {
-        // Cargar comunidades desde BD
+      // 1. SUPERADMIN: ve todas o filtra por comunidad
+      if (req.user?.is_superadmin) {
+        if (req.query.comunidad_id) {
+          sql += ' AND m.comunidad_id = ?';
+          params.push(req.query.comunidad_id);
+          console.log(
+            `👑 Superadmin: filtrando por comunidad_id=${req.query.comunidad_id}`
+          );
+        } else {
+          console.log('👑 Superadmin: viendo TODAS las multas');
+        }
+      }
+      // 2. USUARIOS NORMALES: depende del rol en la comunidad específica
+      else {
+        // Obtener comunidades del usuario
         const comunidadIds = await obtenerComunidadesUsuario(
           req.user.sub,
           req.user.persona_id,
-          req.user.is_superadmin
+          false
         );
 
         console.log(`🏘️ Comunidades del usuario:`, comunidadIds);
@@ -233,20 +280,97 @@ router.get(
           });
         }
 
-        const placeholders = comunidadIds.map(() => '?').join(',');
-        sql += ` AND m.comunidad_id IN (${placeholders})`;
-        params.push(...comunidadIds);
-      } else {
-        console.log('👑 Usuario superadmin - ve todas las multas');
-      }
+        // Si viene comunidad_id del filtro global
+        if (req.query.comunidad_id) {
+          const comunidadSeleccionada = Number(req.query.comunidad_id);
+          // Validar que le pertenezca
+          if (!comunidadIds.includes(comunidadSeleccionada)) {
+            console.log(
+              `⚠️ Usuario intenta acceder a comunidad_id=${comunidadSeleccionada} que no le pertenece`
+            );
+            return res.status(403).json({
+              success: false,
+              error: 'No tiene permisos para ver multas de esta comunidad',
+            });
+          }
 
-      // Filtro específico por comunidad_id (cuando viene del frontend)
-      if (req.query.comunidad_id) {
-        sql += ' AND m.comunidad_id = ?';
-        params.push(req.query.comunidad_id);
-        console.log(
-          `🏘️ Filtro adicional: comunidad_id=${req.query.comunidad_id}`
-        );
+          // Obtener rol específico en ESA comunidad
+          const rolEnComunidad = await obtenerRolEnComunidad(
+            req.user.sub,
+            comunidadSeleccionada
+          );
+
+          console.log(
+            `👤 Rol en comunidad ${comunidadSeleccionada}: ${rolEnComunidad}`
+          );
+
+          // Roles administrativos: ven TODAS las multas de la comunidad
+          const rolesAdmin = [
+            'admin_comunidad',
+            'presidente_comite',
+            'contador',
+            'tesorero',
+          ];
+
+          if (rolesAdmin.includes(rolEnComunidad)) {
+            sql += ' AND m.comunidad_id = ?';
+            params.push(comunidadSeleccionada);
+            console.log(
+              `🏢 Admin: ve todas las multas de comunidad ${comunidadSeleccionada}`
+            );
+          }
+          // Roles básicos: solo ven SUS multas
+          else {
+            sql += ' AND m.comunidad_id = ? AND m.persona_id = ?';
+            params.push(comunidadSeleccionada, req.user.persona_id);
+            console.log(
+              `🔒 Rol básico: solo multas propias en comunidad ${comunidadSeleccionada}`
+            );
+          }
+        }
+        // Sin filtro de comunidad: ver de TODAS sus comunidades
+        else {
+          // Agrupar por tipo de rol
+          const comunidadesAdmin = [];
+          const comunidadesBasico = [];
+
+          for (const comunidadId of comunidadIds) {
+            const rol = await obtenerRolEnComunidad(req.user.sub, comunidadId);
+            const rolesAdmin = [
+              'admin_comunidad',
+              'presidente_comite',
+              'contador',
+              'tesorero',
+            ];
+            if (rolesAdmin.includes(rol)) {
+              comunidadesAdmin.push(comunidadId);
+            } else {
+              comunidadesBasico.push(comunidadId);
+            }
+          }
+
+          // Construir SQL complejo
+          const conditions = [];
+          if (comunidadesAdmin.length > 0) {
+            const placeholders = comunidadesAdmin.map(() => '?').join(',');
+            conditions.push(`m.comunidad_id IN (${placeholders})`);
+            params.push(...comunidadesAdmin);
+          }
+          if (comunidadesBasico.length > 0) {
+            const placeholders = comunidadesBasico.map(() => '?').join(',');
+            conditions.push(
+              `(m.comunidad_id IN (${placeholders}) AND m.persona_id = ?)`
+            );
+            params.push(...comunidadesBasico, req.user.persona_id);
+          }
+
+          if (conditions.length > 0) {
+            sql += ` AND (${conditions.join(' OR ')})`;
+            console.log(
+              `🔄 Ver todas: ${comunidadesAdmin.length} admin, ${comunidadesBasico.length} básico`
+            );
+          }
+        }
       }
 
       // Filtros adicionales

@@ -168,19 +168,24 @@ const PagarCargoPage: React.FC = () => {
       <Layout title={`Pagar Cargo - ${cargo.concepto}`}>
         <div className="container-fluid p-4">
           <div className="max-width-container">
-            {/* Encabezado */}
-            <div className="d-flex align-items-center mb-4">
+            {/* Encabezado elegante */}
+            <div className="payment-header mb-4">
               <button
                 onClick={handleCancelar}
-                className="btn btn-link text-decoration-none me-3"
+                className="btn-back"
               >
                 <i className="material-icons">arrow_back</i>
               </button>
-              <div>
-                <h1 className="h4 mb-1">Pagar Cargo - {cargo.concepto}</h1>
-                <p className="text-muted small mb-0">
-                  Complete el pago de forma segura con Webpay
-                </p>
+              <div className="header-content">
+                <div className="header-icon">
+                  <i className="material-icons">account_balance_wallet</i>
+                </div>
+                <div>
+                  <h1 className="header-title">Confirmación de Pago</h1>
+                  <p className="header-subtitle">
+                    Revisa los detalles antes de continuar
+                  </p>
+                </div>
               </div>
             </div>
 

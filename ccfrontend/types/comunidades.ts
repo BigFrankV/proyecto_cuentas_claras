@@ -5,6 +5,7 @@
 export interface Comunidad {
   id: number;
   nombre: string;
+  razon_social?: string; // Alias para razon_social del backend
   direccion: string;
   tipo: 'Condominio' | 'Edificio' | 'Conjunto Residencial' | 'Otro';
   estado: 'Activa' | 'Inactiva' | 'Suspendida';

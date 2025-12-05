@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import comunidadesService from '@/lib/comunidadesService';
 import emisionesService from '@/lib/emisionesService';
+import gastosService from '@/lib/gastosService';
 import { ProtectedRoute, useAuth } from '@/lib/useAuth';
 import { useComunidad } from '@/lib/useComunidad';
 import { Permission, usePermissions } from '@/lib/usePermissions';
@@ -77,57 +78,57 @@ export default function EmisionNueva() {
     category: '',
   });
 
-  // Generate mock expenses
+  // Load real gastos from API when comunidadId or period changes
   useEffect(() => {
-    const mockExpenses: ExpenseItem[] = [
-      {
-        id: '1',
-        description: 'Consumo eléctrico - Septiembre',
-        amount: 450000,
-        category: 'Servicios Básicos',
-        supplier: 'CGE',
-        date: '2025-09-15',
-        selected: false,
-      },
-      {
-        id: '2',
-        description: 'Consumo de agua - Septiembre',
-        amount: 280000,
-        category: 'Servicios Básicos',
-        supplier: 'ESVAL',
-        date: '2025-09-10',
-        selected: false,
-      },
-      {
-        id: '3',
-        description: 'Servicio de aseo - Septiembre',
-        amount: 320000,
-        category: 'Servicios',
-        supplier: 'Aseo Total',
-        date: '2025-09-01',
-        selected: false,
-      },
-      {
-        id: '4',
-        description: 'Mantención ascensores',
-        amount: 180000,
-        category: 'Mantenimiento',
-        supplier: 'Ascensores SA',
-        date: '2025-09-05',
-        selected: false,
-      },
-      {
-        id: '5',
-        description: 'Seguridad - Septiembre',
-        amount: 650000,
-        category: 'Servicios',
-        supplier: 'Seguridad Total',
-        date: '2025-09-01',
-        selected: false,
-      },
-    ];
-    setExpenses(mockExpenses);
-  }, []);
+    if (!formData.community || !formData.period) {
+      setExpenses([]);
+      return;
+    }
+
+    const loadGastos = async () => {
+      try {
+        const comunidadId = parseInt(formData.community);
+        const response = await gastosService.listGastos(comunidadId, {});
+        
+        const gastosData = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+        
+        // Extract year and month from period (format: "2025-10")
+        const [year, month] = formData.period.split('-').map(Number);
+        
+        // Filter approved gastos for the selected period
+        const gastosFiltrados = gastosData.filter((gasto: any) => {
+          if (gasto.estado !== 'aprobado') {return false;}
+          
+          if (!gasto.fecha) {return false;}
+          
+          const gastoDate = new Date(gasto.fecha);
+          const gastoYear = gastoDate.getFullYear();
+          const gastoMonth = gastoDate.getMonth() + 1; // getMonth() returns 0-11
+          
+          return gastoYear === year && gastoMonth === month;
+        });
+        
+        // Transform gastos to ExpenseItem format
+        const expenseItems: ExpenseItem[] = gastosFiltrados.map((gasto: any) => ({
+          id: String(gasto.id),
+          description: gasto.glosa || gasto.descripcion || gasto.numero || 'Sin descripción',
+          amount: Number(gasto.monto) || 0,
+          category: gasto.categoria || 'Sin categoría',
+          supplier: gasto.proveedor || '-',
+          date: gasto.fecha || '',
+          selected: false,
+        }));
+        
+        setExpenses(expenseItems);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('[EmisionNueva] Error loading gastos:', error);
+        setExpenses([]);
+      }
+    };
+
+    loadGastos();
+  }, [formData.community, formData.period]);
 
   // Load comunidades
   useEffect(() => {
@@ -543,7 +544,7 @@ export default function EmisionNueva() {
                               key={comunidad.id}
                               value={comunidad.id.toString()}
                             >
-                              {comunidad.razon_social}
+                              {comunidad.razon_social || comunidad.nombre || `Comunidad ${comunidad.id}`}
                             </option>
                           ))}
                         </select>

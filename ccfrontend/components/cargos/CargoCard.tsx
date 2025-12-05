@@ -24,6 +24,15 @@ export interface Cargo {
   interesAcumulado?: number;
   nombreComunidad?: string;
   propietario?: string;
+  detalles?: Array<{
+    id: number;
+    categoria: string;
+    descripcion: string;
+    monto: number;
+    origen: string;
+    origen_id: number;
+    iva_incluido: boolean;
+  }>;
 }
 
 export interface CargoCardProps {
